@@ -1,0 +1,14 @@
+# Ambientes virtuais
+venv/
+
+# Segurança e Credenciais
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Django
+db.sqlite3
+/static/
+/media/
