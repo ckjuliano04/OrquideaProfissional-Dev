@@ -56,6 +56,11 @@ class Users(AbstractBaseUser):
     def is_staff(self):
         return self.user_type in ("admin", "vendedor", "tecnico")
 
+    @property
+    def role(self):
+        """Retorna o user_type como role para o JWT claim."""
+        return self.user_type
+
     def check_password(self, raw_password):
         import bcrypt
 

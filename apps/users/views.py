@@ -2,8 +2,13 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import OrquideaTokenSerializer
 from .serializers import CustomTokenObtainSerializer, UserProfileSerializer
+
+
+class LoginView(TokenObtainPairView):
+    serializer_class = OrquideaTokenSerializer
 
 
 class CustomTokenObtainView(APIView):

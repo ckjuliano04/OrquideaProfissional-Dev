@@ -3,6 +3,18 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Users
 
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+
+class OrquideaTokenSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        # Adicionamos Claims customizadas para o Front usar sem precisar de outra query
+        token["name"] = user.full_name
+        token["role"] = user.role
+        return token
+
 
 class CustomTokenObtainSerializer(serializers.Serializer):
     """

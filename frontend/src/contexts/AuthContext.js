@@ -6,6 +6,18 @@ import { useRouter } from 'next/navigation';
 
 const AuthContext = createContext({});
 
+/**
+ * Decodifica o payload de um JWT (a parte do meio, base64url).
+ */
+function decodeJWTPayload(token) {
+  try {
+    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(base64));
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,38 +27,44 @@ export function AuthProvider({ children }) {
     // Verifica se tem token ao carregar a aplicação
     const token = localStorage.getItem('orquidea_token');
     if (token) {
-      // Idealmente chama uma rota /api/me/ para validar o token
-      fetchAPI('/users/me/')
-        .then(data => {
-          setUser(data);
-        })
-        .catch(() => {
-          localStorage.removeItem('orquidea_token');
-          setUser(null);
-        })
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
+      const payload = decodeJWTPayload(token);
+      if (payload && payload.exp * 1000 > Date.now()) {
+        // Token ainda válido — reconstrói o user a partir dos claims
+        setUser({
+          id: payload.user_id,
+          name: payload.name,
+          role: payload.role,
+        });
+      } else {
+        // Token expirado
+        localStorage.removeItem('orquidea_token');
+        localStorage.removeItem('orquidea_refresh');
+      }
     }
+    setLoading(false);
   }, []);
 
   const login = async (email, password) => {
     try {
-      // Usa rota de token que fizemos no Django
       const data = await fetchAPI('/token/', {
         method: 'POST',
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
-      
+
+      // Salva os tokens
       localStorage.setItem('orquidea_token', data.access);
-      
-      // Decodifica o payload base64 ou faz nova requisição /me/
-      // Como a API /token/ retorna o token, vamos puxar os dados do /me/
-      const userData = await fetchAPI('/users/me/');
+      localStorage.setItem('orquidea_refresh', data.refresh);
+
+      // Decodifica os claims customizados do Access Token
+      const payload = decodeJWTPayload(data.access);
+      const userData = {
+        id: payload.user_id,
+        name: payload.name,
+        role: payload.role,
+      };
       setUser(userData);
-      
-      // Se for técnico/vendedor vai pro treinamento, se cliente vai pro catálogo logado
-      router.push('/dashboard'); 
+
+      router.push('/dashboard');
       return { success: true };
     } catch (error) {
       return { success: false, message: error.message };
@@ -55,6 +73,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     localStorage.removeItem('orquidea_token');
+    localStorage.removeItem('orquidea_refresh');
     setUser(null);
     router.push('/login');
   };

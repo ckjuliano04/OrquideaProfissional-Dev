@@ -1,46 +1,51 @@
 from rest_framework import serializers
 from .models import Products, ProductCategories, ProductImages, ProductFiles, ProductTips, ProductRoleContents
 
+
 class ProductImagesSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImages
-        fields = ['id', 'image_url', 'is_main', 'sort_order']
+        fields = ["id", "image_url", "alt_text", "sort_order"]
+
 
 class ProductFilesSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductFiles
-        fields = ['id', 'title', 'sort_order']
+        fields = ["id", "title", "file_type", "sort_order", "external_url"]
+
 
 class ProductCategoriesSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductCategories
-        fields = ['id', 'name', 'description', 'sort_order']
+        fields = ["id", "name", "description", "sort_order"]
+
 
 class ProductsListSerializer(serializers.ModelSerializer):
-    category_name = serializers.CharField(source='category.name', read_only=True)
-    images = ProductImagesSerializer(many=True, read_only=True)
+    category_name = serializers.CharField(source="category.name", read_only=True)
 
     class Meta:
         model = Products
         fields = [
-            'id', 'name', 'slug', 'sku', 'short_description', 
-            'image_url', 'category', 'category_name', 'is_featured', 
-            'images'
+            "id", "name", "slug", "sku", "short_description",
+            "image_url", "category", "category_name", "is_featured",
         ]
 
+
 class ProductsDetailSerializer(serializers.ModelSerializer):
-    category_name = serializers.CharField(source='category.name', read_only=True)
+    category_name = serializers.CharField(source="category.name", read_only=True)
     images = ProductImagesSerializer(many=True, read_only=True)
     files = ProductFilesSerializer(many=True, read_only=True)
 
     class Meta:
         model = Products
-        fields = '__all__'
+        fields = "__all__"
+
 
 class ProductRoleContentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductRoleContents
-        fields = ['exclusive_content', 'role']
+        fields = ["title", "content", "role"]
+
 
 class PortalProductDetailSerializer(ProductsDetailSerializer):
     role_contents = serializers.SerializerMethodField()
@@ -49,11 +54,11 @@ class PortalProductDetailSerializer(ProductsDetailSerializer):
         pass
 
     def get_role_contents(self, obj):
-        user = self.context['request'].user
+        user = self.context["request"].user
         if not user or not user.is_authenticated:
             return []
-        
+
         # Filtra os conteúdos restritos baseados nas roles que o usuário possui
-        user_role_ids = user.userroles_set.values_list('role_id', flat=True)
+        user_role_ids = user.userroles_set.values_list("role_id", flat=True)
         contents = obj.role_contents.filter(role_id__in=user_role_ids)
         return ProductRoleContentsSerializer(contents, many=True).data
