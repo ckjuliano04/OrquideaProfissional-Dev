@@ -43,3 +43,47 @@ class Products(models.Model):
 
     def __str__(self):
         return f"{self.sku} - {self.name}"
+
+class ProductImages(models.Model):
+    product = models.ForeignKey(Products, models.DO_NOTHING, related_name='images')
+    image_url = models.CharField(max_length=255, db_collation='Latin1_General_CI_AS')
+    is_main = models.BooleanField()
+    sort_order = models.IntegerField()
+    created_at = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'product_images'
+
+class ProductFiles(models.Model):
+    product = models.ForeignKey(Products, models.DO_NOTHING, related_name='files')
+    upload = models.ForeignKey('core_media.Uploads', models.DO_NOTHING)
+    title = models.CharField(max_length=150, db_collation='Latin1_General_CI_AS')
+    sort_order = models.IntegerField()
+    created_at = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'product_files'
+
+class ProductRoleContents(models.Model):
+    product = models.ForeignKey(Products, models.DO_NOTHING, related_name='role_contents')
+    role = models.ForeignKey('users.Roles', models.DO_NOTHING)
+    exclusive_content = models.TextField(db_collation='Latin1_General_CI_AS')
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'product_role_contents'
+        unique_together = (('product', 'role'),)
+
+class ProductTips(models.Model):
+    product = models.ForeignKey(Products, models.DO_NOTHING, related_name='product_tips')
+    tip = models.ForeignKey('content.Tips', models.DO_NOTHING)
+    created_at = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'product_tips'
+        unique_together = (('product', 'tip'),)

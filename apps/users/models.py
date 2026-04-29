@@ -61,3 +61,29 @@ class Users(AbstractBaseUser):
 
         stored_hash = self.password.strip().encode("utf-8")
         return bcrypt.checkpw(raw_password.encode("utf-8"), stored_hash)
+
+
+class Roles(models.Model):
+    name = models.CharField(unique=True, max_length=50, db_collation="Latin1_General_CI_AS")
+    description = models.CharField(max_length=255, db_collation="Latin1_General_CI_AS", blank=True, null=True)
+    access_area = models.CharField(max_length=30, db_collation="Latin1_General_CI_AS")
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "roles"
+
+    def __str__(self):
+        return self.name
+
+
+class UserRoles(models.Model):
+    user = models.ForeignKey("Users", models.DO_NOTHING)
+    role = models.ForeignKey(Roles, models.DO_NOTHING)
+    created_at = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = "user_roles"
+        unique_together = (("user", "role"),)

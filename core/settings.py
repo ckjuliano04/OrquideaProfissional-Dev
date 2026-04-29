@@ -49,8 +49,11 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     # Apps do projeto
-    "apps.products",
+    "apps.core_media",
     "apps.users",
+    "apps.content",
+    "apps.products",
+    "apps.training",
 ]
 
 MIDDLEWARE = [
