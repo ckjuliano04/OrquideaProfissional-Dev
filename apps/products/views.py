@@ -1,7 +1,7 @@
 from rest_framework import generics
 from rest_framework.permissions import AllowAny
 from .models import Products, ProductCategories
-from .serializers import ProductsListSerializer, ProductsDetailSerializer, ProductCategoriesSerializer
+from .serializers import ProductsListSerializer, ProductsDetailSerializer, ProductCategoriesSerializer, PortalProductDetailSerializer
 
 class CategoryListView(generics.ListAPIView):
     queryset = ProductCategories.objects.filter(is_active=True).order_by('sort_order')
@@ -29,4 +29,16 @@ class ProductDetailView(generics.RetrieveAPIView):
     queryset = Products.objects.filter(is_active=True)
     serializer_class = ProductsDetailSerializer
     permission_classes = [AllowAny]
+    lookup_field = 'slug'
+
+from apps.users.permissions import IsClienteOrAbove
+
+class PortalProductDetailView(generics.RetrieveAPIView):
+    """
+    Retorna os detalhes do produto incluindo conteúdos exclusivos
+    (ProductRoleContents) baseados no cargo (Role) do usuário logado.
+    """
+    queryset = Products.objects.filter(is_active=True)
+    serializer_class = PortalProductDetailSerializer
+    permission_classes = [IsClienteOrAbove]
     lookup_field = 'slug'

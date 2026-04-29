@@ -1,28 +1,30 @@
 from django.contrib import admin
 from .models import RestrictedMaterials, RestrictedFiles, RestrictedVideos, RestrictedMaterialRoles
 
-class BaseReadOnlyAdmin(admin.ModelAdmin):
-    # Impedir escrita via Admin por enquanto, já que managed=False
-    def has_add_permission(self, request): return False
-    def has_delete_permission(self, request, obj=None): return False
-    def has_change_permission(self, request, obj=None): return False
+from django.utils import timezone
+
+class BaseCMSAdmin(admin.ModelAdmin):
+    exclude = ('created_at', 'updated_at', 'created_by_user', 'updated_by_user')
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_at = timezone.now()
+            obj.created_by_user = request.user
+        else:
+            obj.updated_at = timezone.now()
+            obj.updated_by_user = request.user
+        super().save_model(request, obj, form, change)
 
 class RestrictedFilesInline(admin.TabularInline):
     model = RestrictedFiles
-    extra = 0
-    def has_add_permission(self, request, obj): return False
-    def has_delete_permission(self, request, obj=None): return False
-    def has_change_permission(self, request, obj=None): return False
+    extra = 1
 
 class RestrictedVideosInline(admin.TabularInline):
     model = RestrictedVideos
-    extra = 0
-    def has_add_permission(self, request, obj): return False
-    def has_delete_permission(self, request, obj=None): return False
-    def has_change_permission(self, request, obj=None): return False
+    extra = 1
 
 @admin.register(RestrictedMaterials)
-class RestrictedMaterialsAdmin(BaseReadOnlyAdmin):
+class RestrictedMaterialsAdmin(BaseCMSAdmin):
     list_display = ('title', 'audience_type', 'is_active', 'published_at')
     list_filter = ('audience_type', 'is_active')
     search_fields = ('title',)
