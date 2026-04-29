@@ -17,7 +17,7 @@ class LegacyMSSQLBackend(BaseBackend):
             user = Users.objects.get(email=username, is_active=True)
 
             # Remove espaços que o MSSQL pode adicionar em campos NVARCHAR
-            stored_hash = user.password_hash.strip().encode("utf-8")
+            stored_hash = user.password.strip().encode("utf-8")
             password_bytes = password.encode("utf-8")
 
             if bcrypt.checkpw(password_bytes, stored_hash):

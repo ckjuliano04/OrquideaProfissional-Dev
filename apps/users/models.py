@@ -26,13 +26,13 @@ class Users(AbstractBaseUser):
     id = models.AutoField(primary_key=True)
     full_name = models.CharField(max_length=150, db_collation="Latin1_General_CI_AS")
     email = models.CharField(unique=True, max_length=150, db_collation="Latin1_General_CI_AS")
-    password_hash = models.CharField(max_length=255, db_collation="Latin1_General_CI_AS")
+    password = models.CharField(max_length=255, db_column="password_hash")
     phone = models.CharField(max_length=30, db_collation="Latin1_General_CI_AS", blank=True, null=True)
     document_number = models.CharField(max_length=30, db_collation="Latin1_General_CI_AS", blank=True, null=True)
     user_type = models.CharField(max_length=30, db_collation="Latin1_General_CI_AS")
     status = models.CharField(max_length=20, db_collation="Latin1_General_CI_AS")
     is_active = models.BooleanField(default=True)
-    last_login_at = models.DateTimeField(blank=True, null=True)
+    last_login = models.DateTimeField(db_column="last_login_at", blank=True, null=True)
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField(blank=True, null=True)
     must_change_password = models.BooleanField(default=False)
@@ -44,15 +44,6 @@ class Users(AbstractBaseUser):
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["full_name"]
-
-    # AbstractBaseUser espera um campo "password"; redirecionamos para password_hash
-    @property
-    def password(self):
-        return self.password_hash
-
-    @password.setter
-    def password(self, value):
-        self.password_hash = value
 
     class Meta:
         managed = False  # Mandatório: o Django não deve alterar a tabela legada
@@ -68,5 +59,5 @@ class Users(AbstractBaseUser):
     def check_password(self, raw_password):
         import bcrypt
 
-        stored_hash = self.password_hash.strip().encode("utf-8")
+        stored_hash = self.password.strip().encode("utf-8")
         return bcrypt.checkpw(raw_password.encode("utf-8"), stored_hash)
