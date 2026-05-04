@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "apps.content",
     "apps.products",
     "apps.training",
+    "cms",
 ]
 
 MIDDLEWARE = [
@@ -139,6 +140,7 @@ USE_TZ = True
 # ---------------------------------------------------------------------------
 
 STATIC_URL = "static/"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "media/"

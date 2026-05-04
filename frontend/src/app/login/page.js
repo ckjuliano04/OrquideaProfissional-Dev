@@ -31,7 +31,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-slate-50 relative overflow-hidden">
+    <main className="flex-grow flex items-center justify-center bg-slate-50 relative overflow-hidden py-12">
       {/* Background decorations */}
       <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-orquidea-green/10 rounded-full blur-[100px] pointer-events-none"></div>
       <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-orquidea-light/10 rounded-full blur-[100px] pointer-events-none"></div>
@@ -39,7 +39,14 @@ export default function LoginPage() {
       <div className="container mx-auto px-4 z-10 flex justify-center">
         <div className="w-full max-w-md bg-white/80 backdrop-blur-xl p-8 md:p-10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
           
-          <div className="text-center mb-8">
+          <div className="text-center mb-10">
+            <Link href="/" className="inline-block mb-8">
+              <img 
+                src="/logos/OrquideaProfissional_Logo_Transparente.png" 
+                alt="Orquídea Profissional" 
+                className="h-24 w-auto object-contain mx-auto transition-all duration-300 hover:scale-105 drop-shadow-md"
+              />
+            </Link>
             <h1 className="text-3xl font-extrabold text-slate-900 mb-2">Acesso Restrito</h1>
             <p className="text-slate-500">Faça login para acessar os materiais técnicos.</p>
           </div>
@@ -64,12 +71,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <div className="flex justify-between mb-2">
-                <label className="block text-sm font-semibold text-slate-700">Senha</label>
-                <Link href="#" className="text-sm font-medium text-orquidea-green hover:text-orquidea-dark transition-colors">
-                  Esqueceu a senha?
-                </Link>
-              </div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Senha</label>
               <input
                 type="password"
                 value={password}
@@ -78,6 +80,11 @@ export default function LoginPage() {
                 placeholder="••••••••"
                 required
               />
+              <div className="flex justify-end mt-2">
+                <Link href="#" className="text-sm font-medium text-orquidea-green hover:text-orquidea-dark transition-colors">
+                  Esqueceu a senha?
+                </Link>
+              </div>
             </div>
 
             <button

@@ -1,9 +1,14 @@
 @import "tailwindcss";
 
 @theme {
-  --color-orquidea-green: #15803d; /* Um verde forte e profissional */
-  --color-orquidea-light: #22c55e;
-  --color-orquidea-dark: #14532d;
+  --color-orquidea-green: #006437;    /* Verde Identidade */
+  --color-orquidea-red: #e31e24;      /* Vermelho Ação Primária */
+  --color-orquidea-cream: #f2ede4;    /* Fundo Creme para Catálogo */
+  
+  /* Variações de Área Restrita */
+  --color-orquidea-tech: #004d2a;     /* Verde mais saturado/profundo */
+  --color-orquidea-seller: #1a7a4d;   /* Verde mais aberto/vibrante */
+  --color-orquidea-night: #0a2118;    /* Verde Floresta Noturno (Substitui o Azul Escuro) */
   
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }

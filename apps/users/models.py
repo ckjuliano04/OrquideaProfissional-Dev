@@ -24,14 +24,22 @@ class UsersManager(BaseUserManager):
 class Users(AbstractBaseUser):
     # Mapeamento direto do schema_dump (MSSQL)
     id = models.AutoField(primary_key=True)
-    full_name = models.CharField(max_length=150, db_collation="Latin1_General_CI_AS")
-    email = models.CharField(unique=True, max_length=150, db_collation="Latin1_General_CI_AS")
-    password = models.CharField(max_length=255, db_column="password_hash")
-    phone = models.CharField(max_length=30, db_collation="Latin1_General_CI_AS", blank=True, null=True)
-    document_number = models.CharField(max_length=30, db_collation="Latin1_General_CI_AS", blank=True, null=True)
-    user_type = models.CharField(max_length=30, db_collation="Latin1_General_CI_AS")
-    status = models.CharField(max_length=20, db_collation="Latin1_General_CI_AS")
-    is_active = models.BooleanField(default=True)
+    full_name = models.CharField(max_length=150, db_collation="Latin1_General_CI_AS", verbose_name="Nome Completo")
+    email = models.CharField(unique=True, max_length=150, db_collation="Latin1_General_CI_AS", verbose_name="E-mail")
+    password = models.CharField(max_length=255, db_column="password_hash", verbose_name="Senha (Hash)")
+    phone = models.CharField(max_length=30, db_collation="Latin1_General_CI_AS", blank=True, null=True, verbose_name="Telefone")
+    document_number = models.CharField(max_length=30, db_collation="Latin1_General_CI_AS", blank=True, null=True, verbose_name="CPF/CNPJ")
+    # Definição completa de tipos (Suportada após atualização da constraint no DB)
+    USER_TYPE_CHOICES = [
+        ("admin", "Administrador"),
+        ("interno", "Equipe Interna (Marketing)"),
+        ("vendedor", "Vendedor"),
+        ("tecnico", "Técnico"),
+        ("cliente", "Cliente"),
+    ]
+    user_type = models.CharField(max_length=30, db_collation="Latin1_General_CI_AS", choices=USER_TYPE_CHOICES, verbose_name="Tipo de Usuário")
+    status = models.CharField(max_length=20, db_collation="Latin1_General_CI_AS", verbose_name="Status")
+    is_active = models.BooleanField(default=True, verbose_name="Conta Ativa")
     last_login = models.DateTimeField(db_column="last_login_at", blank=True, null=True)
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField(blank=True, null=True)
@@ -48,18 +56,41 @@ class Users(AbstractBaseUser):
     class Meta:
         managed = False  # Mandatório: o Django não deve alterar a tabela legada
         db_table = "users"
+        verbose_name = "Usuário"
+        verbose_name_plural = "Usuários"
 
     def __str__(self):
         return self.email
 
     @property
     def is_staff(self):
-        return self.user_type in ("admin", "vendedor", "tecnico")
+        """
+        Define quem pode entrar no Django Admin (CMS).
+        """
+        return self.user_type in ['admin', 'interno']
+
+    @property
+    def is_superuser(self):
+        return self.user_type == "admin"
+
+    def has_perm(self, perm, obj=None):
+        return self.is_staff
+
+    def has_module_perms(self, app_label):
+        return self.is_staff
 
     @property
     def role(self):
         """Retorna o user_type como role para o JWT claim."""
         return self.user_type
+
+    def set_password(self, raw_password):
+        import bcrypt
+        if raw_password:
+            hashed = bcrypt.hashpw(raw_password.encode("utf-8"), bcrypt.gensalt())
+            self.password = hashed.decode("utf-8")
+        else:
+            self.password = None
 
     def check_password(self, raw_password):
         import bcrypt
@@ -91,4 +122,6 @@ class UserRoles(models.Model):
     class Meta:
         managed = False
         db_table = "user_roles"
+        verbose_name = "Vínculo de Perfil"
+        verbose_name_plural = "Vínculos de Perfis"
         unique_together = (("user", "role"),)

@@ -35,8 +35,7 @@ from apps.users.permissions import IsClienteOrAbove
 
 class PortalProductDetailView(generics.RetrieveAPIView):
     """
-    Retorna os detalhes do produto incluindo conteúdos exclusivos
-    (ProductRoleContents) baseados no cargo (Role) do usuário logado.
+    Retorna os detalhes do produto para usuários logados.
     """
     queryset = Products.objects.filter(is_active=True)
     serializer_class = PortalProductDetailSerializer

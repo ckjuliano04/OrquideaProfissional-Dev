@@ -1,11 +1,24 @@
 from rest_framework import serializers
-from .models import Products, ProductCategories, ProductImages, ProductFiles, ProductTips, ProductRoleContents
+from .models import Products, ProductCategories, ProductImages, ProductFiles, ProductTips
 
 
 class ProductImagesSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
     class Meta:
         model = ProductImages
         fields = ["id", "image_url", "alt_text", "sort_order"]
+
+    def get_image_url(self, obj):
+        """
+        Converte o caminho relativo do banco (ex: uploads/...) 
+        em uma URL absoluta (ex: http://domain.com/media/uploads/...)
+        """
+        if not obj.image_url:
+            return None
+        request = self.context.get('request')
+        if request is not None:
+            return request.build_absolute_uri(obj.image_url.url)
+        return obj.image_url.url
 
 
 class ProductFilesSerializer(serializers.ModelSerializer):
@@ -17,11 +30,12 @@ class ProductFilesSerializer(serializers.ModelSerializer):
 class ProductCategoriesSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductCategories
-        fields = ["id", "name", "description", "sort_order"]
+        fields = ["id", "name", "parent", "description", "sort_order"]
 
 
 class ProductsListSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source="category.name", read_only=True)
+    image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Products
@@ -30,8 +44,19 @@ class ProductsListSerializer(serializers.ModelSerializer):
             "image_url", "category", "category_name", "is_featured",
         ]
 
-
+    def get_image_url(self, obj):
+        """
+        Converte o caminho relativo do banco (ex: uploads/...) 
+        em uma URL absoluta (ex: http://domain.com/media/uploads/...)
+        """
+        if not obj.image_url:
+            return None
+        request = self.context.get('request')
+        if request is not None:
+            return request.build_absolute_uri(obj.image_url.url)
+        return obj.image_url.url
 class ProductsDetailSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
     category_name = serializers.CharField(source="category.name", read_only=True)
     images = ProductImagesSerializer(many=True, read_only=True)
     files = ProductFilesSerializer(many=True, read_only=True)
@@ -40,25 +65,19 @@ class ProductsDetailSerializer(serializers.ModelSerializer):
         model = Products
         fields = "__all__"
 
-
-class ProductRoleContentsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProductRoleContents
-        fields = ["title", "content", "role"]
+    def get_image_url(self, obj):
+        """
+        Converte o caminho relativo do banco (ex: uploads/...) 
+        em uma URL absoluta (ex: http://domain.com/media/uploads/...)
+        """
+        if not obj.image_url:
+            return None
+        request = self.context.get('request')
+        if request is not None:
+            return request.build_absolute_uri(obj.image_url.url)
+        return obj.image_url.url
 
 
 class PortalProductDetailSerializer(ProductsDetailSerializer):
-    role_contents = serializers.SerializerMethodField()
-
     class Meta(ProductsDetailSerializer.Meta):
         pass
-
-    def get_role_contents(self, obj):
-        user = self.context["request"].user
-        if not user or not user.is_authenticated:
-            return []
-
-        # Filtra os conteúdos restritos baseados nas roles que o usuário possui
-        user_role_ids = user.userroles_set.values_list("role_id", flat=True)
-        contents = obj.role_contents.filter(role_id__in=user_role_ids)
-        return ProductRoleContentsSerializer(contents, many=True).data

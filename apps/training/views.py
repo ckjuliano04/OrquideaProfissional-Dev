@@ -1,5 +1,6 @@
+from django.db import models
 from rest_framework import generics
-from apps.users.permissions import IsTecnicoOrVendedor
+from apps.users.permissions import IsTecnicoOnly
 from .models import RestrictedMaterials
 from .serializers import RestrictedMaterialsListSerializer, RestrictedMaterialsDetailSerializer
 
@@ -9,18 +10,18 @@ class TrainingListView(generics.ListAPIView):
     baseado nas roles que ele possui.
     """
     serializer_class = RestrictedMaterialsListSerializer
-    permission_classes = [IsTecnicoOrVendedor]
+    permission_classes = [IsTecnicoOnly]
 
     def get_queryset(self):
         user = self.request.user
         queryset = RestrictedMaterials.objects.filter(is_active=True)
-        # Se for admin, pode ver tudo
+        
+        # Admins e Equipe Interna veem tudo
         if user.user_type in ['admin', 'interno']:
             return queryset
             
-        # Filtra baseado na role (UserRoles -> RestrictedMaterialRoles)
-        user_role_ids = user.userroles_set.values_list('role_id', flat=True)
-        return queryset.filter(restrictedmaterialroles__role_id__in=user_role_ids).distinct()
+        # Para técnicos, mostramos apenas o que é marcado como 'tecnico'
+        return queryset.filter(audience_type__icontains='tecnico').distinct()
 
 class TrainingDetailView(generics.RetrieveAPIView):
     """
@@ -28,7 +29,7 @@ class TrainingDetailView(generics.RetrieveAPIView):
     desde que o usuário tenha permissão de role.
     """
     serializer_class = RestrictedMaterialsDetailSerializer
-    permission_classes = [IsTecnicoOrVendedor]
+    permission_classes = [IsTecnicoOnly]
 
     def get_queryset(self):
         user = self.request.user
@@ -36,5 +37,4 @@ class TrainingDetailView(generics.RetrieveAPIView):
         if user.user_type in ['admin', 'interno']:
             return queryset
             
-        user_role_ids = user.userroles_set.values_list('role_id', flat=True)
-        return queryset.filter(restrictedmaterialroles__role_id__in=user_role_ids).distinct()
+        return queryset.filter(audience_type__icontains='tecnico').distinct()
