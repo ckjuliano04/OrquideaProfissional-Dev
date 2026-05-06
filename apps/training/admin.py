@@ -46,11 +46,13 @@ class BaseCMSAdmin(admin.ModelAdmin):
 
 class RestrictedFilesInline(admin.TabularInline):
     model = RestrictedFiles
+    fields = ('title', 'file_upload', 'sort_order')
     extra = 1
 
 
 class RestrictedVideosInline(admin.TabularInline):
     model = RestrictedVideos
+    fields = ('title', 'video_file', 'video_url', 'sort_order')
     extra = 1
 
 

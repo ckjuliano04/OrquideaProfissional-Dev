@@ -23,23 +23,24 @@ class CustomTokenObtainSerializer(serializers.Serializer):
     Retorna tokens JWT com dados do usuário no payload.
     """
 
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
+    email = serializers.EmailField(error_messages={"invalid": "Por favor, insira um endereço de e-mail válido."})
+    password = serializers.CharField(write_only=True, min_length=6, error_messages={"min_length": "A senha deve ter pelo menos 6 caracteres."})
 
     def validate(self, attrs):
-        email = attrs["email"]
-        password = attrs["password"]
+        email = attrs.get("email").strip().lower()
+        password = attrs.get("password")
 
         try:
             user = Users.objects.get(email=email)
         except Users.DoesNotExist:
-            raise serializers.ValidationError("Credenciais inválidas.")
+            # Por segurança, usamos a mesma mensagem para usuário inexistente ou senha errada
+            raise serializers.ValidationError("E-mail ou senha incorretos.")
 
         if not user.is_active:
-            raise serializers.ValidationError("Conta desativada.")
+            raise serializers.ValidationError("Esta conta está desativada. Entre em contato com o suporte.")
 
         if not user.check_password(password):
-            raise serializers.ValidationError("Credenciais inválidas.")
+            raise serializers.ValidationError("E-mail ou senha incorretos.")
 
         # Gerar tokens JWT
         refresh = RefreshToken.for_user(user)

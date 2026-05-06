@@ -22,27 +22,28 @@ class RestrictedMaterials(models.Model):
         return self.title
 
 class RestrictedFiles(models.Model):
-    restricted_material = models.ForeignKey(RestrictedMaterials, models.DO_NOTHING, verbose_name="Material")
-    upload = models.ForeignKey('core_media.Uploads', models.DO_NOTHING, verbose_name="Arquivo (Upload)")
-    title = models.CharField(max_length=150, db_collation='Latin1_General_CI_AS', verbose_name="Título do Arquivo")
-    sort_order = models.IntegerField(verbose_name="Ordem de Exibição")
-    created_at = models.DateTimeField()
+    restricted_material = models.ForeignKey(RestrictedMaterials, models.CASCADE, related_name='files', verbose_name="Material", db_constraint=False)
+    title = models.CharField(max_length=150, verbose_name="Título do Arquivo")
+    file_upload = models.FileField(upload_to='training/files/', verbose_name="Arquivo (Upload)")
+    sort_order = models.IntegerField(default=0, verbose_name="Ordem de Exibição")
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'restricted_files'
         verbose_name = "Arquivo do Treinamento"
         verbose_name_plural = "Arquivos do Treinamento"
 
 class RestrictedVideos(models.Model):
-    restricted_material = models.ForeignKey(RestrictedMaterials, models.DO_NOTHING, verbose_name="Material")
-    title = models.CharField(max_length=150, db_collation='Latin1_General_CI_AS', verbose_name="Título do Vídeo")
-    video_url = models.CharField(max_length=500, db_collation='Latin1_General_CI_AS', verbose_name="URL do Vídeo (YouTube/Vimeo)")
-    sort_order = models.IntegerField(verbose_name="Ordem de Exibição")
-    created_at = models.DateTimeField()
+    restricted_material = models.ForeignKey(RestrictedMaterials, models.CASCADE, verbose_name="Material", db_constraint=False)
+    title = models.CharField(max_length=150, verbose_name="Título do Vídeo")
+    video_url = models.CharField(max_length=500, blank=True, null=True, verbose_name="URL Externa (opcional)")
+    video_file = models.FileField(upload_to='training/videos/', blank=True, null=True, verbose_name="Arquivo de Vídeo (Upload)")
+    sort_order = models.IntegerField(default=0, verbose_name="Ordem de Exibição")
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'restricted_videos'
         verbose_name = "Vídeo do Treinamento"
         verbose_name_plural = "Vídeos do Treinamento"

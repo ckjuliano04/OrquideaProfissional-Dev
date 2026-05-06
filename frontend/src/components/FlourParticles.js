@@ -1,12 +1,10 @@
 'use client';
 
-import React, { useRef, useMemo } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { useMemo } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-function Particles({ count = 2000 }) {
-  const mesh = useRef();
-  const { mouse, viewport } = useThree();
+function Particles({ count = 1500 }) {
 
   // Cria as posições iniciais das partículas de farinha
   const particles = useMemo(() => {
@@ -15,9 +13,7 @@ function Particles({ count = 2000 }) {
       const x = (Math.random() - 0.5) * 10;
       const y = (Math.random() - 0.5) * 10;
       const z = (Math.random() - 0.5) * 5;
-      const size = Math.random() * 0.015 + 0.005;
-      const speed = Math.random() * 0.01 + 0.002;
-      temp.push({ x, y, z, size, speed, ox: x, oy: y });
+      temp.push({ x, y, z, ox: x, oy: y });
     }
     return temp;
   }, [count]);
@@ -46,39 +42,30 @@ function Particles({ count = 2000 }) {
 
   useFrame((state) => {
     const positions = geo.attributes.position.array;
+    const time = state.clock.elapsedTime;
     
-    particles.forEach((p, i) => {
-      // Movimento de deriva orgânica (vento sutil)
-      p.x += Math.sin(state.clock.elapsedTime * 0.5 + i) * 0.002;
-      p.y += Math.cos(state.clock.elapsedTime * 0.3 + i) * 0.002;
+    for (let i = 0; i < count; i++) {
+      const p = particles[i];
+      const i3 = i * 3;
 
-      // Interatividade com o mouse
-      const mx = (mouse.x * viewport.width) / 2;
-      const my = (mouse.y * viewport.height) / 2;
-      
-      const dx = p.x - mx;
-      const dy = p.y - my;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      
-      if (dist < 2) {
-        const force = (2 - dist) * 0.02;
-        p.x += (dx / dist) * force;
-        p.y += (dy / dist) * force;
-      } else {
-        p.x += (p.ox - p.x) * 0.01;
-        p.y += (p.oy - p.y) * 0.01;
-      }
+      // Movimento de deriva orgânica (vento sutilmente mais ágil)
+      p.x += Math.sin(time * 0.8 + i) * 0.003;
+      p.y += Math.cos(time * 0.6 + i) * 0.003;
 
-      positions[i * 3] = p.x;
-      positions[i * 3 + 1] = p.y;
-      positions[i * 3 + 2] = p.z;
-    });
+      // Retorno contínuo e suave à origem para não se perderem na tela com o tempo
+      p.x += (p.ox - p.x) * 0.01;
+      p.y += (p.oy - p.y) * 0.01;
+
+      positions[i3] = p.x;
+      positions[i3 + 1] = p.y;
+      positions[i3 + 2] = p.z;
+    }
 
     geo.attributes.position.needsUpdate = true;
   });
 
   return (
-    <points ref={mesh} geometry={geo}>
+    <points geometry={geo}>
       <pointsMaterial
         size={0.08}
         map={texture}

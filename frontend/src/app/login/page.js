@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -11,7 +12,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
-  const router = useRouter();
+  const { addToast } = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,11 +21,15 @@ export default function LoginPage() {
 
     try {
       const result = await login(email, password);
-      if (!result.success) {
+      if (result.success) {
+        addToast('Login realizado com sucesso! Bem-vindo.', 'success');
+      } else {
         setError(result.message || 'E-mail ou senha incorretos.');
+        addToast(result.message || 'Erro ao realizar login.', 'error');
       }
     } catch (err) {
       setError('Ocorreu um erro ao conectar ao servidor.');
+      addToast('Erro de conexão com o servidor.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -41,9 +46,12 @@ export default function LoginPage() {
           
           <div className="text-center mb-10">
             <Link href="/" className="inline-block mb-8">
-              <img 
+              <Image 
                 src="/logos/OrquideaProfissional_Logo_Transparente.png" 
                 alt="Orquídea Profissional" 
+                width={200}
+                height={96}
+                priority
                 className="h-24 w-auto object-contain mx-auto transition-all duration-300 hover:scale-105 drop-shadow-md"
               />
             </Link>

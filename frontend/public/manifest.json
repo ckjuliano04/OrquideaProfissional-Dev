@@ -1,0 +1,10 @@
+{
+  "name": "Orquídea Profissional",
+  "short_name": "Orquídea Prof",
+  "description": "Portal Técnico da Orquídea Alimentos",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a472a",
+  "icons": []
+}

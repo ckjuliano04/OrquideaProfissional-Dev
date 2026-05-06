@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { fetchAPI } from '@/services/api';
+import { normalizeProductList, normalizeCategories } from '@/services/normalizers';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
+import Image from 'next/image';
+import { ProductSkeleton } from '@/components/ui/Skeleton';
 
 export default function CatalogoPage() {
   const { isAuthenticated } = useAuth();
@@ -19,8 +22,8 @@ export default function CatalogoPage() {
       fetchAPI('/products/')
     ])
       .then(([catsData, prodsData]) => {
-        setCategories(catsData);
-        setProducts(prodsData);
+        setCategories(normalizeCategories(catsData));
+        setProducts(normalizeProductList(prodsData));
       })
       .catch(err => console.error("Erro ao carregar catálogo:", err))
       .finally(() => setLoading(false));
@@ -131,7 +134,7 @@ export default function CatalogoPage() {
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1,2,3,4,5,6].map(i => (
-                <div key={i} className="bg-white h-80 rounded-3xl animate-pulse border border-slate-100"></div>
+                <ProductSkeleton key={i} />
               ))}
             </div>
           ) : filteredProducts.length === 0 ? (
@@ -148,7 +151,14 @@ export default function CatalogoPage() {
                 >
                   <div className="h-56 bg-orquidea-cream flex items-center justify-center relative p-8">
                     {product.image_url ? (
-                      <img src={product.image_url} alt={product.name} className="max-h-full object-contain group-hover:scale-110 transition-transform duration-500" />
+                      <Image 
+                        src={product.image_url} 
+                        alt={product.name} 
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        priority={products.indexOf(product) < 3}
+                        className="object-contain p-4 group-hover:scale-110 transition-transform duration-500" 
+                      />
                     ) : (
                       <div className="text-slate-300 font-bold text-xs uppercase tracking-widest">Sem imagem</div>
                     )}

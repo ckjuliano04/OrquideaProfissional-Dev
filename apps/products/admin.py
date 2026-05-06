@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Products, ProductCategories, ProductImages, ProductFiles, ProductTips
+from django import forms
+from .models import Products, ProductCategories, ProductTips, ProductNutrition, ProductNutritionRow
 from django.utils.html import format_html
 
 from django.utils import timezone
@@ -18,7 +19,6 @@ class BaseCMSAdmin(admin.ModelAdmin):
             obj.created_at = timezone.now()
             if hasattr(obj, 'created_by_user'):
                 obj.created_by_user = request.user
-            # Garante que sort_order não seja nulo em novos registros
             if hasattr(obj, 'sort_order') and obj.sort_order is None:
                 obj.sort_order = 0
         else:
@@ -27,33 +27,92 @@ class BaseCMSAdmin(admin.ModelAdmin):
                 obj.updated_by_user = request.user
         super().save_model(request, obj, form, change)
 
+    def get_urls(self):
+        from django.urls import path
+        urls = super().get_urls()
+        custom_urls = [
+            path('toggle-active/<int:pk>/', self.admin_site.admin_view(self.toggle_active), name='toggle-active'),
+        ]
+        return custom_urls + urls
+
+    def toggle_active(self, request, pk):
+        """Alterna o status ativo/inativo do objeto em vez de excluir."""
+        from django.shortcuts import redirect
+        from django.contrib import messages
+        obj = self.get_object(request, pk)
+        if obj:
+            obj.is_active = not obj.is_active
+            obj.save()
+            status = "ativado" if obj.is_active else "desativado e movido para a lixeira"
+            messages.success(request, f"O item '{obj}' foi {status} com sucesso.")
+        return redirect(request.META.get('HTTP_REFERER', '..'))
+
     def ações(self, obj):
-        """Renderiza um ícone de lixeira para exclusão rápida."""
+        """Ações rápidas: Editar, Ver no Site e Desativar (Lixeira)."""
         from django.urls import reverse
         from django.utils.safestring import mark_safe
         
-        delete_url = reverse(
-            f'admin:{obj._meta.app_label}_{obj._meta.model_name}_delete',
-            args=[obj.pk]
-        )
-        return mark_safe(f'<a href="{delete_url}" title="Excluir" style="color: #ba2121;">🗑️</a>')
+        edit_url = reverse(f'admin:{obj._meta.app_label}_{obj._meta.model_name}_change', args=[obj.pk])
+        # Criamos um link que apenas desativa o produto via URL
+        toggle_url = f"toggle-active/{obj.pk}/"
+        
+        return mark_safe(f'''
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <a href="{edit_url}" title="Editar" style="text-decoration: none; font-size: 16px;">📝</a>
+                <a href="{toggle_url}" title="Desativar/Mover para Lixeira" style="color: #ba2121; text-decoration: none; font-size: 16px;">🗑️</a>
+            </div>
+        ''')
     ações.short_description = 'Ações'
 
-class ProductImagesInline(admin.TabularInline):
-    model = ProductImages
-    extra = 1
-    readonly_fields = ('image_preview',)
-    
-    def image_preview(self, obj):
-        """Gera a miniatura da imagem para exibição dentro do formulário do admin."""
-        if obj.image_url:
-            return format_html('<img src="{}" style="max-height: 100px;"/>', obj.image_url.url)
-        return "-"
-    image_preview.short_description = 'Prévia'
+class ProductNutritionInline(admin.StackedInline):
+    model = ProductNutrition
+    extra = 0
+    can_delete = False
+    verbose_name = "Tabela Nutricional (Cabeçalho)"
 
-class ProductFilesInline(admin.TabularInline):
-    model = ProductFiles
-    extra = 1
+
+
+class ProductNutritionRowForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Se a linha já existe no banco, bloqueamos o nome do nutriente
+        if self.instance and self.instance.pk:
+            self.fields['label'].disabled = True
+            self.fields['label'].required = False
+
+class ProductNutritionRowInline(admin.TabularInline):
+    model = ProductNutritionRow
+    form = ProductNutritionRowForm
+    extra = 0
+    fields = ('sort_order', 'label', 'value_100g', 'value_serving', 'vd_percentage', 'value_4', 'value_5')
+    verbose_name = "Linha da Tabela Nutricional"
+    verbose_name_plural = "Tabela Nutricional (Nutrientes)"
+
+    def get_formset(self, request, obj=None, **kwargs):
+        """Muda os títulos das colunas dinamicamente baseado no que foi escrito no cabeçalho."""
+        formset = super().get_formset(request, obj, **kwargs)
+        # Se estivermos editando um produto e ele já tiver o cabeçalho de nutrição
+        if obj and hasattr(obj, 'nutrition'):
+            nut = obj.nutrition
+            formset.form.base_fields['value_100g'].label = nut.col_1_label
+            formset.form.base_fields['value_serving'].label = nut.col_2_label
+            formset.form.base_fields['vd_percentage'].label = nut.col_3_label
+            formset.form.base_fields['value_4'].label = nut.col_4_label
+            formset.form.base_fields['value_5'].label = nut.col_5_label
+        return formset
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    class Media:
+        css = {
+            'all': ('admin/css/custom_admin.css',)
+        }
+        js = ('admin/js/nutrition_dynamic.js',)
+
+@admin.register(ProductNutrition)
+class ProductNutritionAdmin(admin.ModelAdmin):
+    list_display = ('product', 'serving_size', 'portions_per_package')
 
 @admin.register(ProductCategories)
 class ProductCategoriesAdmin(BaseCMSAdmin):
@@ -70,19 +129,23 @@ class ProductTipsInline(admin.TabularInline):
 
 @admin.register(Products)
 class ProductsAdmin(BaseCMSAdmin):
-    list_display = ('sku', 'name', 'category', 'is_active', 'is_featured', 'ações')
+    list_display = ('image_preview_list', 'name', 'category', 'is_active', 'ver_no_site', 'ações')
     list_filter = ('category', 'is_active', 'is_featured')
-    search_fields = ('name', 'sku', 'short_description')
+    search_fields = ('name', 'short_description')
     ordering = ('name',)
-    inlines = [ProductImagesInline, ProductFilesInline, ProductTipsInline]
+    inlines = [ProductNutritionInline, ProductNutritionRowInline, ProductTipsInline]
     readonly_fields = ('image_preview',)
 
     def image_preview_list(self, obj):
-        """Gera a miniatura da imagem para a listagem geral de produtos."""
         if obj.image_url:
-            return format_html('<img src="{}" style="max-height: 50px;"/>', obj.image_url.url)
+            return format_html('<img src="{}" style="height: 40px; width: 40px; border-radius: 8px; object-fit: contain; background: #f8f9fa; border: 1px solid #dee2e6;"/>', obj.image_url.url)
         return "-"
     image_preview_list.short_description = 'Capa'
+
+    def ver_no_site(self, obj):
+        url = f"http://localhost:3000/catalogo/{obj.slug}"
+        return format_html('<a href="{}" target="_blank" style="background: #1a472a; color: white; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 11px;">👁️ Ver Site</a>', url)
+    ver_no_site.short_description = 'Link Externo'
 
     def image_preview(self, obj):
         if obj.image_url:
@@ -92,7 +155,7 @@ class ProductsAdmin(BaseCMSAdmin):
     
     fieldsets = (
         ('Informações Básicas', {
-            'fields': ('sku', 'name', 'slug', 'category', 'is_active', 'is_featured')
+            'fields': ('name', 'slug', 'category', 'is_active', 'is_featured')
         }),
         ('Descrições', {
             'fields': ('short_description', 'full_description', 'usage_tips', 'application_text')

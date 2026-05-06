@@ -1,8 +1,10 @@
-import os, django
+import os
+import django
+import urllib.request
+import json
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 django.setup()
-
-import urllib.request, json
 
 endpoints = [
     '/api/products/',

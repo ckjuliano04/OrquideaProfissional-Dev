@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { fetchAPI } from '@/services/api';
+import { normalizeTrainingList } from '@/services/normalizers';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
+import { TrainingSkeleton } from '@/components/ui/Skeleton';
 
 export default function TreinamentosPage() {
   const { isAuthenticated, loading: authLoading } = useAuth();
@@ -21,7 +23,7 @@ export default function TreinamentosPage() {
 
     fetchAPI('/portal/training/')
       .then(data => {
-        setMaterials(data);
+        setMaterials(normalizeTrainingList(data));
         setError(null);
       })
       .catch(err => {
@@ -33,10 +35,19 @@ export default function TreinamentosPage() {
 
   if (loading || authLoading) {
     return (
-      <div className="flex-grow flex items-center justify-center bg-slate-50 min-h-[60vh]">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="w-12 h-12 border-4 border-orquidea-green border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-slate-500 font-medium">Carregando treinamentos...</p>
+      <div className="flex-grow bg-slate-50 pb-20">
+        <div className="bg-orquidea-tech text-white py-16 relative overflow-hidden">
+          <div className="container mx-auto px-4 animate-pulse">
+            <div className="h-12 w-64 bg-white/10 rounded-xl mb-4" />
+            <div className="h-6 w-96 bg-white/10 rounded-lg" />
+          </div>
+        </div>
+        <div className="container mx-auto px-4 mt-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <TrainingSkeleton key={i} />
+            ))}
+          </div>
         </div>
       </div>
     );

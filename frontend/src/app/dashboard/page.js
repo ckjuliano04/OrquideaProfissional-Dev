@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
+import { PageSkeleton } from '@/components/ui/Skeleton';
 
 export default function DashboardPage() {
   const { user, logout, loading } = useAuth();
@@ -15,7 +16,7 @@ export default function DashboardPage() {
     }
   }, [user, loading, router]);
 
-  if (loading) return <div className="p-8 text-center">Carregando...</div>;
+  if (loading) return <PageSkeleton />;
   if (!user) return null;
 
   return (

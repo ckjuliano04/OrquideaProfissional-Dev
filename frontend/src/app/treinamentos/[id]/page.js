@@ -2,8 +2,10 @@
 
 import { useState, useEffect, use } from 'react';
 import { fetchAPI } from '@/services/api';
+import { normalizeTrainingDetail } from '@/services/normalizers';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
+import { TrainingDetailSkeleton } from '@/components/ui/Skeleton';
 
 export default function TreinamentoDetailPage({ params }) {
   const resolvedParams = use(params);
@@ -23,7 +25,7 @@ export default function TreinamentoDetailPage({ params }) {
 
     fetchAPI(`/portal/training/${id}/`)
       .then(data => {
-        setMaterial(data);
+        setMaterial(normalizeTrainingDetail(data));
         setError(null);
       })
       .catch(err => {
@@ -34,14 +36,7 @@ export default function TreinamentoDetailPage({ params }) {
   }, [id, isAuthenticated, authLoading]);
 
   if (loading || authLoading) {
-    return (
-      <div className="flex-grow flex items-center justify-center bg-slate-50 min-h-[60vh]">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="w-12 h-12 border-4 border-orquidea-green border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-slate-500 font-medium">Carregando conteúdo...</p>
-        </div>
-      </div>
-    );
+    return <TrainingDetailSkeleton />;
   }
 
   if (!isAuthenticated) {
@@ -91,9 +86,18 @@ export default function TreinamentoDetailPage({ params }) {
           <h1 className="text-3xl md:text-5xl font-extrabold text-slate-900 mb-6 leading-tight">
             {material.title}
           </h1>
-          <p className="text-lg text-slate-600 leading-relaxed max-w-3xl">
+          <p className="text-lg text-slate-600 leading-relaxed max-w-3xl mb-8">
             {material.description}
           </p>
+
+          {/* Conteúdo Adicional */}
+          {material.content && (
+            <div className="bg-slate-50 border-l-4 border-orquidea-green p-6 rounded-r-2xl max-w-3xl">
+              <div className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                {material.content}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -116,8 +120,19 @@ export default function TreinamentoDetailPage({ params }) {
                 <div className="space-y-6">
                   {material.videos.map(video => (
                     <div key={video.id} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-200">
-                      {/* Embed Responsivo Simples para Youtube/Vimeo (Exemplo de uso de iframe) */}
-                      {video.video_url.includes('youtube.com') || video.video_url.includes('youtu.be') ? (
+                      {/* Prioridade para Vídeo Nativo (Upload) */}
+                      {video.video_file ? (
+                        <div className="relative bg-black aspect-video">
+                          <video 
+                            controls 
+                            className="w-full h-full"
+                            poster="/logos/OrquideaProfissional_Logo_Transparente.png"
+                          >
+                            <source src={video.video_file} type="video/mp4" />
+                            Seu navegador não suporta a reprodução de vídeos.
+                          </video>
+                        </div>
+                      ) : video.video_url && (video.video_url.includes('youtube.com') || video.video_url.includes('youtu.be')) ? (
                         <div className="relative pt-[56.25%] bg-slate-900">
                           <iframe 
                             className="absolute top-0 left-0 w-full h-full"
@@ -161,7 +176,7 @@ export default function TreinamentoDetailPage({ params }) {
                     {material.files.map(file => (
                       <li key={file.id}>
                         <a 
-                          href={file.upload} 
+                          href={file.file_upload} 
                           target="_blank" 
                           rel="noopener noreferrer" 
                           className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors border border-slate-100 group"

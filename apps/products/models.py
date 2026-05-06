@@ -139,3 +139,81 @@ class ProductRoleContents(models.Model):
 
     def __str__(self):
         return f"Regra para {self.product.name}"
+
+class ProductNutrition(models.Model):
+    """Cabeçalho da Tabela Nutricional"""
+    product = models.OneToOneField(Products, on_delete=models.CASCADE, related_name="nutrition", verbose_name="Produto", null=True, blank=True, db_constraint=False)
+    serving_size = models.CharField(max_length=100, verbose_name="Porção (ex: 50g)", blank=True, null=True)
+    household_measure = models.CharField(max_length=100, verbose_name="Medida Caseira (ex: 1/2 xícara)", blank=True, null=True)
+    portions_per_package = models.CharField(max_length=50, verbose_name="Porções por Embalagem", blank=True, null=True)
+    footer_note = models.TextField(verbose_name="Nota de Rodapé", blank=True, null=True, help_text="Ex: *% Valores Diários com base em uma dieta de 2.000 kcal...")
+    
+    # Novos campos dinâmicos para colunas (Até 5)
+    COLUMN_CHOICES = [
+        (1, '1 Coluna'),
+        (2, '2 Colunas'),
+        (3, '3 Colunas'),
+        (4, '4 Colunas'),
+        (5, '5 Colunas'),
+    ]
+    column_count = models.IntegerField(choices=COLUMN_CHOICES, default=3, verbose_name="Número de Colunas no Site")
+    col_1_label = models.CharField(max_length=50, default="Valor por 100g", verbose_name="Título Coluna 1")
+    col_2_label = models.CharField(max_length=50, default="Valor por Porção", verbose_name="Título Coluna 2")
+    col_3_label = models.CharField(max_length=50, default="% VD", verbose_name="Título Coluna 3")
+    col_4_label = models.CharField(max_length=50, default="Extra 1", verbose_name="Título Coluna 4", blank=True, null=True)
+    col_5_label = models.CharField(max_length=50, default="Extra 2", verbose_name="Título Coluna 5", blank=True, null=True)
+
+    class Meta:
+        managed = True 
+        db_table = "product_nutrition"
+        verbose_name = "Cabeçalho da Tabela Nutricional"
+
+
+class ProductNutritionRow(models.Model):
+    """Linhas da Tabela Nutricional"""
+    product = models.ForeignKey(Products, on_delete=models.CASCADE, related_name="nutrition_rows", verbose_name="Produto", null=True, blank=True, db_constraint=False)
+    label = models.CharField(max_length=100, verbose_name="Nutriente (ex: Carboidratos)")
+    value_100g = models.CharField(max_length=50, verbose_name="Valor Coluna 1", blank=True, null=True)
+    value_serving = models.CharField(max_length=50, verbose_name="Valor Coluna 2", blank=True, null=True)
+    vd_percentage = models.CharField(max_length=10, verbose_name="Valor Coluna 3", blank=True, null=True)
+    value_4 = models.CharField(max_length=50, verbose_name="Valor Coluna 4", blank=True, null=True)
+    value_5 = models.CharField(max_length=50, verbose_name="Valor Coluna 5", blank=True, null=True)
+    sort_order = models.IntegerField(default=0, verbose_name="Ordem")
+
+    class Meta:
+        managed = True
+        db_table = "product_nutrition_rows"
+        verbose_name = "Linha da Tabela Nutricional"
+        ordering = ['sort_order']
+
+    def __str__(self):
+        return self.label
+
+# Signal para pré-preencher as linhas fixas
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=ProductNutrition)
+def create_default_nutrition_rows(sender, instance, created, **kwargs):
+    if created:
+        default_rows = [
+            (1, "Valor energético (kcal)"),
+            (2, "Carboidratos (g)"),
+            (3, "Açúcares totais (g)"),
+            (4, "Açúcares adicionados (g)"),
+            (5, "Proteínas (g)"),
+            (6, "Gorduras totais (g)"),
+            (7, "Gorduras saturadas (g)"),
+            (8, "Gorduras trans (g)"),
+            (9, "Fibras alimentares (g)"),
+            (10, "Sódio (mg)"),
+        ]
+        for order, label in default_rows:
+            ProductNutritionRow.objects.create(
+                product=instance.product,
+                label=label,
+                sort_order=order
+            )
+
+    def __str__(self):
+        return self.label

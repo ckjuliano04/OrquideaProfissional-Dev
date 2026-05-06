@@ -1,0 +1,35 @@
+# Usa uma imagem oficial do Python slim (leve)
+FROM python:3.11-slim
+
+# Evita que o Python gere arquivos .pyc e permite logs em tempo real
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# Define o diretório de trabalho
+WORKDIR /app
+
+# Instala dependências do sistema e o Driver ODBC para SQL Server (Essencial para o projeto)
+RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg \
+    unixodbc-dev \
+    build-essential \
+    && curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
+    && curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && ACCEPT_EULA=Y apt-get install -y msodbcsql18 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Instala as dependências do Python
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install gunicorn
+
+# Copia o restante do código
+COPY . .
+
+# Expõe a porta que o Gunicorn vai rodar
+EXPOSE 8000
+
+# Comando para iniciar o servidor em produção
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "core.wsgi:application"]

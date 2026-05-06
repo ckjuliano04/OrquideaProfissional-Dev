@@ -19,6 +19,22 @@ from dotenv import load_dotenv
 # Carrega as variáveis de ambiente do .env
 load_dotenv()
 
+try:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+
+    SENTRY_DSN = os.getenv("SENTRY_DSN")
+    if SENTRY_DSN:
+        sentry_sdk.init(
+            dsn=SENTRY_DSN,
+            integrations=[DjangoIntegration()],
+            traces_sample_rate=1.0,
+            send_default_pii=True
+        )
+except ImportError:
+    # Sentry não está instalado, ignora silenciosamente
+    pass
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -181,6 +197,15 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "100/day",     # Visitantes anônimos: 100 requisições por dia
+        "user": "1000/day",    # Usuários logados: 1000 por dia
+        "burst": "60/min",     # Limite de segurança para rajadas
+    },
 }
 
 SIMPLE_JWT = {

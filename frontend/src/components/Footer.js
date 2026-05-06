@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -11,9 +12,11 @@ export default function Footer() {
           {/* Brand */}
           <div className="md:col-span-2">
             <div className="mb-6">
-              <img 
+              <Image 
                 src="/logos/OrquideaProfissional_Logo_Transparente.png" 
                 alt="Orquídea Profissional" 
+                width={160}
+                height={64}
                 className="h-16 w-auto object-contain filter drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]"
               />
             </div>

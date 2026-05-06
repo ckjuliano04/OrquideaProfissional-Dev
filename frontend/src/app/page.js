@@ -1,6 +1,9 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import FlourParticles from '@/components/FlourParticles';
 import ScrollReveal from '@/components/ui/ScrollReveal';
+import SliceReveal from '@/components/SliceReveal';
+import { normalizeHomeData } from '@/services/normalizers';
 
 export default async function Home() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
@@ -15,69 +18,63 @@ export default async function Home() {
     console.error("Erro ao carregar dados do CMS:", error);
   }
 
-  const data = cmsData || {
-    hero_title: "Excelência Técnica e Prática",
-    hero_subtitle: "Bem-vindo à plataforma definitiva para profissionais de panificação, confeitaria e culinária. Acesse o maior acervo técnico da Orquídea Alimentos.",
-    about_title: "Tradição e Qualidade desde o início",
-    about_text1: "A Orquídea Alimentos atua com excelência no mercado, fornecendo produtos de alta qualidade para profissionais e consumidores. Nossa história é marcada por inovação, respeito às tradições e um compromisso inabalável com a qualidade.",
-    about_text2: "Contamos com diversas unidades estruturadas com a mais alta tecnologia para garantir que o melhor produto chegue até o seu negócio.",
-    about_stat1_title: "+60 Anos",
-    about_stat1_desc: "de tradição no mercado",
-    about_stat2_title: "Alta Tecnologia",
-    about_stat2_desc: "nas unidades produtivas",
-    where_to_buy_title: "Onde Comprar",
-    where_to_buy_text: "Nossos produtos profissionais estão disponíveis nos melhores distribuidores e atacadistas da sua região.",
-    where_to_buy_phone: "0800 000 0000",
-    where_to_buy_hours: "Segunda a Sexta, das 08h às 18h",
-    tips: [
-      { id: 1, title: 'Como otimizar a fermentação na padaria', description: 'Aprenda dicas essenciais para garantir que seus pães cresçam de maneira uniforme.', link: '#', image_url: 'https://images.unsplash.com/photo-1556910103-1c02745a8050?auto=format&fit=crop&q=80&w=600' }
-    ],
-    brands: [
-      { id: 1, name: 'Marca Parceira 1', link: '#' }
-    ]
-  };
+  const data = normalizeHomeData(cmsData);
 
   return (
     <div className="flex-grow flex flex-col">
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-orquidea-night text-white">
-        <FlourParticles density={2800} opacity={0.6} />
-        <div className="absolute inset-0 z-0">
+        <FlourParticles opacity={0.6} />
+        <div className="absolute inset-0 z-0 pointer-events-none">
           <div className="absolute inset-0 bg-gradient-to-b from-orquidea-night/40 via-orquidea-night/80 to-orquidea-night z-10" />
         </div>
 
-        <div className="container mx-auto px-4 z-20 relative">
-          <div className="max-w-4xl">
+        <div className="container mx-auto px-4 z-20 relative text-center">
+          <div className="max-w-4xl mx-auto flex flex-col items-center">
             <ScrollReveal direction="down">
-              <div className="inline-flex items-center gap-2 px-5 py-2 bg-orquidea-gold/10 backdrop-blur-md border border-orquidea-gold/30 rounded-full text-orquidea-gold font-black text-[12px] mb-10 tracking-[0.2em] uppercase">
-                <span className="w-2.5 h-2.5 rounded-full bg-orquidea-gold animate-pulse"></span>
-                Portal do Profissional
-              </div>
-            </ScrollReveal>
-            
-            <ScrollReveal delay={0.2}>
-              <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-8 leading-[0.95]" 
-                dangerouslySetInnerHTML={{ __html: data.hero_title.replace('Técnica', '<span class="text-transparent bg-clip-text bg-gradient-to-r from-orquidea-cream via-orquidea-gold to-orquidea-cream">Técnica</span>') }} 
+              <Image 
+                src="/logos/OrquideaProfissional_Logo_Transparente.png" 
+                alt="Orquídea Profissional" 
+                width={320}
+                height={180}
+                priority
+                className="w-72 md:w-80 mb-6 drop-shadow-2xl"
+                style={{ height: 'auto' }}
               />
             </ScrollReveal>
             
+            <ScrollReveal delay={0.2}>
+              <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-8 leading-[0.95]">
+                {data.hero_title.split('Técnica').map((part, i, arr) => (
+                  <span key={i}>
+                    {part}
+                    {i < arr.length - 1 && (
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-orquidea-cream via-orquidea-gold to-orquidea-cream">
+                        Técnica
+                      </span>
+                    )}
+                  </span>
+                ))}
+              </h1>
+            </ScrollReveal>
+            
             <ScrollReveal delay={0.4}>
-              <p className="text-xl md:text-2xl text-orquidea-cream/80 mb-12 max-w-2xl leading-relaxed font-medium">
+              <p className="text-xl md:text-2xl text-orquidea-cream/80 mb-12 max-w-2xl leading-relaxed font-medium mx-auto">
                 {data.hero_subtitle}
               </p>
             </ScrollReveal>
             
             <ScrollReveal delay={0.6} direction="up">
-              <div className="flex flex-col sm:flex-row gap-6">
+              <div className="flex flex-col sm:flex-row gap-6 justify-center w-full">
                 <Link 
                   href="/login" 
-                  className="px-10 py-5 bg-orquidea-red hover:bg-red-700 text-white font-black rounded-2xl transition-all shadow-2xl shadow-orquidea-red/20 hover:shadow-orquidea-red/40 hover:-translate-y-1 text-center text-lg uppercase tracking-wider"
+                  className="px-10 py-5 bg-orquidea-red hover:bg-red-700 text-white font-black rounded-2xl transition-all shadow-2xl shadow-orquidea-red/20 hover:shadow-orquidea-red/40 hover:-translate-y-1 text-center text-lg uppercase tracking-wider min-w-[260px]"
                 >
                   Acessar Portal Restrito
                 </Link>
                 <Link 
                   href="/catalogo" 
-                  className="px-10 py-5 bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/20 text-white font-black rounded-2xl transition-all text-center text-lg uppercase tracking-wider"
+                  className="px-10 py-5 bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/20 text-white font-black rounded-2xl transition-all text-center text-lg uppercase tracking-wider min-w-[260px]"
                 >
                   Explorar Catálogo
                 </Link>
@@ -94,9 +91,11 @@ export default async function Home() {
             <div className="w-full lg:w-1/2">
               <ScrollReveal direction="left">
                 <div className="aspect-[4/3] bg-slate-200 rounded-[3rem] overflow-hidden relative shadow-2xl border-8 border-white group">
-                  <img 
-                    src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80" 
+                  <Image 
+                    src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=800" 
                     alt="Nossa História" 
+                    width={800}
+                    height={600}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-orquidea-green/20 mix-blend-multiply opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -128,6 +127,9 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Slice Animation Section */}
+      <SliceReveal />
+
       {/* DICAS */}
       <section id="dicas" className="py-32 bg-white scroll-mt-20">
         <div className="container mx-auto px-4 max-w-6xl text-center">
@@ -141,7 +143,7 @@ export default async function Home() {
               <ScrollReveal key={tip.id} delay={index * 0.2}>
                 <div className="group bg-slate-50 rounded-[2.5rem] overflow-hidden border border-slate-100 hover:bg-white hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col h-full">
                   <div className="h-64 overflow-hidden relative">
-                    <img src={tip.image_url} alt={tip.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <Image src={tip.image_url} alt={tip.title} width={600} height={400} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                     <div className="absolute top-6 left-6 px-4 py-2 bg-white/90 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest text-orquidea-green shadow-sm">
                       Técnico
                     </div>
@@ -188,8 +190,8 @@ export default async function Home() {
 
       {/* ONDE COMPRAR */}
       <section id="onde-comprar" className="py-24 bg-orquidea-night text-white scroll-mt-16 relative overflow-hidden">
-        <FlourParticles density={2000} opacity={0.5} />
-        <div className="absolute inset-0 bg-orquidea-green/5 mix-blend-overlay z-0" />
+        <FlourParticles opacity={0.5} />
+        <div className="absolute inset-0 bg-orquidea-green/5 mix-blend-overlay z-0 pointer-events-none" />
         <div className="container mx-auto px-4 max-w-4xl text-center relative z-10">
           <h2 className="text-3xl md:text-4xl font-extrabold mb-6">{data.where_to_buy_title}</h2>
           <p className="text-slate-300 text-lg mb-8 leading-relaxed">

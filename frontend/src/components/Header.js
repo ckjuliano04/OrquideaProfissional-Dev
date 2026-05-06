@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
@@ -22,7 +23,7 @@ export default function Header() {
   }, []);
 
   const navLinks = [
-    { href: '/#quem-somos', label: 'Nossa História' },
+    { href: '/nossa-historia', label: 'Nossa História' },
     { href: '/catalogo', label: 'Produtos' },
     { href: '/#dicas', label: 'Dicas' },
     { href: '/onde-comprar', label: 'Onde comprar' },
@@ -49,10 +50,13 @@ export default function Header() {
       <div className="container mx-auto px-4 h-full flex items-center justify-between transition-all duration-500">
         {/* Logo - Apenas a logo limpa com sombra de destaque */}
         <Link href="/" className="flex items-center group h-full py-2">
-          <img 
+          <Image 
             src="/logos/OrquideaProfissional_Logo_Transparente.png" 
             alt="Orquídea Profissional" 
-            className={`transition-all duration-500 group-hover:scale-110 filter drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]
+            width={200}
+            height={112}
+            priority
+            className={`transition-all duration-500 group-hover:scale-110 filter drop-shadow-[0_0_8px_rgba(255,255,255,0.4)] w-auto
               ${isScrolled ? 'h-14 md:h-16' : 'h-20 md:h-28'}
             `}
           />
