@@ -42,7 +42,7 @@ class ProductFilesSerializer(serializers.ModelSerializer):
 class ProductCategoriesSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductCategories
-        fields = ["id", "name", "parent", "description", "sort_order"]
+        fields = ["id", "name", "parent", "is_main_category", "description", "sort_order"]
 
 
 class ProductsListSerializer(serializers.ModelSerializer):

@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 @theme {
-  --color-orquidea-green: #006437; /* Verde Identidade */
+  --color-orquidea-green: #007a44; /* Verde Identidade (Ajustado para ser mais claro) */
   --color-orquidea-gold: #c5a059; /* Destaque Ouro */
   --color-orquidea-red: #e31e24; /* Vermelho Ação Primária */
   --color-orquidea-cream: #f2ede4; /* Fundo Creme para Catálogo */
   --color-orquidea-light: #e6f4ea; /* Verde Ultra Leve para BG */
 
   /* Variações de Área Restrita */
-  --color-orquidea-tech: #004d2a; /* Verde mais saturado/profundo */
+  --color-orquidea-tech: #005a32; /* Verde mais saturado/profundo (Ajustado) */
   --color-orquidea-seller: #1a7a4d; /* Verde mais aberto/vibrante */
-  --color-orquidea-night: #0a2118; /* Verde Floresta Noturno */
+  --color-orquidea-night: #0e2e22; /* Verde Floresta Noturno (Ajustado para ser mais claro) */
 
   /* Design Tokens */
   --radius-xs: 0.5rem;

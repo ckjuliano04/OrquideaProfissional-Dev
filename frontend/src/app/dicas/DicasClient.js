@@ -19,9 +19,6 @@ export default function DicasClient({ initialTips }) {
       tip.summary.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const featuredTip = filteredTips[0];
-  const regularTips = filteredTips.slice(1);
-
   return (
     <div className="flex-grow flex flex-col bg-white selection:bg-orquidea-gold selection:text-orquidea-night">
       {/* Editorial Header */}
@@ -113,47 +110,8 @@ export default function DicasClient({ initialTips }) {
               </Button>
             </motion.div>
           ) : (
-            <div className="space-y-32">
-              {/* Featured Card */}
-              {!searchQuery && featuredTip && (
-                <motion.div
-                  initial={{ opacity: 0, y: 40 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="group relative h-[70vh] rounded-[4rem] overflow-hidden shadow-2xl border border-slate-100"
-                >
-                  <Image
-                    src={
-                      featuredTip.image ||
-                      "/images/placeholders/tip-placeholder.jpg"
-                    }
-                    alt={featuredTip.title}
-                    fill
-                    className="object-cover transition-transform duration-1000 group-hover:scale-105"
-                    sizes="100vw"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-orquidea-night via-orquidea-night/40 to-transparent" />
-
-                  <div className="absolute inset-x-0 bottom-0 p-12 md:p-20 flex flex-col items-start max-w-5xl">
-                    <Badge variant="gold" className="mb-8 px-6 py-2">
-                      Destaque da Edição
-                    </Badge>
-                    <h2 className="text-5xl md:text-7xl font-black text-white mb-8 font-serif leading-[0.95] tracking-tighter">
-                      {featuredTip.title}
-                    </h2>
-                    <p className="text-white/60 text-xl mb-10 max-w-2xl line-clamp-2 font-serif italic">
-                      {featuredTip.summary}
-                    </p>
-                    <Link href={`/dicas/${featuredTip.slug}`}>
-                      <button className="px-12 py-5 bg-white text-orquidea-night rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-4 hover:bg-orquidea-gold transition-all shadow-2xl">
-                        Ler Matéria Completa
-                        <ArrowRight size={18} />
-                      </button>
-                    </Link>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Regular Grid */}
+            <div className="space-y-16">
+              {/* Grid */}
               <motion.div
                 initial="hidden"
                 animate="visible"
@@ -162,7 +120,7 @@ export default function DicasClient({ initialTips }) {
                 }}
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16"
               >
-                {(searchQuery ? filteredTips : regularTips).map((tip) => (
+                {filteredTips.map((tip) => (
                   <motion.div
                     key={tip.id}
                     variants={{

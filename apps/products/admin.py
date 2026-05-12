@@ -141,11 +141,17 @@ class ProductNutritionRowInline(SortableTabularInline):
 
 @admin.register(ProductCategories)
 class ProductCategoriesAdmin(BaseCMSAdmin):
-    list_display = ("name", "parent", "is_active", "ações")
-    list_filter = ("parent", "is_active")
+    list_display = ("name", "parent", "is_main_category", "is_active", "ações")
+    list_filter = ("parent", "is_main_category", "is_active")
     search_fields = ("name",)
     ordering = ("name",)
-    fields = ("parent", "name", "description", "is_active")
+    fields = ("is_main_category", "parent", "name", "description", "is_active")
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "parent":
+            # Filtra para mostrar apenas categorias que foram marcadas como 'Mãe'
+            kwargs["queryset"] = ProductCategories.objects.filter(is_main_category=True)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 class ProductTipsInline(admin.TabularInline):

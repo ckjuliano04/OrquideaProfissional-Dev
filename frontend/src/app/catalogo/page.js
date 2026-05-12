@@ -47,11 +47,11 @@ export default function CatalogoPage() {
   }, [activeCategory, searchQuery]);
 
   const mainDivisions = categories
-    .filter((c) => !c.parent)
+    .filter((c) => c.is_main_category)
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const subcategories = categories
-    .filter((c) => c.parent)
+    .filter((c) => !c.is_main_category && c.parent)
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const filteredProducts = products
@@ -94,7 +94,7 @@ export default function CatalogoPage() {
           setDrawerOpen(false);
         }}
         className={cn(
-          "text-left px-4 py-3 rounded-xl text-sm font-bold transition-all",
+          "text-left px-4 py-3 rounded-xl text-sm font-bold transition-all mb-2",
           activeCategory.type === "all"
             ? "bg-orquidea-green text-white shadow-lg shadow-orquidea-green/20"
             : "text-slate-600 hover:bg-slate-50",

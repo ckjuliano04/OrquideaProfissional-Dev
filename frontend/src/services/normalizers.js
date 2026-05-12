@@ -102,6 +102,7 @@ export function normalizeCategories(raw) {
     id: c.id ?? 0,
     name: c.name ?? "Categoria",
     parent: c.parent ?? null,
+    is_main_category: c.is_main_category ?? false,
     description: c.description ?? "",
     sort_order: c.sort_order ?? 0,
   }));

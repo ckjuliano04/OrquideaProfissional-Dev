@@ -61,8 +61,8 @@ export default function Footer() {
       <div className="container mx-auto px-4 py-20">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-20">
           {/* Brand */}
-          <div className="md:col-span-5">
-            <div className="mb-8">
+          <div className="md:col-span-5 flex flex-col items-center md:items-start text-center md:text-left">
+            <div className="mb-8 flex justify-center md:justify-start w-full">
               <Image
                 src="/logos/OrquideaProfissional_Logo_Transparente.png"
                 alt="Orquídea Profissional"
@@ -76,7 +76,7 @@ export default function Footer() {
               conecta especialistas e parceiros através de conhecimento e
               qualidade superior.
             </p>
-            <div className="flex gap-5 mt-10">
+            <div className="flex justify-center md:justify-start gap-5 mt-10">
               <a
                 href="#"
                 className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-orquidea-green hover:text-white transition-all duration-300"

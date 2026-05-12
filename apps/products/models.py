@@ -19,6 +19,7 @@ class ProductCategories(models.Model):
         max_length=255, db_collation="Latin1_General_CI_AS", blank=True, null=True
     )
     is_active = models.BooleanField()
+    is_main_category = models.BooleanField(default=False, verbose_name="É Categoria Mãe?")
     sort_order = models.IntegerField(default=0)
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField(blank=True, null=True)
