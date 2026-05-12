@@ -109,6 +109,8 @@ class Roles(models.Model):
     class Meta:
         managed = False
         db_table = "roles"
+        verbose_name = "Grupo"
+        verbose_name_plural = "Grupos"
 
     def __str__(self):
         return self.name

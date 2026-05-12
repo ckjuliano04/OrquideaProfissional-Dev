@@ -41,9 +41,14 @@ const Tab = ({ children, setPosition, href }) => {
           left: ref.current.offsetLeft,
         });
       }}
-      className="relative z-10 block cursor-pointer px-3 py-1.5 text-xs font-black uppercase text-orquidea-cream mix-blend-difference lg:px-5 lg:py-2 lg:text-sm transition-all duration-300"
+      className="relative z-10"
     >
-      <Link href={href}>{children}</Link>
+      <Link 
+        href={href} 
+        className="block px-3 py-1.5 text-xs font-black uppercase text-orquidea-cream mix-blend-difference lg:px-6 lg:py-3 lg:text-sm transition-all duration-300 outline-none"
+      >
+        {children}
+      </Link>
     </li>
   );
 };
@@ -52,7 +57,7 @@ const Cursor = ({ position }) => {
   return (
     <motion.li
       animate={position}
-      className="absolute z-0 h-7 rounded-full bg-orquidea-cream lg:h-9"
+      className="absolute z-0 h-8 rounded-full bg-orquidea-cream lg:h-11"
     />
   );
 };

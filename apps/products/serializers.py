@@ -1,4 +1,7 @@
+from django.db.models import Q
 from rest_framework import serializers
+
+from apps.users.models import UserRoles
 from .models import Products, ProductCategories, ProductImages, ProductFiles, ProductNutrition, ProductNutritionRow
 
 
@@ -67,11 +70,22 @@ class ProductNutritionSerializer(serializers.ModelSerializer):
         fields = ['serving_size', 'household_measure', 'portions_per_package', 'footer_note', 
                   'column_count', 'col_1_label', 'col_2_label', 'col_3_label', 'col_4_label', 'col_5_label']
 
-class ProductsDetailSerializer(serializers.ModelSerializer):
-    image_url = serializers.SerializerMethodField()
-    category_name = serializers.CharField(source="category.name", read_only=True)
+class ProductsDetailSerializer(ProductsListSerializer):
+    """
+    Representação pública do detalhe do produto. 
+    Limitada a campos seguros para catálogo pois o ProductDetailView permite acesso anônimo.
+    """
+    class Meta(ProductsListSerializer.Meta):
+        fields = ProductsListSerializer.Meta.fields + ["full_description"]
+
+
+class PortalProductDetailSerializer(ProductsListSerializer):
+    """
+    Representação completa do produto para o Portal Restrito.
+    Inclui dados técnicos, arquivos, nutrição e logística.
+    """
     images = ProductImagesSerializer(many=True, read_only=True)
-    files = ProductFilesSerializer(many=True, read_only=True)
+    files = serializers.SerializerMethodField()
     nutrition = ProductNutritionSerializer(read_only=True)
     nutrition_rows = ProductNutritionRowSerializer(many=True, read_only=True)
 
@@ -84,15 +98,21 @@ class ProductsDetailSerializer(serializers.ModelSerializer):
             "category", "category_name", "images", "files", "nutrition", "nutrition_rows"
         ]
 
-    def get_image_url(self, obj):
-        if not obj.image_url:
-            return None
+    def get_files(self, obj):
+        files = obj.files.all().order_by("sort_order")
         request = self.context.get('request')
-        if request is not None:
-            return request.build_absolute_uri(obj.image_url.url)
-        return obj.image_url.url
+        user = getattr(request, 'user', None)
 
-
-class PortalProductDetailSerializer(ProductsDetailSerializer):
-    class Meta(ProductsDetailSerializer.Meta):
-        pass
+        if not user or not user.is_authenticated:
+            # Visitantes não logados: apenas arquivos públicos (sem papel definido)
+            files = files.filter(role__isnull=True)
+        elif user.user_type not in ['admin', 'interno']:
+            # Usuários comuns: arquivos públicos + arquivos específicos do seu papel
+            role_ids = UserRoles.objects.filter(user=user).values_list('role_id', flat=True)
+            files = files.filter(
+                Q(role__isnull=True)
+                | Q(role_id__in=role_ids)
+            ).distinct()
+        
+        # Se for admin/interno, o filtro acima é ignorado e ele vê todos os arquivos
+        return ProductFilesSerializer(files, many=True, context=self.context).data

@@ -1,6 +1,6 @@
-from rest_framework import generics
-from .models import Stores
-from .serializers import StoreListSerializer
+from rest_framework import generics, permissions
+from .models import Stores, Tips
+from .serializers import StoreListSerializer, TipSerializer
 
 class StoreListView(generics.ListAPIView):
     """
@@ -8,4 +8,12 @@ class StoreListView(generics.ListAPIView):
     """
     queryset = Stores.objects.filter(is_active=True).order_by('sort_order')
     serializer_class = StoreListSerializer
-    permission_classes = [] # Público
+    permission_classes = [permissions.AllowAny] # Público
+
+class TipListView(generics.ListAPIView):
+    """
+    Lista todas as dicas profissionais ativas.
+    """
+    queryset = Tips.objects.filter(is_active=True).order_by('-published_at')
+    serializer_class = TipSerializer
+    permission_classes = [permissions.AllowAny] # Público

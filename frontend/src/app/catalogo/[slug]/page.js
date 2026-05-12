@@ -53,15 +53,5 @@ export async function generateMetadata({ params }) {
 export default async function ProductDetailPage({ params }) {
   const { slug } = await params;
 
-  // Busca inicial no servidor para renderização rápida (SEO)
-  let product = null;
-  try {
-    const res = await fetch(`${API_URL}/products/${slug}/`, { next: { revalidate: 60 } });
-    if (res.ok) {
-      const raw = await res.json();
-      product = normalizeProductDetail(raw);
-    }
-  } catch (e) {}
-
-  return <ProductDetailClient product={product} slug={slug} />;
+  return <ProductDetailClient slug={slug} />;
 }

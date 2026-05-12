@@ -11,7 +11,9 @@ export default function Providers({ children }) {
       <ToastProvider>
         <div className="min-h-screen flex flex-col">
           <Header />
-          <main className="flex-grow pt-24 md:pt-28">{children}</main>
+          <main className="flex-grow">
+            {children}
+          </main>
           <Footer />
         </div>
       </ToastProvider>

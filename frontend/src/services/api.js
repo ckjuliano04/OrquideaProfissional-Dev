@@ -32,13 +32,13 @@ export async function fetchAPI(endpoint, options = {}) {
       // Redirecionamento pode ser gerido pelo contexto
     }
     
-    let errorMsg = 'Erro na requisição';
+    let errorMsg = `Erro ${response.status} em ${endpoint}`;
     try {
       const errorData = await response.json();
       errorMsg = errorData.detail || errorMsg;
     } catch(e) {}
     
-    throw new Error(errorMsg);
+    throw new Error(`${errorMsg} (${response.status})`);
   }
 
   if (response.status === 204) {

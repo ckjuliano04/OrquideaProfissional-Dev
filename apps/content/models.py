@@ -74,7 +74,7 @@ class Tips(models.Model):
     slug = models.CharField(unique=True, max_length=160, db_collation='Latin1_General_CI_AS', verbose_name="Slug (URL)")
     summary = models.CharField(max_length=500, db_collation='Latin1_General_CI_AS', blank=True, null=True, verbose_name="Resumo")
     content = models.TextField(db_collation='Latin1_General_CI_AS', verbose_name="Conteúdo Completo")
-    image_url = models.CharField(max_length=255, db_collation='Latin1_General_CI_AS', blank=True, null=True, verbose_name="URL da Imagem")
+    image = models.ImageField(upload_to='tips/', db_column='image_url', blank=True, null=True, verbose_name="Imagem de Capa")
     is_active = models.BooleanField(verbose_name="Ativo")
     published_at = models.DateTimeField(blank=True, null=True, verbose_name="Data de Publicação")
     created_at = models.DateTimeField()

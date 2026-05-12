@@ -30,25 +30,34 @@ class CustomTokenObtainSerializer(serializers.Serializer):
         email = attrs.get("email").strip().lower()
         password = attrs.get("password")
 
+        # Mensagem de erro genérica para evitar enumeração de contas
+        error_msg = "E-mail ou senha incorretos."
+
         try:
             user = Users.objects.get(email=email)
         except Users.DoesNotExist:
-            # Por segurança, usamos a mesma mensagem para usuário inexistente ou senha errada
-            raise serializers.ValidationError("E-mail ou senha incorretos.")
+            # Usuário não existe: executamos um check_password "fantasma" 
+            # para que o tempo de resposta seja similar ao de um usuário real.
+            # Usamos um hash fixo e inválido para isso.
+            import bcrypt
+            dummy_hash = b"$2b$12$K8M8vR5kXf4v.u.7p9.A.O.Y.O.Y.O.Y.O.Y.O.Y.O.Y.O.Y.O.Y."
+            bcrypt.checkpw(password.encode('utf-8'), dummy_hash)
+            raise serializers.ValidationError(error_msg)
 
-        if not user.is_active:
-            raise serializers.ValidationError("Esta conta está desativada. Entre em contato com o suporte.")
+        # Mesmo para usuários inativos, fazemos a checagem de senha primeiro
+        # para manter o tempo de resposta e depois falhamos com a mesma mensagem genérica.
+        is_password_valid = user.check_password(password)
 
-        if not user.check_password(password):
-            raise serializers.ValidationError("E-mail ou senha incorretos.")
+        if not user.is_active or not is_password_valid:
+            raise serializers.ValidationError(error_msg)
 
         # Gerar tokens JWT
         refresh = RefreshToken.for_user(user)
 
-        # Adicionar claims customizados ao token de acesso
+        # Adicionar claims customizados ao token de acesso (Sincronizado com AuthContext.js)
         refresh["email"] = user.email
-        refresh["full_name"] = user.full_name
-        refresh["user_type"] = user.user_type
+        refresh["name"] = user.full_name
+        refresh["role"] = user.user_type
 
         return {
             "refresh": str(refresh),
@@ -56,8 +65,8 @@ class CustomTokenObtainSerializer(serializers.Serializer):
             "user": {
                 "id": user.id,
                 "email": user.email,
-                "full_name": user.full_name,
-                "user_type": user.user_type,
+                "name": user.full_name,
+                "role": user.user_type,
             },
         }
 

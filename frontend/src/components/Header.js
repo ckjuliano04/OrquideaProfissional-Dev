@@ -6,6 +6,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import NavHeader from '@/components/ui/nav-header';
+import { Button } from '@/components/ui/Button';
+import { LogOut, Menu, X, User } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function Header() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -16,21 +19,20 @@ export default function Header() {
   // Detector de Scroll para efeito adaptativo
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      setIsScrolled(window.scrollY > 10);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const navLinks = [
-    { href: '/nossa-historia', label: 'Nossa História' },
+    { href: '/nossa-historia', label: 'História' },
     { href: '/catalogo', label: 'Produtos' },
-    { href: '/#dicas', label: 'Dicas' },
+    { href: '/dicas', label: 'Dicas' },
     { href: '/onde-comprar', label: 'Onde comprar' },
-    { href: '/#orquidea-alimentos', label: 'Orquídea Alimentos' },
     ...(isAuthenticated ? [
       { href: '/dashboard', label: 'Painel' },
-      { href: '/treinamentos', label: 'Treinamentos' },
+      ...(user?.role !== 'CLIENTE' ? [{ href: '/treinamentos', label: 'Treinos' }] : []),
     ] : []),
   ];
 
@@ -39,59 +41,69 @@ export default function Header() {
     return pathname.startsWith(href);
   };
 
+  const isTransparentPage = pathname === '/' || pathname === '/nossa-historia' || pathname.startsWith('/dicas');
+  const showSolid = isScrolled || !isTransparentPage;
+
   return (
     <header 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b 
-        ${isScrolled 
-          ? 'h-20 bg-orquidea-green/80 backdrop-blur-lg border-white/10 shadow-2xl' 
-          : 'h-24 md:h-28 bg-orquidea-green border-white/5 shadow-lg'
-        }`}
+      className={cn(
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-700",
+        showSolid 
+          ? "h-16 bg-orquidea-night/90 backdrop-blur-xl border-b border-white/10 shadow-2xl" 
+          : "h-24 bg-transparent border-b border-transparent"
+      )}
     >
-      <div className="container mx-auto px-4 h-full flex items-center justify-between transition-all duration-500">
-        {/* Logo - Apenas a logo limpa com sombra de destaque */}
-        <Link href="/" className="flex items-center group h-full py-2">
+      <div className="container mx-auto px-4 h-full flex items-center justify-between">
+        {/* Logo */}
+        <Link href="/" className="flex items-center group h-full py-2" aria-label="Orquídea Profissional Home">
           <Image 
             src="/logos/OrquideaProfissional_Logo_Transparente.png" 
             alt="Orquídea Profissional" 
-            width={200}
-            height={112}
+            width={220}
+            height={120}
             priority
-            className={`transition-all duration-500 group-hover:scale-110 filter drop-shadow-[0_0_8px_rgba(255,255,255,0.4)] w-auto
-              ${isScrolled ? 'h-14 md:h-16' : 'h-20 md:h-28'}
-            `}
+            className={cn(
+              "transition-all duration-700 group-hover:scale-105 filter drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] w-auto",
+              showSolid ? "h-10 md:h-12" : "h-16 md:h-20"
+            )}
           />
         </Link>
 
-        {/* Nav Desktop - Estilo Pílula Deslizante */}
-        <nav className="hidden md:block">
+        {/* Nav Desktop */}
+        <nav className="hidden xl:block" aria-label="Navegação Principal">
           <NavHeader items={navLinks} />
         </nav>
 
         {/* User Area Desktop */}
-        <div className="hidden md:flex items-center gap-4 border-l border-white/10 pl-6 ml-2">
+        <div className="hidden md:flex items-center gap-6">
           {isAuthenticated ? (
-            <>
-              <div className="text-right hidden lg:block text-orquidea-cream">
-                <p className="text-sm font-bold leading-tight">{user?.name}</p>
-                <p className="text-[10px] font-bold opacity-70 uppercase tracking-wider">{user?.role}</p>
+            <div className="flex items-center gap-4 pl-8 border-l border-white/10">
+              <div className="text-right hidden lg:block">
+                <p className="text-[10px] font-black text-white/40 leading-tight uppercase tracking-widest mb-0.5">{user?.role}</p>
+                <p className="text-sm font-black text-white leading-tight uppercase tracking-tight">{user?.name?.split(' ')[0]}</p>
               </div>
-              <div className="w-11 h-11 bg-white/10 rounded-full flex items-center justify-center text-white font-bold shadow-md border border-white/20">
-                {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+              <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-white border border-white/10 shadow-inner group relative overflow-hidden transition-all hover:border-orquidea-gold/50">
+                <User size={20} className="z-10 group-hover:text-orquidea-gold transition-colors" />
+                <div className="absolute inset-0 bg-orquidea-gold/10 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
               <button
                 onClick={logout}
-                className="p-2 text-orquidea-cream/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                className="p-3 text-white/40 hover:text-orquidea-red hover:bg-white/5 rounded-2xl transition-all focus:outline-none focus:ring-2 focus:ring-orquidea-red/50"
+                aria-label="Encerrar Sessão"
                 title="Sair"
               >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                <LogOut size={22} strokeWidth={2.5} />
               </button>
-            </>
+            </div>
           ) : (
-            <Link
-              href="/login"
-              className="px-6 py-3 bg-orquidea-red hover:bg-red-700 text-white text-sm font-black rounded-xl transition-all shadow-xl shadow-black/20 hover:-translate-y-1"
-            >
-              Área Restrita
+            <Link href="/login">
+              <Button 
+                variant={showSolid ? "destructive" : "glass"} 
+                size="xl" 
+                className="rounded-2xl px-10 font-black uppercase tracking-[0.15em] text-xs shadow-xl"
+              >
+                Área Restrita
+              </Button>
             </Link>
           )}
         </div>
@@ -99,70 +111,61 @@ export default function Header() {
         {/* Hamburger Mobile */}
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="md:hidden p-3 rounded-xl hover:bg-slate-100 transition-colors"
-          aria-label="Menu"
+          className="md:hidden p-2.5 rounded-xl bg-white/10 text-white border border-white/10 transition-colors active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50"
+          aria-label={mobileOpen ? "Fechar Menu" : "Abrir Menu"}
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-navigation"
         >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            {mobileOpen ? (
-              <>
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </>
-            ) : (
-              <>
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </>
-            )}
-          </svg>
+          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
-      {/* Mobile Menu */}
-      {mobileOpen && (
-        <div className="md:hidden border-t border-slate-100 bg-white/95 backdrop-blur-xl animate-in slide-in-from-top shadow-xl pb-4">
-          <nav className="container mx-auto px-4 py-4 flex flex-col gap-1">
-            {navLinks.map(link => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                className={`px-4 py-3 rounded-xl text-sm font-semibold transition-all
-                  ${isActive(link.href)
-                    ? 'bg-orquidea-green/10 text-orquidea-green'
-                    : 'text-slate-600 hover:bg-slate-50'
-                  }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-            <hr className="my-2 border-slate-100" />
+      {/* Mobile Menu Overlay */}
+      <div 
+        id="mobile-navigation"
+        className={cn(
+          "fixed inset-0 top-16 bg-orquidea-night/95 backdrop-blur-2xl transition-all duration-500 md:hidden",
+          mobileOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-full pointer-events-none"
+        )}
+      >
+        <nav className="container mx-auto px-6 py-12 flex flex-col gap-4" aria-label="Navegação Mobile">
+          {navLinks.map(link => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setMobileOpen(false)}
+              className={cn(
+                "text-2xl font-black uppercase tracking-tighter transition-all",
+                isActive(link.href) ? "text-orquidea-gold" : "text-white/60 hover:text-white"
+              )}
+            >
+              {link.label}
+            </Link>
+          ))}
+          
+          <div className="mt-8 pt-8 border-t border-white/10">
             {isAuthenticated ? (
-              <div className="flex items-center justify-between px-4 py-3">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-bold text-slate-900">{user?.name}</p>
-                  <p className="text-xs text-slate-400 capitalize">{user?.role}</p>
+                  <p className="text-sm font-black text-white uppercase tracking-widest">{user?.name}</p>
+                  <p className="text-xs text-orquidea-gold font-bold uppercase">{user?.role}</p>
                 </div>
-                <button
-                  onClick={() => { logout(); setMobileOpen(false); }}
-                  className="px-4 py-2 text-sm font-semibold text-red-500 hover:bg-red-50 rounded-lg"
-                >
+                <Button variant="destructive" size="sm" onClick={() => { logout(); setMobileOpen(false); }}>
                   Sair
-                </button>
+                </Button>
               </div>
             ) : (
-              <Link
-                href="/login"
-                onClick={() => setMobileOpen(false)}
-                className="mx-4 py-3 bg-orquidea-green text-white text-center text-sm font-bold rounded-xl"
-              >
-                Área Restrita
+              <Link href="/login" onClick={() => setMobileOpen(false)}>
+                <Button variant="destructive" className="w-full">
+                  Acessar Portal
+                </Button>
               </Link>
             )}
-          </nav>
-        </div>
-      )}
+          </div>
+        </nav>
+      </div>
     </header>
   );
 }
+
+

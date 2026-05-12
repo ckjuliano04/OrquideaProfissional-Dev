@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     # Terceiros
     "corsheaders",
     "rest_framework",
+    "adminsortable2",
     # Apps do projeto
     "apps.core_media",
     "apps.users",
@@ -108,6 +109,10 @@ WSGI_APPLICATION = "core.wsgi.application"
 # Banco de dados – MS SQL Server via variáveis de ambiente
 # ---------------------------------------------------------------------------
 
+# Configuração dinâmica de segurança para o Banco de Dados
+# Em produção (DEBUG=False), exigimos certificados válidos por padrão.
+db_trust_cert = os.getenv("DB_TRUST_CERT", str(DEBUG)).lower() in ("true", "1", "yes")
+
 DATABASES = {
     "default": {
         "ENGINE": "mssql",
@@ -118,7 +123,7 @@ DATABASES = {
         "PORT": os.getenv("DB_PORT", "1433"),
         "OPTIONS": {
             "driver": "ODBC Driver 18 for SQL Server",
-            "extra_params": "TrustServerCertificate=yes",
+            "extra_params": f"Encrypt=yes;TrustServerCertificate={'yes' if db_trust_cert else 'no'}",
         },
     }
 }
@@ -202,9 +207,10 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.UserRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
-        "anon": "100/day",     # Visitantes anônimos: 100 requisições por dia
-        "user": "1000/day",    # Usuários logados: 1000 por dia
-        "burst": "60/min",     # Limite de segurança para rajadas
+        "anon": "2000/day",     # Aumentado para evitar bloqueios em dev
+        "user": "5000/day",    # Usuários logados
+        "burst": "120/min",     # Limite de segurança para rajadas
+        "login": "10/min",      # Limite de tentativas de login por IP
     },
 }
 

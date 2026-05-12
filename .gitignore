@@ -12,3 +12,15 @@ __pycache__/
 db.sqlite3
 /static/
 /media/
+
+# Node / Next.js
+node_modules/
+.next/
+dist/
+build/
+
+# Temporary / QA Results
+agent/skills-external/playwright-skill/node_modules/
+agent/skills-external/playwright-skill/.temp-*
+*.png
+*.log

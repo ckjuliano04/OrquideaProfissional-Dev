@@ -1,4 +1,7 @@
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
 
 
 class ProductCategories(models.Model):
@@ -113,10 +116,10 @@ class ProductTips(models.Model):
         db_table = "product_tips"
         verbose_name = "Dica Vinculada"
         verbose_name_plural = "Dicas Vinculadas"
+        unique_together = (("product", "tip"),)
 
     def __str__(self):
         return f"Dica: {self.tip.title}"
-        unique_together = (("product", "tip"),)
 
 
 class ProductRoleContents(models.Model):
@@ -189,9 +192,6 @@ class ProductNutritionRow(models.Model):
     def __str__(self):
         return self.label
 
-# Signal para pré-preencher as linhas fixas
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 
 @receiver(post_save, sender=ProductNutrition)
 def create_default_nutrition_rows(sender, instance, created, **kwargs):
@@ -214,6 +214,3 @@ def create_default_nutrition_rows(sender, instance, created, **kwargs):
                 label=label,
                 sort_order=order
             )
-
-    def __str__(self):
-        return self.label

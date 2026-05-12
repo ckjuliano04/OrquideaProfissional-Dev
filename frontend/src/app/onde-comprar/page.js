@@ -2,6 +2,24 @@
 
 import { useState, useEffect } from 'react';
 import { fetchAPI } from '@/services/api';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  MapPin, 
+  Phone, 
+  Mail, 
+  Search, 
+  MessageCircle, 
+  ChevronRight, 
+  Globe,
+  Map,
+  Store,
+  Navigation
+} from 'lucide-react';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent } from '@/components/ui/Card';
+import FlourParticles from '@/components/FlourParticles';
+import { cn } from '@/lib/utils';
 
 export default function OndeComprarPage() {
   const [stores, setStores] = useState([]);
@@ -29,7 +47,7 @@ export default function OndeComprarPage() {
   }, []);
 
   const filteredStores = stores.filter(store => {
-    const matchState = store.state === activeState;
+    const matchState = store.state?.trim().toUpperCase() === activeState.trim().toUpperCase();
     const matchSearch = store.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                        (store.city && store.city.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchState && matchSearch;
@@ -63,111 +81,175 @@ export default function OndeComprarPage() {
     return phone;
   };
 
-  return (
-    <div className="flex-grow flex flex-col bg-orquidea-cream/20">
-      <div className="bg-orquidea-green text-white py-16 relative overflow-hidden">
-        <div className="container mx-auto px-4 relative z-10">
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">Onde <span className="text-orquidea-cream">Comprar</span></h1>
-          <p className="text-orquidea-cream/70 text-lg max-w-2xl font-medium">Encontre nossos fornecedores e vendedores autorizados por região.</p>
-        </div>
-      </div>
+  const fadeIn = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
+    transition: { duration: 0.5 }
+  };
 
-      <div className="container mx-auto px-4 py-12 flex-grow">
-        {/* Filtros e Busca */}
-        <div className="flex flex-col lg:flex-row justify-between items-center gap-8 mb-12">
-          {/* Abas de Estados */}
-          <div className="flex flex-wrap justify-center gap-2 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
+  return (
+    <div className="flex-grow flex flex-col bg-slate-50">
+      {/* Hero Section */}
+      <section className="relative pt-40 pb-20 bg-orquidea-night overflow-hidden">
+        <FlourParticles opacity={0.3} />
+        <div className="absolute inset-0 bg-gradient-to-b from-orquidea-night/50 to-orquidea-night z-0" />
+        
+        <div className="container mx-auto px-4 relative z-10 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <h1 className="text-5xl md:text-6xl font-black text-white mb-6 font-serif tracking-tight">Onde <span className="text-orquidea-gold">Comprar</span></h1>
+            <p className="text-orquidea-cream/60 text-lg md:text-xl max-w-2xl mx-auto font-serif italic">
+              Encontre nossos fornecedores e vendedores autorizados por região para garantir a melhor performance em sua produção.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      <div className="container mx-auto px-4 max-w-6xl -mt-10 relative z-20 pb-32">
+        {/* Filters and Search Bar Container */}
+        <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 p-6 md:p-10 mb-16 flex flex-col lg:flex-row items-center gap-8">
+          {/* State Tabs */}
+          <div className="flex flex-wrap justify-center lg:justify-start gap-2 flex-grow">
             {allowedStates.map(state => (
               <button
                 key={state.uf}
                 onClick={() => setActiveState(state.uf)}
-                className={`px-6 py-3 rounded-xl text-sm font-bold transition-all ${activeState === state.uf ? 'bg-orquidea-green text-white shadow-lg shadow-orquidea-green/20' : 'text-slate-500 hover:bg-slate-50'}`}
+                className={cn(
+                  "px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-[0.1em] transition-all duration-300 whitespace-nowrap",
+                  activeState === state.uf 
+                    ? "bg-orquidea-green text-white shadow-lg shadow-orquidea-green/20" 
+                    : "text-slate-500 hover:bg-slate-50 hover:text-orquidea-green"
+                )}
               >
-                {state.uf} - {state.name}
+                {state.uf} <span className="hidden sm:inline opacity-40 ml-1">| {state.name}</span>
               </button>
             ))}
           </div>
 
-          {/* Busca */}
-          <div className="w-full lg:w-96 relative">
+          {/* Search Field */}
+          <div className="w-full lg:w-[350px] relative">
+            <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Buscar por nome ou cidade..." 
+              placeholder="Nome ou cidade..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orquidea-green focus:border-transparent shadow-sm"
+              className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orquidea-green/20 focus:bg-white transition-all font-bold text-slate-900 placeholder:text-slate-400 text-sm"
             />
-            <svg className="w-6 h-6 text-slate-300 absolute left-4 top-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
           </div>
         </div>
 
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1,2,3].map(i => (
-              <div key={i} className="bg-white h-64 rounded-3xl animate-pulse border border-slate-100"></div>
-            ))}
-          </div>
-        ) : filteredStores.length === 0 ? (
-          <div className="bg-white rounded-3xl border border-slate-100 p-20 text-center shadow-sm">
-             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-200">
-                <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-             </div>
-             <h3 className="text-xl font-bold text-slate-900 mb-2">Nenhum resultado para {activeState}</h3>
-             <p className="text-slate-500">Tente ajustar sua busca ou selecionar outro estado.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredStores.map(store => {
-              const mapLink = getMapLink(store);
-              const waLink = getWhatsAppLink(store.contact_info);
-              
-              return (
-                <div key={store.id} className="bg-white rounded-[2.5rem] p-8 shadow-[0_4px_25px_rgb(0,0,0,0.03)] border border-slate-100 flex flex-col items-center text-center group hover:shadow-xl transition-all duration-500">
-                  <span className="text-orquidea-green font-bold text-sm mb-1">{store.city}</span>
-                  <h3 className="text-2xl font-black text-slate-900 mb-6 leading-tight">{store.title}</h3>
-                  
-                  <div className="space-y-2 mb-8 text-slate-500 text-sm font-medium">
-                    <p className="uppercase tracking-wide">{store.address_text || 'Consultar endereço'}</p>
-                    <p>{formatPhone(store.contact_info)}</p>
-                    <p className="lowercase">{store.email || 'sem@email.com.br'}</p>
-                  </div>
+        {/* Results Grid */}
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div 
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            >
+              {[1,2,3].map(i => (
+                <div key={i} className="bg-white h-80 rounded-3xl animate-pulse border border-slate-100" />
+              ))}
+            </motion.div>
+          ) : filteredStores.length === 0 ? (
+            <motion.div 
+              key="empty"
+              {...fadeIn}
+              className="bg-white rounded-[3rem] border border-slate-100 p-20 text-center shadow-xl max-w-xl mx-auto"
+            >
+              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-8 text-slate-300">
+                <Store size={32} />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 mb-4 font-serif">Nenhum parceiro encontrado</h3>
+              <p className="text-slate-500 mb-8 leading-relaxed">
+                Tente ajustar sua busca para <span className="font-bold text-orquidea-green">{activeState}</span> ou selecione outro estado.
+              </p>
+              <Button variant="outline" onClick={() => {setSearchQuery(''); setActiveState('RS');}}>
+                Ver todos os parceiros
+              </Button>
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="grid"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                visible: { transition: { staggerChildren: 0.1 } }
+              }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            >
+              {filteredStores.map(store => (
+                <motion.div
+                  key={store.id}
+                  variants={{
+                    hidden: { opacity: 0, y: 20 },
+                    visible: { opacity: 1, y: 0 }
+                  }}
+                >
+                  <Card className="h-full border-none shadow-lg hover:shadow-2xl transition-all duration-500 rounded-[2.5rem] overflow-hidden bg-white">
+                    <CardContent className="p-8 md:p-10 flex flex-col h-full">
+                      <div className="flex items-center gap-2 mb-6">
+                        <Badge variant="tech" className="px-3 py-1 rounded-lg flex items-center gap-2">
+                          <MapPin size={12} />
+                          {store.city}
+                        </Badge>
+                      </div>
+                      
+                      <h3 className="text-2xl font-black text-slate-900 mb-8 leading-tight font-serif flex-grow">{store.title}</h3>
+                      
+                      <div className="space-y-5 mb-10">
+                        <div className="flex items-start gap-4">
+                          <Navigation size={18} className="text-orquidea-gold mt-1 flex-shrink-0" />
+                          <p className="text-sm font-bold text-slate-600 uppercase tracking-tight leading-snug">{store.address_text || 'Endereço sob consulta'}</p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <Phone size={18} className="text-orquidea-gold flex-shrink-0" />
+                          <p className="text-sm font-bold text-slate-600">{formatPhone(store.contact_info)}</p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <Mail size={18} className="text-orquidea-gold flex-shrink-0" />
+                          <p className="text-sm font-bold text-slate-600 truncate lowercase">{store.email || 'contato@parceiro.com'}</p>
+                        </div>
+                      </div>
 
-                  <div className="flex flex-col w-full gap-3">
-                    {mapLink && (
-                      <a 
-                        href={mapLink} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-3 bg-orquidea-green hover:bg-orquidea-tech text-white px-6 py-4 rounded-full font-bold shadow-lg shadow-orquidea-green/20 transition-all hover:-translate-y-1 w-full"
-                      >
-                        + VER MAPA
-                        <div className="w-6 h-6 bg-orquidea-tech/50 rounded-full flex items-center justify-center">
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
-                        </div>
-                      </a>
-                    )}
-                    
-                    {waLink && (
-                      <a 
-                        href={waLink} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-3 bg-green-600 hover:bg-green-700 text-white px-6 py-4 rounded-full font-bold shadow-lg shadow-green-200 transition-all hover:-translate-y-1 w-full"
-                      >
-                        WHATSAPP
-                        <div className="w-6 h-6 bg-black/10 rounded-full flex items-center justify-center">
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
-                        </div>
-                      </a>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                      <div className="flex flex-col gap-3 mt-auto">
+                        {getMapLink(store) && (
+                          <a 
+                            href={getMapLink(store)} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="flex items-center justify-center gap-3 bg-orquidea-green hover:bg-orquidea-night text-white px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-orquidea-green/20 transition-all duration-300"
+                          >
+                            Ver Localização
+                            <ChevronRight size={16} />
+                          </a>
+                        )}
+                        
+                        {getWhatsAppLink(store.contact_info) && (
+                          <a 
+                            href={getWhatsAppLink(store.contact_info)} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="flex items-center justify-center gap-3 bg-green-500 hover:bg-green-600 text-white px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-green-100 transition-all duration-300"
+                          >
+                            <MessageCircle size={18} />
+                            WhatsApp
+                          </a>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

@@ -80,11 +80,13 @@ class ProductNutritionRowForm(forms.ModelForm):
             self.fields['label'].disabled = True
             self.fields['label'].required = False
 
-class ProductNutritionRowInline(admin.TabularInline):
+from adminsortable2.admin import SortableAdminBase, SortableTabularInline
+
+class ProductNutritionRowInline(SortableTabularInline):
     model = ProductNutritionRow
     form = ProductNutritionRowForm
     extra = 0
-    fields = ('sort_order', 'label', 'value_100g', 'value_serving', 'vd_percentage', 'value_4', 'value_5')
+    fields = ('label', 'value_100g', 'value_serving', 'vd_percentage', 'value_4', 'value_5')
     verbose_name = "Linha da Tabela Nutricional"
     verbose_name_plural = "Tabela Nutricional (Nutrientes)"
 
@@ -128,7 +130,7 @@ class ProductTipsInline(admin.TabularInline):
     extra = 1
 
 @admin.register(Products)
-class ProductsAdmin(BaseCMSAdmin):
+class ProductsAdmin(SortableAdminBase, BaseCMSAdmin):
     list_display = ('image_preview_list', 'name', 'category', 'is_active', 'ver_no_site', 'ações')
     list_filter = ('category', 'is_active', 'is_featured')
     search_fields = ('name', 'short_description')

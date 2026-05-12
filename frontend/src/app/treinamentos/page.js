@@ -8,15 +8,17 @@ import Link from 'next/link';
 import { TrainingSkeleton } from '@/components/ui/Skeleton';
 
 export default function TreinamentosPage() {
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const isCliente = user?.role === 'CLIENTE';
+
   useEffect(() => {
     if (authLoading) return;
 
-    if (!isAuthenticated) {
+    if (!isAuthenticated || isCliente) {
       setLoading(false);
       return;
     }
@@ -28,7 +30,11 @@ export default function TreinamentosPage() {
       })
       .catch(err => {
         console.error("Erro ao carregar treinamentos:", err);
-        setError("Não foi possível carregar os materiais de treinamento.");
+        if (err.message.includes('403')) {
+          setError("Você não tem permissão de nível 'Técnico' para acessar estes materiais.");
+        } else {
+          setError("Não foi possível carregar os materiais de treinamento.");
+        }
       })
       .finally(() => setLoading(false));
   }, [isAuthenticated, authLoading]);
@@ -53,19 +59,24 @@ export default function TreinamentosPage() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || isCliente) {
     return (
       <div className="flex-grow flex items-center justify-center bg-slate-50 min-h-[60vh] p-4">
-        <div className="text-center bg-white p-10 rounded-3xl shadow-sm border border-slate-200 max-w-lg">
-          <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-400">
-            <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        <div className="text-center bg-white p-10 rounded-[3rem] shadow-sm border border-slate-200 max-w-xl">
+          <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-8 text-slate-400">
+            <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">Acesso Restrito</h2>
-          <p className="text-slate-600 mb-8">Faça login para acessar os materiais exclusivos de treinamento e capacitação técnica.</p>
-          <Link href="/login" className="px-8 py-4 bg-orquidea-green text-white font-bold rounded-xl hover:bg-orquidea-dark transition-all shadow-md shadow-orquidea-green/20">
-            Fazer Login
+          <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tighter uppercase">Área Restrita</h2>
+          <p className="text-slate-500 mb-10 text-lg leading-relaxed">
+            {isCliente 
+              ? "Esta seção é exclusiva para nossa equipe técnica e parceiros especializados. Como cliente, você tem acesso total ao nosso catálogo de produtos e dicas de uso."
+              : "Faça login para acessar os materiais exclusivos de treinamento e capacitação técnica."
+            }
+          </p>
+          <Link href={isCliente ? "/catalogo" : "/login"} className="inline-flex items-center gap-3 px-10 py-5 bg-orquidea-night text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-orquidea-green transition-all shadow-xl shadow-orquidea-night/10">
+            {isCliente ? "Explorar Catálogo" : "Fazer Login"}
           </Link>
         </div>
       </div>
