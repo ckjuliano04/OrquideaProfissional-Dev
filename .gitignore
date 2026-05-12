@@ -23,4 +23,7 @@ build/
 agent/skills-external/playwright-skill/node_modules/
 agent/skills-external/playwright-skill/.temp-*
 *.png
-*.log
+*.log
+# Agent / local AI tooling
+.agent/
+agent/skills-external/

@@ -78,22 +78,12 @@ export default function Footer() {
             </p>
             <div className="flex justify-center md:justify-start gap-5 mt-10">
               <a
-                href="#"
-                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-orquidea-green hover:text-white transition-all duration-300"
-              >
-                <FacebookIcon size={18} />
-              </a>
-              <a
-                href="#"
+                href="https://www.instagram.com/orquideaprofissional/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-orquidea-green hover:text-white transition-all duration-300"
               >
                 <InstagramIcon size={18} />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-orquidea-green hover:text-white transition-all duration-300"
-              >
-                <LinkedinIcon size={18} />
               </a>
             </div>
           </div>
