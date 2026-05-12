@@ -1,10 +1,9 @@
 import os
-
 import django
+from django.db import connection
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
 django.setup()
-from django.db import connection
 
 cursor = connection.cursor()
 cursor.execute(

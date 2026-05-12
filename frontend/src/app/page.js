@@ -26,12 +26,12 @@ export default function Home() {
   if (!data) return <div className="min-h-screen bg-orquidea-night" />;
 
   return (
-    <div className="flex-grow flex flex-col">
+    <div className="grow flex flex-col">
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center overflow-hidden bg-orquidea-night text-white">
         <FlourParticles opacity={0.4} />
         <div className="absolute inset-0 z-0 pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-b from-orquidea-night/40 via-orquidea-night/80 to-orquidea-night z-10" />
+          <div className="absolute inset-0 bg-linear-to-b from-orquidea-night/40 via-orquidea-night/80 to-orquidea-night z-10" />
         </div>
 
         <div className="container mx-auto px-4 z-20 relative text-center">
@@ -71,7 +71,7 @@ export default function Home() {
                   <span key={i}>
                     {part}
                     {i < arr.length - 1 && (
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-orquidea-cream via-orquidea-gold to-orquidea-cream">
+                      <span className="text-transparent bg-clip-text bg-linear-to-r from-orquidea-cream via-orquidea-gold to-orquidea-cream">
                         Técnica
                       </span>
                     )}
@@ -127,7 +127,7 @@ export default function Home() {
           <motion.div
             animate={{ y: [0, 8, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
-            className="w-1 h-12 rounded-full bg-gradient-to-b from-orquidea-gold to-transparent opacity-50"
+            className="w-1 h-12 rounded-full bg-linear-to-b from-orquidea-gold to-transparent opacity-50"
           />
         </motion.div>
       </section>
@@ -144,7 +144,7 @@ export default function Home() {
                 <motion.div
                   whileHover={{ scale: 1.02 }}
                   transition={{ duration: 0.5 }}
-                  className="aspect-[4/3] bg-slate-200 rounded-[3rem] overflow-hidden relative shadow-2xl border-8 border-white group cursor-pointer"
+                  className="aspect-4/3 bg-slate-200 rounded-3xl overflow-hidden relative shadow-2xl border-8 border-white group cursor-pointer"
                 >
                   <Image
                     src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=800"
@@ -228,11 +228,11 @@ export default function Home() {
                       <Badge variant="glass">Técnico</Badge>
                     </div>
                   </div>
-                  <div className="p-10 flex flex-col flex-grow">
+                  <div className="p-10 flex flex-col grow">
                     <h3 className="font-black text-2xl text-slate-900 mb-4 group-hover:text-orquidea-green transition-colors leading-tight">
                       {tip.title}
                     </h3>
-                    <p className="text-slate-500 mb-10 text-sm leading-relaxed flex-grow font-medium">
+                    <p className="text-slate-500 mb-10 text-sm leading-relaxed grow font-medium">
                       {tip.description}
                     </p>
                     <Link
@@ -342,11 +342,11 @@ export default function Home() {
               {data.where_to_buy_text}
             </p>
             <Link href="/onde-comprar">
-              <motion.div
-                whileHover={{ y: -10, scale: 1.02 }}
-                className="bg-white/5 backdrop-blur-2xl border border-white/10 p-12 md:p-20 rounded-[4rem] shadow-2xl relative group overflow-hidden cursor-pointer"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-orquidea-gold/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <motion.div
+                  whileHover={{ y: -10, scale: 1.02 }}
+                  className="bg-white/5 backdrop-blur-2xl border border-white/10 p-12 md:p-20 rounded-3xl shadow-2xl relative group overflow-hidden cursor-pointer"
+                >
+                  <div className="absolute inset-0 bg-linear-to-br from-orquidea-gold/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <h4 className="text-[10px] font-black uppercase tracking-[0.4em] mb-8 text-orquidea-gold">
                   Encontre um Parceiro Próximo
                 </h4>

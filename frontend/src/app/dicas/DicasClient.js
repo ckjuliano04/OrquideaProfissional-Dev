@@ -20,11 +20,11 @@ export default function DicasClient({ initialTips }) {
   );
 
   return (
-    <div className="flex-grow flex flex-col bg-white selection:bg-orquidea-gold selection:text-orquidea-night">
+    <div className="grow flex flex-col bg-white selection:bg-orquidea-gold selection:text-orquidea-night">
       {/* Editorial Header */}
       <section className="relative pt-48 pb-32 bg-orquidea-night overflow-hidden">
         <FlourParticles opacity={0.3} />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-orquidea-night via-orquidea-night/95 to-transparent z-0" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-orquidea-night via-orquidea-night/95 to-transparent z-0" />
 
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
@@ -55,7 +55,7 @@ export default function DicasClient({ initialTips }) {
       <div className="container mx-auto px-4 max-w-7xl relative z-20 pb-40">
         {/* Search Bar - Editorial Style */}
         <div className="max-w-4xl mx-auto -mt-16 mb-24">
-          <div className="bg-white p-4 rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] border border-slate-100 flex items-center gap-4 group transition-all hover:shadow-[0_60px_120px_-30px_rgba(0,0,0,0.2)]">
+          <div className="bg-white p-4 rounded-3xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] border border-slate-100 flex items-center gap-4 group transition-all hover:shadow-[0_60px_120px_-30px_rgba(0,0,0,0.2)]">
             <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-orquidea-gold transition-colors">
               <Search size={24} />
             </div>
@@ -64,7 +64,7 @@ export default function DicasClient({ initialTips }) {
               placeholder="O que você deseja aprender hoje?"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-grow bg-transparent border-none focus:ring-0 text-xl font-medium text-slate-900 placeholder:text-slate-300 px-2"
+              className="grow bg-transparent border-none focus:ring-0 text-xl font-medium text-slate-900 placeholder:text-slate-300 px-2"
             />
             <div className="hidden md:flex gap-2 pr-2">
               <button
