@@ -35,7 +35,7 @@ import argparse
 import os
 
 from collect_metadata import collect
-from push_metadata import push, _BATCH_SIZE
+from push_metadata import _BATCH_SIZE, push
 
 
 def main() -> None:

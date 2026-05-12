@@ -1,12 +1,14 @@
 import unittest
-from unittest.mock import Mock, patch
 from typing import Optional
+from unittest.mock import Mock, patch
 
 from tools import edgar
 
 
 class EdgarTests(unittest.TestCase):
-    def test_shares_outstanding_does_not_include_weighted_average_concepts(self) -> None:
+    def test_shares_outstanding_does_not_include_weighted_average_concepts(
+        self,
+    ) -> None:
         concepts = edgar._FIELD_CONCEPTS["balance_sheet"]["shares_outstanding"]
         self.assertNotIn("WeightedAverageNumberOfDilutedSharesOutstanding", concepts)
         self.assertNotIn("WeightedAverageShares", concepts)
@@ -42,7 +44,9 @@ class EdgarTests(unittest.TestCase):
 
     def test_request_json_retries_then_succeeds(self) -> None:
         class FakeResponse:
-            def __init__(self, status_code: int, payload: Optional[dict] = None) -> None:
+            def __init__(
+                self, status_code: int, payload: Optional[dict] = None
+            ) -> None:
                 self.status_code = status_code
                 self._payload = payload or {}
 

@@ -11,11 +11,10 @@ Usage:
 """
 
 import argparse
-import json
-import sys
-from typing import Dict, List, Any, Optional
-from datetime import datetime
 import html as html_module
+import json
+from datetime import datetime
+from typing import Any, Dict
 
 
 def escape(text: str) -> str:
@@ -29,35 +28,47 @@ def escape(text: str) -> str:
 
 DESIGN_STYLES = {
     "dark-saas": {
-        "bg": "bg-gray-950", "text": "text-white",
-        "accent": "violet", "card_bg": "bg-gray-900 border border-gray-800",
+        "bg": "bg-gray-950",
+        "text": "text-white",
+        "accent": "violet",
+        "card_bg": "bg-gray-900 border border-gray-800",
         "btn": "bg-violet-600 hover:bg-violet-500 text-white",
         "btn_secondary": "border border-gray-700 text-gray-300 hover:bg-gray-800",
-        "section_alt": "bg-gray-900/50", "muted": "text-gray-400",
+        "section_alt": "bg-gray-900/50",
+        "muted": "text-gray-400",
         "border": "border-gray-800",
     },
     "clean-minimal": {
-        "bg": "bg-white", "text": "text-gray-900",
-        "accent": "blue", "card_bg": "bg-gray-50 border border-gray-200 rounded-2xl",
+        "bg": "bg-white",
+        "text": "text-gray-900",
+        "accent": "blue",
+        "card_bg": "bg-gray-50 border border-gray-200 rounded-2xl",
         "btn": "bg-blue-600 hover:bg-blue-700 text-white",
         "btn_secondary": "border border-gray-300 text-gray-700 hover:bg-gray-50",
-        "section_alt": "bg-gray-50", "muted": "text-gray-500",
+        "section_alt": "bg-gray-50",
+        "muted": "text-gray-500",
         "border": "border-gray-200",
     },
     "bold-startup": {
-        "bg": "bg-white", "text": "text-gray-900",
-        "accent": "orange", "card_bg": "shadow-xl rounded-3xl bg-white",
+        "bg": "bg-white",
+        "text": "text-gray-900",
+        "accent": "orange",
+        "card_bg": "shadow-xl rounded-3xl bg-white",
         "btn": "bg-orange-500 hover:bg-orange-600 text-white",
         "btn_secondary": "border-2 border-orange-500 text-orange-600 hover:bg-orange-50",
-        "section_alt": "bg-orange-50/30", "muted": "text-gray-500",
+        "section_alt": "bg-orange-50/30",
+        "muted": "text-gray-500",
         "border": "border-gray-200",
     },
     "enterprise": {
-        "bg": "bg-slate-50", "text": "text-slate-900",
-        "accent": "slate", "card_bg": "bg-white border border-slate-200 shadow-sm",
+        "bg": "bg-slate-50",
+        "text": "text-slate-900",
+        "accent": "slate",
+        "card_bg": "bg-white border border-slate-200 shadow-sm",
         "btn": "bg-slate-900 hover:bg-slate-800 text-white",
         "btn_secondary": "border border-slate-300 text-slate-700 hover:bg-slate-100",
-        "section_alt": "bg-white", "muted": "text-slate-500",
+        "section_alt": "bg-white",
+        "muted": "text-slate-500",
         "border": "border-slate-200",
     },
 }
@@ -66,6 +77,7 @@ DESIGN_STYLES = {
 # ---------------------------------------------------------------------------
 # TSX generators
 # ---------------------------------------------------------------------------
+
 
 def tsx_nav(config: Dict[str, Any], style: Dict[str, str]) -> str:
     brand = config.get("brand", "Brand")
@@ -166,7 +178,7 @@ def tsx_testimonials(testimonials: Dict[str, Any], style: Dict[str, str]) -> str
         </div>'''
         for t in items
     )
-    return f'''function Testimonials() {{
+    return f"""function Testimonials() {{
   return (
     <section className="px-6 py-24 {style["bg"]}">
       <div className="mx-auto max-w-7xl">
@@ -177,7 +189,7 @@ def tsx_testimonials(testimonials: Dict[str, Any], style: Dict[str, str]) -> str
       </div>
     </section>
   );
-}}'''
+}}"""
 
 
 def tsx_pricing(pricing: Dict[str, Any], style: Dict[str, str]) -> str:
@@ -189,8 +201,16 @@ def tsx_pricing(pricing: Dict[str, Any], style: Dict[str, str]) -> str:
     cards = []
     for p in plans:
         featured = p.get("featured", False)
-        border_cls = f"border-2 border-{accent}-500 ring-4 ring-{accent}-500/20" if featured else f"border {style['border']}"
-        badge = f'\n            <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-{accent}-600 px-4 py-1 text-xs font-semibold text-white">Most Popular</div>' if featured else ""
+        border_cls = (
+            f"border-2 border-{accent}-500 ring-4 ring-{accent}-500/20"
+            if featured
+            else f"border {style['border']}"
+        )
+        badge = (
+            f'\n            <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-{accent}-600 px-4 py-1 text-xs font-semibold text-white">Most Popular</div>'
+            if featured
+            else ""
+        )
         features_jsx = "\n              ".join(
             f'<li className="flex items-center gap-2 py-2"><span className="text-{accent}-500 font-bold">&#10003;</span> {feat}</li>'
             for feat in p.get("features", [])
@@ -242,13 +262,13 @@ def tsx_footer(config: Dict[str, Any], style: Dict[str, str]) -> str:
     brand = config.get("brand", "Company")
     year = datetime.now().year
     footer_text = config.get("footer_text", f"{year} {brand}. All rights reserved.")
-    return f'''function Footer() {{
+    return f"""function Footer() {{
   return (
     <footer className="border-t {style["border"]} {style["bg"]} px-6 py-10 text-center {style["muted"]}">
       <p>&copy; {footer_text}</p>
     </footer>
   );
-}}'''
+}}"""
 
 
 def generate_tsx(config: Dict[str, Any]) -> str:
@@ -322,6 +342,7 @@ export default function LandingPage() {{
 # ---------------------------------------------------------------------------
 # HTML generators (existing)
 # ---------------------------------------------------------------------------
+
 
 def generate_css(config: Dict[str, Any]) -> str:
     """Generate responsive CSS from config theme."""
@@ -401,7 +422,7 @@ def render_nav(config: Dict[str, Any]) -> str:
     <nav><div class="container">
         <a href="#" class="nav-logo">{brand}</a>
         <ul class="nav-links">{links}</ul>
-        <a href="{escape(cta.get('url', '#'))}" class="nav-cta">{escape(cta.get('text', 'Get Started'))}</a>
+        <a href="{escape(cta.get("url", "#"))}" class="nav-cta">{escape(cta.get("text", "Get Started"))}</a>
     </div></nav>"""
 
 
@@ -425,12 +446,15 @@ def render_features(features: Dict[str, Any]) -> str:
     title = escape(features.get("title", "Features"))
     subtitle = escape(features.get("subtitle", ""))
     items = features.get("items", [])
-    cards = "\n".join(f"""
+    cards = "\n".join(
+        f"""
         <div class="feature-card">
-            <div class="feature-icon">{escape(f.get('icon', ''))}</div>
-            <h3>{escape(f.get('title', ''))}</h3>
-            <p>{escape(f.get('description', ''))}</p>
-        </div>""" for f in items)
+            <div class="feature-icon">{escape(f.get("icon", ""))}</div>
+            <h3>{escape(f.get("title", ""))}</h3>
+            <p>{escape(f.get("description", ""))}</p>
+        </div>"""
+        for f in items
+    )
     return f"""
     <section class="features"><div class="container">
         <h2 class="section-title">{title}</h2>
@@ -444,16 +468,19 @@ def render_testimonials(testimonials: Dict[str, Any]) -> str:
     items = testimonials.get("items", [])
     if not items:
         return ""
-    cards = "\n".join(f"""
+    cards = "\n".join(
+        f"""
         <div class="testimonial-card">
-            <p class="testimonial-text">"{escape(t.get('quote', ''))}"</p>
+            <p class="testimonial-text">"{escape(t.get("quote", ""))}"</p>
             <div class="testimonial-author">
                 <div class="author-info">
-                    <strong>{escape(t.get('name', ''))}</strong>
-                    <span>{escape(t.get('title', ''))}, {escape(t.get('company', ''))}</span>
+                    <strong>{escape(t.get("name", ""))}</strong>
+                    <span>{escape(t.get("title", ""))}, {escape(t.get("company", ""))}</span>
                 </div>
             </div>
-        </div>""" for t in items)
+        </div>"""
+        for t in items
+    )
     return f"""
     <section class="testimonials"><div class="container">
         <h2 class="section-title">{title}</h2>
@@ -466,16 +493,19 @@ def render_pricing(pricing: Dict[str, Any]) -> str:
     plans = pricing.get("plans", [])
     if not plans:
         return ""
-    cards = "\n".join(f"""
-        <div class="pricing-card {'featured' if p.get('featured') else ''}">
-            <div class="pricing-name">{escape(p.get('name', ''))}</div>
-            <div class="pricing-price">${escape(str(p.get('price', '0')))}<span>/mo</span></div>
-            <p>{escape(p.get('description', ''))}</p>
+    cards = "\n".join(
+        f"""
+        <div class="pricing-card {"featured" if p.get("featured") else ""}">
+            <div class="pricing-name">{escape(p.get("name", ""))}</div>
+            <div class="pricing-price">${escape(str(p.get("price", "0")))}<span>/mo</span></div>
+            <p>{escape(p.get("description", ""))}</p>
             <ul class="pricing-features">
-                {"".join(f'<li>{escape(f)}</li>' for f in p.get('features', []))}
+                {"".join(f"<li>{escape(f)}</li>" for f in p.get("features", []))}
             </ul>
-            <a href="{escape(p.get('cta_url', '#'))}" class="btn-primary">{escape(p.get('cta_text', 'Choose Plan'))}</a>
-        </div>""" for p in plans)
+            <a href="{escape(p.get("cta_url", "#"))}" class="btn-primary">{escape(p.get("cta_text", "Choose Plan"))}</a>
+        </div>"""
+        for p in plans
+    )
     return f"""
     <section class="pricing"><div class="container">
         <h2 class="section-title">{title}</h2>
@@ -486,9 +516,9 @@ def render_pricing(pricing: Dict[str, Any]) -> str:
 def render_cta(cta: Dict[str, Any]) -> str:
     return f"""
     <section class="cta-section"><div class="container">
-        <h2>{escape(cta.get('headline', 'Ready to get started?'))}</h2>
-        <p>{escape(cta.get('subheadline', ''))}</p>
-        <a href="{escape(cta.get('url', '#'))}" class="btn-white">{escape(cta.get('text', 'Start Free Trial'))}</a>
+        <h2>{escape(cta.get("headline", "Ready to get started?"))}</h2>
+        <p>{escape(cta.get("subheadline", ""))}</p>
+        <a href="{escape(cta.get("url", "#"))}" class="btn-white">{escape(cta.get("text", "Start Free Trial"))}</a>
     </div></section>"""
 
 
@@ -510,7 +540,7 @@ def generate_html(config: Dict[str, Any]) -> str:
         sections.append(render_cta(config["cta"]))
     sections.append(f"""
     <footer><div class="container">
-        <p>{escape(config.get('footer_text', f'{datetime.now().year} {config.get("brand", "Company")}. All rights reserved.'))}</p>
+        <p>{escape(config.get("footer_text", f"{datetime.now().year} {config.get("brand", "Company")}. All rights reserved."))}</p>
     </div></footer>""")
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -518,7 +548,7 @@ def generate_html(config: Dict[str, Any]) -> str:
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{title}</title>
-    <meta name="description" content="{escape(config.get('meta_description', ''))}">
+    <meta name="description" content="{escape(config.get("meta_description", ""))}">
     <style>{css}</style>
 </head>
 <body>
@@ -533,8 +563,10 @@ def main():
     )
     parser.add_argument("input", help="Path to page config JSON")
     parser.add_argument(
-        "--format", choices=["html", "tsx", "json"], default="tsx",
-        help="Output format: tsx (Next.js + Tailwind), html (standalone), json (metadata)"
+        "--format",
+        choices=["html", "tsx", "json"],
+        default="tsx",
+        help="Output format: tsx (Next.js + Tailwind), html (standalone), json (metadata)",
     )
     parser.add_argument("--output", type=str, default=None, help="Output file path")
 
@@ -544,13 +576,27 @@ def main():
         config = json.load(f)
 
     if args.format == "json":
-        output = json.dumps({
-            "generated_at": datetime.now().isoformat(),
-            "config": config,
-            "formats_available": ["html", "tsx"],
-            "sections": [k for k in ["nav", "hero", "features", "testimonials", "pricing", "cta", "footer"]
-                         if config.get(k) or k in ("nav", "footer")]
-        }, indent=2)
+        output = json.dumps(
+            {
+                "generated_at": datetime.now().isoformat(),
+                "config": config,
+                "formats_available": ["html", "tsx"],
+                "sections": [
+                    k
+                    for k in [
+                        "nav",
+                        "hero",
+                        "features",
+                        "testimonials",
+                        "pricing",
+                        "cta",
+                        "footer",
+                    ]
+                    if config.get(k) or k in ("nav", "footer")
+                ],
+            },
+            indent=2,
+        )
     elif args.format == "tsx":
         output = generate_tsx(config)
     else:

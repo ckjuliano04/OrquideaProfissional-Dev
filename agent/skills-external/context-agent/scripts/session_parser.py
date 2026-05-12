@@ -4,8 +4,8 @@ Lê arquivos de sessão e extrai informações estruturadas.
 """
 
 import json
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
 from config import CLAUDE_SESSION_DIR, FILE_MODIFYING_TOOLS

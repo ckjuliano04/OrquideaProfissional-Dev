@@ -34,7 +34,9 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 log = logging.getLogger(__name__)
 
 RESOURCE_TYPE = "bigquery"
-LOOKBACK_HOURS = int(os.getenv("LOOKBACK_HOURS", "24"))  # ← SUBSTITUTE: adjust lookback window
+LOOKBACK_HOURS = int(
+    os.getenv("LOOKBACK_HOURS", "24")
+)  # ← SUBSTITUTE: adjust lookback window
 
 # Regex patterns to detect CTAS and INSERT INTO SELECT in BigQuery SQL
 _CTAS_PATTERN = re.compile(
@@ -93,7 +95,10 @@ def _collect_schema_link_lineage(
                 }
             )
     except Exception:
-        log.warning("SCHEMATA_LINKS query failed — skipping dataset-share lineage", exc_info=True)
+        log.warning(
+            "SCHEMATA_LINKS query failed — skipping dataset-share lineage",
+            exc_info=True,
+        )
     return edges
 
 
@@ -107,7 +112,9 @@ def _collect_query_lineage(
     start_dt = end_dt - timedelta(hours=lookback_hours)
 
     edges: list[dict] = []
-    for job in bq_client.list_jobs(all_users=True, min_creation_time=start_dt, max_creation_time=end_dt):
+    for job in bq_client.list_jobs(
+        all_users=True, min_creation_time=start_dt, max_creation_time=end_dt
+    ):
         sql: str = getattr(job, "query", None) or ""
         if not sql.strip():
             continue
@@ -170,7 +177,9 @@ def collect(
 
     log.info(
         "Collected %d lineage edges (%d schema-link, %d query-derived)",
-        len(all_edges), len(schema_edges), len(query_edges),
+        len(all_edges),
+        len(schema_edges),
+        len(query_edges),
     )
 
     manifest = {
@@ -191,8 +200,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Collect BigQuery lineage and write to a manifest file",
     )
-    parser.add_argument("--project-id", default=os.getenv("BIGQUERY_PROJECT_ID"))  # ← SUBSTITUTE
-    parser.add_argument("--region", default=os.getenv("BIGQUERY_REGION", "us"))    # ← SUBSTITUTE
+    parser.add_argument(
+        "--project-id", default=os.getenv("BIGQUERY_PROJECT_ID")
+    )  # ← SUBSTITUTE
+    parser.add_argument(
+        "--region", default=os.getenv("BIGQUERY_REGION", "us")
+    )  # ← SUBSTITUTE
     parser.add_argument("--lookback-hours", type=int, default=LOOKBACK_HOURS)
     parser.add_argument("--output-file", default="lineage_output.json")
     args = parser.parse_args()

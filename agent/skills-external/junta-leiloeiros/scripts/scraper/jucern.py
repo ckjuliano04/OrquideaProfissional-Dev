@@ -5,6 +5,7 @@ Método: httpx (HTTP sem TLS — site usa HTTP apenas)
 Nota: URL com parâmetros de query é a página correta de leiloeiros.
       Usar HTTP (não HTTPS). Referenciado em FENAJU e InnLei como ativo.
 """
+
 from __future__ import annotations
 
 from typing import List
@@ -21,7 +22,9 @@ class JucernScraper(AbstractJuntaScraper):
         soup = await self.fetch_page()
         if not soup:
             # Tenta domínio sem www
-            soup = await self.fetch_page(url="http://jucern.rn.gov.br/Conteudo.asp?TRAN=ITEM&TARG=8695&ACT=&PAGE=0&PARM=&LBL=Leiloeiros")
+            soup = await self.fetch_page(
+                url="http://jucern.rn.gov.br/Conteudo.asp?TRAN=ITEM&TARG=8695&ACT=&PAGE=0&PARM=&LBL=Leiloeiros"
+            )
         if not soup:
             soup = await self.fetch_page_js(wait_ms=3000)
         if not soup:
@@ -33,7 +36,9 @@ class JucernScraper(AbstractJuntaScraper):
             rows = table.find_all("tr")
             if len(rows) < 2:
                 continue
-            headers = [self.clean(th.get_text()) for th in rows[0].find_all(["th", "td"])]
+            headers = [
+                self.clean(th.get_text()) for th in rows[0].find_all(["th", "td"])
+            ]
             col = {(h or "").lower(): i for i, h in enumerate(headers)}
 
             def gcol(cells, frags):
@@ -46,19 +51,23 @@ class JucernScraper(AbstractJuntaScraper):
                 cells = row.find_all(["td", "th"])
                 if not cells:
                     continue
-                nome = gcol(cells, ["nome", "leiloeiro"]) or self.clean(cells[0].get_text())
+                nome = gcol(cells, ["nome", "leiloeiro"]) or self.clean(
+                    cells[0].get_text()
+                )
                 if not nome or len(nome) < 3:
                     continue
-                results.append(self.make_leiloeiro(
-                    nome=nome,
-                    matricula=gcol(cells, ["matr", "registro", "nº"]),
-                    situacao=gcol(cells, ["situ", "status"]),
-                    municipio=gcol(cells, ["munic", "cidade"]) or "Natal",
-                    telefone=gcol(cells, ["tel", "fone"]),
-                    email=gcol(cells, ["email"]),
-                    endereco=gcol(cells, ["ender", "logr"]),
-                    data_registro=gcol(cells, ["data", "posse"]),
-                ))
+                results.append(
+                    self.make_leiloeiro(
+                        nome=nome,
+                        matricula=gcol(cells, ["matr", "registro", "nº"]),
+                        situacao=gcol(cells, ["situ", "status"]),
+                        municipio=gcol(cells, ["munic", "cidade"]) or "Natal",
+                        telefone=gcol(cells, ["tel", "fone"]),
+                        email=gcol(cells, ["email"]),
+                        endereco=gcol(cells, ["ender", "logr"]),
+                        data_registro=gcol(cells, ["data", "posse"]),
+                    )
+                )
             if results:
                 break
 

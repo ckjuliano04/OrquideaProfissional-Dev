@@ -38,7 +38,9 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 log = logging.getLogger(__name__)
 
 RESOURCE_TYPE = "databricks"
-DEFAULT_BATCH_SIZE = 500  # ← SUBSTITUTE: conservative default to stay under 1 MB compressed
+DEFAULT_BATCH_SIZE = (
+    500  # ← SUBSTITUTE: conservative default to stay under 1 MB compressed
+)
 
 
 def _asset_from_dict(d: dict[str, Any]) -> RelationalAsset:
@@ -54,7 +56,9 @@ def _asset_from_dict(d: dict[str, Any]) -> RelationalAsset:
 
     volume = None
     if d.get("row_count") is not None or d.get("byte_count") is not None:
-        volume = AssetVolume(row_count=d.get("row_count"), byte_count=d.get("byte_count"))
+        volume = AssetVolume(
+            row_count=d.get("row_count"), byte_count=d.get("byte_count")
+        )
 
     freshness = None
     if d.get("last_updated") is not None:
@@ -64,7 +68,7 @@ def _asset_from_dict(d: dict[str, Any]) -> RelationalAsset:
         type=d.get("asset_type", "TABLE"),
         metadata=AssetMetadata(
             name=d["asset_name"],
-            database=d["database"],    # ← SUBSTITUTE: use catalog as database
+            database=d["database"],  # ← SUBSTITUTE: use catalog as database
             schema=d["schema"],
             description=d.get("description"),
         ),
@@ -100,7 +104,9 @@ def push(
 
     def _push_batch(batch: list, batch_num: int) -> str | None:
         """Push a single batch using a dedicated Session (thread-safe)."""
-        client = Client(session=Session(mcd_id=key_id, mcd_token=key_token, scope="Ingestion"))
+        client = Client(
+            session=Session(mcd_id=key_id, mcd_token=key_token, scope="Ingestion")
+        )
         service = IngestionService(mc_client=client)
         result = service.send_metadata(
             resource_uuid=resource_uuid,
@@ -108,7 +114,13 @@ def push(
             events=batch,
         )
         invocation_id = service.extract_invocation_id(result)
-        log.info("Pushed batch %d/%d (%d assets) — invocation_id=%s", batch_num, total_batches, len(batch), invocation_id)
+        log.info(
+            "Pushed batch %d/%d (%d assets) — invocation_id=%s",
+            batch_num,
+            total_batches,
+            len(batch),
+            invocation_id,
+        )
         return invocation_id
 
     # Push batches in parallel (each thread gets its own pycarlo Session)
@@ -117,8 +129,7 @@ def push(
 
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         futures = {
-            pool.submit(_push_batch, batch, i + 1): i
-            for i, batch in enumerate(batches)
+            pool.submit(_push_batch, batch, i + 1): i for i, batch in enumerate(batches)
         }
         for future in as_completed(futures):
             idx = futures[future]
@@ -152,7 +163,9 @@ def push(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Push Databricks metadata to Monte Carlo from manifest")
+    parser = argparse.ArgumentParser(
+        description="Push Databricks metadata to Monte Carlo from manifest"
+    )
     parser.add_argument("--manifest", default="manifest_metadata.json")
     parser.add_argument("--resource-uuid", default=os.getenv("MCD_RESOURCE_UUID"))
     parser.add_argument("--key-id", default=os.getenv("MCD_INGEST_ID"))

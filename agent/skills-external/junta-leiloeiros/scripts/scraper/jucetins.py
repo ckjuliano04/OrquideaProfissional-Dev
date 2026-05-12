@@ -10,6 +10,7 @@ Estrutura: Texto numerado plano sem tabela, padrao:
   E-mail: email@exemplo.com
 Registros: ~55, todos em pagina unica. Ultima atualizacao: 24/02/2026.
 """
+
 from __future__ import annotations
 
 import re
@@ -18,7 +19,9 @@ from typing import List, Optional
 from .base_scraper import AbstractJuntaScraper, Leiloeiro
 
 RE_ENTRY_START = re.compile(r"^\d+\.\s+(.+)$")
-RE_MATRICULA = re.compile(r"[Mm]atr[íi]cula\s+n[oº]?\s*[\.\s]*(\d+).*?de\s+(\d{2}/\d{2}/\d{4})", re.IGNORECASE)
+RE_MATRICULA = re.compile(
+    r"[Mm]atr[íi]cula\s+n[oº]?\s*[\.\s]*(\d+).*?de\s+(\d{2}/\d{2}/\d{4})", re.IGNORECASE
+)
 RE_ENDERECO = re.compile(r"[Ee]ndere[çc]o:\s+(.+)", re.IGNORECASE)
 RE_TELEFONE = re.compile(r"[Tt]elefone:\s+(.+)", re.IGNORECASE)
 RE_EMAIL = re.compile(r"[Ee]-?mail:\s+(.+)", re.IGNORECASE)
@@ -44,7 +47,11 @@ class JucetinsScraper(AbstractJuntaScraper):
                 nome_raw = m_start.group(1).strip()
                 is_cancelado = bool(RE_CANCELADO.search(nome_raw))
                 nome = RE_CANCELADO.sub("", nome_raw).strip(" -")
-                current = {"nome": nome, "municipio": "Palmas", "situacao": "CANCELADO" if is_cancelado else None}
+                current = {
+                    "nome": nome,
+                    "municipio": "Palmas",
+                    "situacao": "CANCELADO" if is_cancelado else None,
+                }
                 continue
             if current is None:
                 continue
@@ -86,8 +93,11 @@ class JucetinsScraper(AbstractJuntaScraper):
             ".field--name-body, article .content, .node__content, main article, .conteudo, #content .field"
         )
         if not content:
-            candidates = sorted(soup.find_all(["div", "article", "section"]),
-                                 key=lambda el: len(el.get_text()), reverse=True)
+            candidates = sorted(
+                soup.find_all(["div", "article", "section"]),
+                key=lambda el: len(el.get_text()),
+                reverse=True,
+            )
             content = candidates[0] if candidates else soup.body
 
         if content:
@@ -102,7 +112,9 @@ class JucetinsScraper(AbstractJuntaScraper):
             rows = table.find_all("tr")
             if len(rows) < 2:
                 continue
-            headers = [self.clean(th.get_text()) for th in rows[0].find_all(["th", "td"])]
+            headers = [
+                self.clean(th.get_text()) for th in rows[0].find_all(["th", "td"])
+            ]
             col = {(h or "").lower(): i for i, h in enumerate(headers)}
 
             def gcol(cells, frags):
@@ -115,19 +127,23 @@ class JucetinsScraper(AbstractJuntaScraper):
                 cells = row.find_all(["td", "th"])
                 if not cells:
                     continue
-                nome = gcol(cells, ["nome", "leiloeiro"]) or self.clean(cells[0].get_text())
+                nome = gcol(cells, ["nome", "leiloeiro"]) or self.clean(
+                    cells[0].get_text()
+                )
                 if not nome or len(nome) < 3:
                     continue
-                results.append(self.make_leiloeiro(
-                    nome=nome,
-                    matricula=gcol(cells, ["matr", "registro"]),
-                    situacao=gcol(cells, ["situ", "status"]),
-                    municipio=gcol(cells, ["munic", "cidade"]) or "Palmas",
-                    telefone=gcol(cells, ["tel", "fone"]),
-                    email=gcol(cells, ["email"]),
-                    endereco=gcol(cells, ["ender", "logr"]),
-                    data_registro=gcol(cells, ["data", "posse"]),
-                ))
+                results.append(
+                    self.make_leiloeiro(
+                        nome=nome,
+                        matricula=gcol(cells, ["matr", "registro"]),
+                        situacao=gcol(cells, ["situ", "status"]),
+                        municipio=gcol(cells, ["munic", "cidade"]) or "Palmas",
+                        telefone=gcol(cells, ["tel", "fone"]),
+                        email=gcol(cells, ["email"]),
+                        endereco=gcol(cells, ["ender", "logr"]),
+                        data_registro=gcol(cells, ["data", "posse"]),
+                    )
+                )
             if results:
                 break
 

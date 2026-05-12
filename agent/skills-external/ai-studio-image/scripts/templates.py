@@ -261,7 +261,10 @@ def search_templates(query: str) -> list[dict]:
     results = []
     for name, tmpl in ALL_TEMPLATES.items():
         tags = tmpl.get("tags", [])
-        if any(query_lower in tag for tag in tags) or query_lower in tmpl.get("prompt", "").lower():
+        if (
+            any(query_lower in tag for tag in tags)
+            or query_lower in tmpl.get("prompt", "").lower()
+        ):
             results.append({"name": name, **tmpl})
     return results
 
@@ -270,11 +273,13 @@ def search_templates(query: str) -> list[dict]:
 # CLI
 # =============================================================================
 
+
 def main():
     parser = argparse.ArgumentParser(description="Templates de imagens humanizadas")
     parser.add_argument("--list", action="store_true", help="Listar todos os templates")
-    parser.add_argument("--mode", choices=["influencer", "educacional"],
-                       help="Filtrar por modo")
+    parser.add_argument(
+        "--mode", choices=["influencer", "educacional"], help="Filtrar por modo"
+    )
     parser.add_argument("--show", help="Mostrar detalhes de um template")
     parser.add_argument("--search", help="Buscar por palavra-chave")
     parser.add_argument("--json", action="store_true", help="Output em JSON")
@@ -290,16 +295,20 @@ def main():
             for name, tmpl in templates.items():
                 if tmpl["mode"] != current_mode:
                     current_mode = tmpl["mode"]
-                    header = "INFLUENCER" if current_mode == "influencer" else "EDUCACIONAL"
-                    print(f"\n{'='*50}")
+                    header = (
+                        "INFLUENCER" if current_mode == "influencer" else "EDUCACIONAL"
+                    )
+                    print(f"\n{'=' * 50}")
                     print(f"  MODO {header}")
-                    print(f"{'='*50}")
+                    print(f"{'=' * 50}")
 
                 print(f"\n  {name}")
                 print(f"    {tmpl['name']}")
-                print(f"    Formato: {tmpl['suggested_format']} | "
-                      f"Luz: {tmpl['suggested_lighting']} | "
-                      f"Human: {tmpl['suggested_humanization']}")
+                print(
+                    f"    Formato: {tmpl['suggested_format']} | "
+                    f"Luz: {tmpl['suggested_lighting']} | "
+                    f"Human: {tmpl['suggested_humanization']}"
+                )
                 print(f"    Tags: {', '.join(tmpl.get('tags', []))}")
         return
 
@@ -319,9 +328,9 @@ def main():
                     print(f"Luz:      {tmpl['suggested_lighting']}")
                     print(f"Human:    {tmpl['suggested_humanization']}")
                     print(f"Tags:     {', '.join(tmpl.get('tags', []))}")
-                    print(f"\nPrompt Base:")
+                    print("\nPrompt Base:")
                     print(f"  {tmpl['prompt']}")
-                    print(f"\nContexto:")
+                    print("\nContexto:")
                     print(f"  {tmpl['context']}")
             else:
                 print(f"Template '{args.show}' nao encontrado")
@@ -334,7 +343,9 @@ def main():
             print(json.dumps(results, indent=2, ensure_ascii=False))
         else:
             if results:
-                print(f"\n{len(results)} template(s) encontrado(s) para '{args.search}':\n")
+                print(
+                    f"\n{len(results)} template(s) encontrado(s) para '{args.search}':\n"
+                )
                 for r in results:
                     print(f"  {r['name']} [{r['mode']}] — {r.get('tags', [])}")
             else:

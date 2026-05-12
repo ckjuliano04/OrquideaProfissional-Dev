@@ -100,13 +100,20 @@ def push(
     assets = [_asset_from_dict(d) for d in asset_dicts]
     log.info("Loaded %d asset(s) from %s", len(assets), input_file)
 
-    batches = [assets[i : i + batch_size] for i in range(0, max(len(assets), 1), batch_size)]
+    batches = [
+        assets[i : i + batch_size] for i in range(0, max(len(assets), 1), batch_size)
+    ]
     total_batches = len(batches)
 
     def _push_batch(batch: list[RelationalAsset], batch_num: int) -> str | None:
-        client = Client(session=Session(
-            mcd_id=key_id, mcd_token=key_token, scope="Ingestion", endpoint=endpoint,
-        ))
+        client = Client(
+            session=Session(
+                mcd_id=key_id,
+                mcd_token=key_token,
+                scope="Ingestion",
+                endpoint=endpoint,
+            )
+        )
         service = IngestionService(mc_client=client)
         result = service.send_metadata(
             resource_uuid=resource_uuid,
@@ -116,7 +123,10 @@ def push(
         invocation_id = service.extract_invocation_id(result)
         log.info(
             "Pushed batch %d/%d (%d assets) — invocation_id=%s",
-            batch_num, total_batches, len(batch), invocation_id,
+            batch_num,
+            total_batches,
+            len(batch),
+            invocation_id,
         )
         return invocation_id
 
@@ -125,8 +135,7 @@ def push(
 
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         futures = {
-            pool.submit(_push_batch, batch, i + 1): i
-            for i, batch in enumerate(batches)
+            pool.submit(_push_batch, batch, i + 1): i for i, batch in enumerate(batches)
         }
         for future in as_completed(futures):
             idx = futures[future]

@@ -40,7 +40,7 @@ def _check_available_memory(min_gb: float = 2.0) -> None:
         if hasattr(os, "sysconf"):  # Linux / macOS
             page_size = os.sysconf("SC_PAGE_SIZE")
             avail_pages = os.sysconf("SC_AVPHYS_PAGES")
-            avail_gb = (page_size * avail_pages) / (1024 ** 3)
+            avail_gb = (page_size * avail_pages) / (1024**3)
         else:
             return  # Windows — skip check
     except (ValueError, OSError):
@@ -82,7 +82,9 @@ def _parse_ref(ref: str) -> tuple[str, str, str]:
     return "", "", parts[0]
 
 
-def _dictfetch(cursor: Any, sql: str, params: tuple | None = None) -> list[dict[str, Any]]:
+def _dictfetch(
+    cursor: Any, sql: str, params: tuple | None = None
+) -> list[dict[str, Any]]:
     cursor.execute(sql, params)
     cols = [d.name for d in cursor.description]
     rows = []
@@ -137,7 +139,9 @@ def parse_lineage_from_sql(sql_text: str) -> list[dict[str, Any]]:
             ref = f"{m.group(1)}.{m.group(2)}"
 
         db, schema, table = _parse_ref(ref)
-        if not table or (db == dest_db and schema == dest_schema and table == dest_table):
+        if not table or (
+            db == dest_db and schema == dest_schema and table == dest_table
+        ):
             continue
         source_refs.append(ref)
 
@@ -153,10 +157,16 @@ def parse_lineage_from_sql(sql_text: str) -> list[dict[str, Any]]:
             db, schema, table = _parse_ref(ref)
             sources.append({"database": db, "schema": schema, "asset_name": table})
 
-    events.append({
-        "sources": sources,
-        "destination": {"database": dest_db, "schema": dest_schema, "asset_name": dest_table},
-    })
+    events.append(
+        {
+            "sources": sources,
+            "destination": {
+                "database": dest_db,
+                "schema": dest_schema,
+                "asset_name": dest_table,
+            },
+        }
+    )
     return events
 
 
@@ -174,7 +184,12 @@ def collect(
     collected_at = datetime.now(timezone.utc).isoformat()
 
     conn = psycopg2.connect(
-        host=host, port=port, dbname=db, user=user, password=password, connect_timeout=30,
+        host=host,
+        port=port,
+        dbname=db,
+        user=user,
+        password=password,
+        connect_timeout=30,
     )
     try:
         with conn.cursor() as cursor:
@@ -205,12 +220,18 @@ def collect(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Collect Redshift lineage to a manifest file")
-    parser.add_argument("--host", default=os.getenv("REDSHIFT_HOST"))         # ← SUBSTITUTE
-    parser.add_argument("--db", default=os.getenv("REDSHIFT_DB"))             # ← SUBSTITUTE
-    parser.add_argument("--user", default=os.getenv("REDSHIFT_USER"))         # ← SUBSTITUTE
-    parser.add_argument("--password", default=os.getenv("REDSHIFT_PASSWORD")) # ← SUBSTITUTE
-    parser.add_argument("--port", type=int, default=int(os.getenv("REDSHIFT_PORT", "5439")))
+    parser = argparse.ArgumentParser(
+        description="Collect Redshift lineage to a manifest file"
+    )
+    parser.add_argument("--host", default=os.getenv("REDSHIFT_HOST"))  # ← SUBSTITUTE
+    parser.add_argument("--db", default=os.getenv("REDSHIFT_DB"))  # ← SUBSTITUTE
+    parser.add_argument("--user", default=os.getenv("REDSHIFT_USER"))  # ← SUBSTITUTE
+    parser.add_argument(
+        "--password", default=os.getenv("REDSHIFT_PASSWORD")
+    )  # ← SUBSTITUTE
+    parser.add_argument(
+        "--port", type=int, default=int(os.getenv("REDSHIFT_PORT", "5439"))
+    )
     parser.add_argument("--lookback-hours", type=int, default=LOOKBACK_HOURS)
     parser.add_argument("--manifest", default="manifest_lineage.json")
     args = parser.parse_args()

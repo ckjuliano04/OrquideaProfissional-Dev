@@ -56,7 +56,9 @@ def _collect_query_logs(
 
     log.info(
         "Listing jobs for project=%s from %s to %s",
-        project_id, start_dt.isoformat(), end_dt.isoformat(),
+        project_id,
+        start_dt.isoformat(),
+        end_dt.isoformat(),
     )
 
     for job in bq_client.list_jobs(
@@ -73,15 +75,17 @@ def _collect_query_logs(
         if STATEMENT_TYPE_FILTER and statement_type not in STATEMENT_TYPE_FILTER:
             continue
 
-        entries.append({
-            "query_id": job.job_id,
-            "query_text": sql,
-            "start_time": _safe_isoformat(getattr(job, "created", None)),
-            "end_time": _safe_isoformat(getattr(job, "ended", None)),
-            "user": getattr(job, "user_email", None),
-            "total_bytes_billed": getattr(job, "total_bytes_billed", None),
-            "statement_type": statement_type or None,
-        })
+        entries.append(
+            {
+                "query_id": job.job_id,
+                "query_text": sql,
+                "start_time": _safe_isoformat(getattr(job, "created", None)),
+                "end_time": _safe_isoformat(getattr(job, "ended", None)),
+                "user": getattr(job, "user_email", None),
+                "total_bytes_billed": getattr(job, "total_bytes_billed", None),
+                "statement_type": statement_type or None,
+            }
+        )
 
         if len(entries) >= MAX_JOBS:
             log.warning("Reached MAX_JOBS=%d — stopping early", MAX_JOBS)

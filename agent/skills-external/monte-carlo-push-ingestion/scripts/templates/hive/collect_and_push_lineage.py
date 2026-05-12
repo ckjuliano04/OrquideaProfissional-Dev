@@ -89,14 +89,18 @@ def main() -> None:
     args = parser.parse_args()
 
     if not args.key_id or not args.key_token:
-        parser.error("--key-id and --key-token are required (or set MCD_INGEST_ID / MCD_INGEST_TOKEN)")
+        parser.error(
+            "--key-id and --key-token are required (or set MCD_INGEST_ID / MCD_INGEST_TOKEN)"
+        )
     if not args.resource_uuid:
         parser.error("--resource-uuid is required (or set MCD_RESOURCE_UUID)")
 
     manifest = collect(log_file=args.log_file)
 
     if not manifest["edges"]:
-        print("No lineage edges detected — no CTAS or INSERT INTO ... SELECT patterns found.")
+        print(
+            "No lineage edges detected — no CTAS or INSERT INTO ... SELECT patterns found."
+        )
         return
 
     push(

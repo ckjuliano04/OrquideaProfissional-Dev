@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { Calendar, ChevronRight, BookOpen } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
+import { motion } from "framer-motion";
+import { Calendar, ChevronRight, BookOpen } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 export default function TipCard({ tip }) {
-  const formattedDate = new Date(tip.published_at).toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric'
+  const formattedDate = new Date(tip.published_at).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
   });
 
   return (
@@ -21,7 +21,7 @@ export default function TipCard({ tip }) {
         {/* Image Container */}
         <div className="relative h-64 overflow-hidden">
           <Image
-            src={tip.image || '/images/placeholders/tip-placeholder.jpg'}
+            src={tip.image || "/images/placeholders/tip-placeholder.jpg"}
             alt={tip.title}
             fill
             className="object-cover transition-transform duration-700 group-hover:scale-110"
@@ -52,7 +52,10 @@ export default function TipCard({ tip }) {
           <div className="pt-6 border-t border-slate-50 flex items-center justify-between mt-auto">
             <div className="flex items-center gap-2 text-orquidea-green font-black text-xs uppercase tracking-widest group/link">
               Ler Conteúdo Completo
-              <ChevronRight size={16} className="group-hover/link:translate-x-1 transition-transform" />
+              <ChevronRight
+                size={16}
+                className="group-hover/link:translate-x-1 transition-transform"
+              />
             </div>
             <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-orquidea-green/10 group-hover:text-orquidea-green transition-colors">
               <BookOpen size={18} />

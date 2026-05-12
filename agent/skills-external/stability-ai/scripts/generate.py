@@ -14,13 +14,13 @@ Uso:
 
 Versao: 2.0.0
 """
+
 from __future__ import annotations
 
 import argparse
 import base64
 import io
 import json
-import re
 import sys
 import time
 from datetime import datetime
@@ -32,23 +32,20 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from config import (
     API_BASE,
-    ENDPOINTS,
-    MIME_MAP,
-    MODELS,
     DEFAULT_MODEL,
+    ENDPOINTS,
+    MODELS,
     OUTPUT_DIR,
     OUTPUT_SETTINGS,
     USER_AGENT,
-    get_api_key,
     get_all_api_keys,
     get_mime_type,
+    increment_daily_counter,
     resolve_aspect_ratio,
     safety_check_daily_limit,
-    increment_daily_counter,
     validate_image_file,
 )
 from styles import apply_style, list_styles
-
 
 # ── Exceptions ───────────────────────────────────────────────────────────────
 
@@ -63,21 +60,25 @@ class APIError(Exception):
 
 class RateLimitError(APIError):
     """Rate limit (429) atingido."""
+
     pass
 
 
 class ContentFilteredError(APIError):
     """Conteudo filtrado pela moderacao."""
+
     pass
 
 
 class AuthenticationError(APIError):
     """API key invalida ou ausente (401)."""
+
     pass
 
 
 class InsufficientCreditsError(APIError):
     """Creditos insuficientes (402)."""
+
     pass
 
 
@@ -159,7 +160,9 @@ def api_call(
         error_body = e.read().decode("utf-8", errors="replace")
         # Mask API key in error output to prevent credential leakage
         if api_key and api_key in error_body:
-            masked_key = f"{api_key[:6]}...masked" if len(api_key) >= 6 else "***masked***"
+            masked_key = (
+                f"{api_key[:6]}...masked" if len(api_key) >= 6 else "***masked***"
+            )
             error_body = error_body.replace(api_key, masked_key)
         try:
             error_json = json.loads(error_body)
@@ -168,11 +171,17 @@ def api_call(
             error_msg = error_body[:500]
 
         if e.code == 401:
-            raise AuthenticationError(f"API key invalida ou ausente.\n{error_msg}", e.code)
+            raise AuthenticationError(
+                f"API key invalida ou ausente.\n{error_msg}", e.code
+            )
         if e.code == 402:
-            raise InsufficientCreditsError(f"Creditos insuficientes.\n{error_msg}", e.code)
+            raise InsufficientCreditsError(
+                f"Creditos insuficientes.\n{error_msg}", e.code
+            )
         if e.code == 403:
-            raise ContentFilteredError(f"Conteudo filtrado pela moderacao.\n{error_msg}", e.code)
+            raise ContentFilteredError(
+                f"Conteudo filtrado pela moderacao.\n{error_msg}", e.code
+            )
         if e.code == 429:
             raise RateLimitError(f"Rate limit atingido.\n{error_msg}", e.code)
         raise APIError(f"HTTP {e.code}: {error_msg}", e.code)
@@ -241,10 +250,16 @@ def generate_image(
 
     # Montar campos e arquivos
     fields, files = _build_request(
-        mode=mode, model=model, prompt=final_prompt,
-        aspect_ratio=aspect_ratio, negative_prompt=negative_prompt,
-        image_path=image_path, mask_path=mask_path,
-        search_prompt=search_prompt, strength=strength, seed=seed,
+        mode=mode,
+        model=model,
+        prompt=final_prompt,
+        aspect_ratio=aspect_ratio,
+        negative_prompt=negative_prompt,
+        image_path=image_path,
+        mask_path=mask_path,
+        search_prompt=search_prompt,
+        strength=strength,
+        seed=seed,
     )
 
     # Retry loop com fallback de keys
@@ -259,8 +274,11 @@ def generate_image(
             try:
                 start_time = time.time()
                 data, content_type, resp_headers = api_call(
-                    endpoint=endpoint, api_key=key,
-                    fields=fields, files=files, accept="image/*",
+                    endpoint=endpoint,
+                    api_key=key,
+                    fields=fields,
+                    files=files,
+                    accept="image/*",
                 )
                 elapsed = time.time() - start_time
 
@@ -274,11 +292,13 @@ def generate_image(
                     used_key_index = i
                     break
 
-                print(f"Resposta inesperada (tipo: {content_type}, tamanho: {len(data) if isinstance(data, bytes) else 'dict'})",
-                      file=sys.stderr)
+                print(
+                    f"Resposta inesperada (tipo: {content_type}, tamanho: {len(data) if isinstance(data, bytes) else 'dict'})",
+                    file=sys.stderr,
+                )
 
             except AuthenticationError as e:
-                print(f"Key {i+1} invalida: {e}", file=sys.stderr)
+                print(f"Key {i + 1} invalida: {e}", file=sys.stderr)
                 continue  # Tentar proxima key
 
             except InsufficientCreditsError as e:
@@ -286,7 +306,10 @@ def generate_image(
                 return []  # Nao adianta retry
 
             except ContentFilteredError as e:
-                print(f"BLOQUEADO: Conteudo filtrado pela moderacao.\n{e}", file=sys.stderr)
+                print(
+                    f"BLOQUEADO: Conteudo filtrado pela moderacao.\n{e}",
+                    file=sys.stderr,
+                )
                 return []  # Nao adianta retry
 
             except RateLimitError:
@@ -298,7 +321,7 @@ def generate_image(
             except APIError as e:
                 is_last_key = i >= len(keys) - 1
                 if not is_last_key:
-                    print(f"Key {i+1} falhou, tentando backup...", file=sys.stderr)
+                    print(f"Key {i + 1} falhou, tentando backup...", file=sys.stderr)
                     continue
                 if attempt < max_retries - 1:
                     wait = 5 * (attempt + 1)
@@ -368,7 +391,14 @@ def generate_image(
     print(f"Tamanho: {size_kb:.1f} KB")
     print(f"Tempo: {elapsed:.1f}s")
 
-    return [{"path": filepath, "size_kb": round(size_kb, 1), "time_s": round(elapsed, 1), "seed": resp_seed}]
+    return [
+        {
+            "path": filepath,
+            "size_kb": round(size_kb, 1),
+            "time_s": round(elapsed, 1),
+            "seed": resp_seed,
+        }
+    ]
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -499,8 +529,25 @@ def analyze_prompt(prompt: str) -> dict:
     # Detectar aspect ratio
     ratio = "1:1"
     ratio_hints = {
-        "16:9": ["landscape", "paisagem", "wide", "panorama", "cinema", "wallpaper", "widescreen"],
-        "9:16": ["portrait", "retrato", "vertical", "stories", "mobile", "phone", "tiktok", "reels"],
+        "16:9": [
+            "landscape",
+            "paisagem",
+            "wide",
+            "panorama",
+            "cinema",
+            "wallpaper",
+            "widescreen",
+        ],
+        "9:16": [
+            "portrait",
+            "retrato",
+            "vertical",
+            "stories",
+            "mobile",
+            "phone",
+            "tiktok",
+            "reels",
+        ],
         "2:3": ["poster", "book", "cover", "pinterest", "cartaz"],
         "3:2": ["photo", "foto", "horizontal", "banner"],
         "4:5": ["instagram", "ig", "feed"],
@@ -512,20 +559,33 @@ def analyze_prompt(prompt: str) -> dict:
 
     # Detectar modelo
     suggested_model = "sd3.5-large"
-    if any(kw in prompt_lower for kw in ["ultra", "premium", "best quality", "8k", "4k", "maximum"]):
+    if any(
+        kw in prompt_lower
+        for kw in ["ultra", "premium", "best quality", "8k", "4k", "maximum"]
+    ):
         suggested_model = "ultra"
-    elif any(kw in prompt_lower for kw in ["quick", "fast", "rapido", "draft", "rascunho"]):
+    elif any(
+        kw in prompt_lower for kw in ["quick", "fast", "rapido", "draft", "rascunho"]
+    ):
         suggested_model = "sd3.5-large-turbo"
     elif any(kw in prompt_lower for kw in ["core", "simple", "simples", "basico"]):
         suggested_model = "core"
 
     # Detectar modo
     suggested_mode = "generate"
-    if any(kw in prompt_lower for kw in ["upscale", "increase resolution", "melhorar resolucao", "aumentar"]):
+    if any(
+        kw in prompt_lower
+        for kw in ["upscale", "increase resolution", "melhorar resolucao", "aumentar"]
+    ):
         suggested_mode = "upscale"
-    elif any(kw in prompt_lower for kw in ["remove background", "remover fundo", "sem fundo", "transparente"]):
+    elif any(
+        kw in prompt_lower
+        for kw in ["remove background", "remover fundo", "sem fundo", "transparente"]
+    ):
         suggested_mode = "remove-bg"
-    elif any(kw in prompt_lower for kw in ["inpaint", "editar parte", "modificar area"]):
+    elif any(
+        kw in prompt_lower for kw in ["inpaint", "editar parte", "modificar area"]
+    ):
         suggested_mode = "inpaint"
     elif any(kw in prompt_lower for kw in ["replace", "substituir", "trocar"]):
         suggested_mode = "search-replace"
@@ -553,8 +613,8 @@ def main():
             '  python generate.py --prompt "mountain sunset" --mode generate\n'
             '  python generate.py --prompt "watercolor cat" --style watercolor\n'
             '  python generate.py --prompt "epic portrait" --mode ultra --aspect-ratio wide\n'
-            '  python generate.py --mode upscale --image foto.jpg\n'
-            '  python generate.py --mode remove-bg --image produto.jpg\n'
+            "  python generate.py --mode upscale --image foto.jpg\n"
+            "  python generate.py --mode remove-bg --image produto.jpg\n"
             "  python generate.py --list-models\n"
             "  python generate.py --list-styles\n"
         ),
@@ -563,33 +623,75 @@ def main():
     # Principal
     parser.add_argument("--prompt", type=str, help="Prompt de texto para geracao")
     parser.add_argument(
-        "--mode", type=str, default="generate",
-        choices=["generate", "ultra", "core", "img2img", "upscale", "upscale-creative",
-                 "remove-bg", "inpaint", "search-replace", "erase"],
+        "--mode",
+        type=str,
+        default="generate",
+        choices=[
+            "generate",
+            "ultra",
+            "core",
+            "img2img",
+            "upscale",
+            "upscale-creative",
+            "remove-bg",
+            "inpaint",
+            "search-replace",
+            "erase",
+        ],
         help="Modo de geracao (default: generate)",
     )
 
     # Modelo e estilo
-    parser.add_argument("--model", type=str, default=DEFAULT_MODEL, help=f"Modelo (default: {DEFAULT_MODEL})")
-    parser.add_argument("--style", type=str, default=None, help="Estilo pre-configurado")
-    parser.add_argument("--aspect-ratio", type=str, default="1:1", help="Aspect ratio (ex: 16:9, square, ig)")
-    parser.add_argument("--negative-prompt", type=str, default=None, help="O que evitar na imagem")
-    parser.add_argument("--seed", type=int, default=None, help="Seed para reprodutibilidade")
-    parser.add_argument("--strength", type=float, default=None, help="Forca para img2img (0.0-1.0)")
-    parser.add_argument("--raw", action="store_true", help="Nao aplicar estilo, usar prompt como esta")
+    parser.add_argument(
+        "--model",
+        type=str,
+        default=DEFAULT_MODEL,
+        help=f"Modelo (default: {DEFAULT_MODEL})",
+    )
+    parser.add_argument(
+        "--style", type=str, default=None, help="Estilo pre-configurado"
+    )
+    parser.add_argument(
+        "--aspect-ratio",
+        type=str,
+        default="1:1",
+        help="Aspect ratio (ex: 16:9, square, ig)",
+    )
+    parser.add_argument(
+        "--negative-prompt", type=str, default=None, help="O que evitar na imagem"
+    )
+    parser.add_argument(
+        "--seed", type=int, default=None, help="Seed para reprodutibilidade"
+    )
+    parser.add_argument(
+        "--strength", type=float, default=None, help="Forca para img2img (0.0-1.0)"
+    )
+    parser.add_argument(
+        "--raw", action="store_true", help="Nao aplicar estilo, usar prompt como esta"
+    )
 
     # Imagens de entrada
     parser.add_argument("--image", type=str, default=None, help="Imagem de entrada")
-    parser.add_argument("--mask", type=str, default=None, help="Mascara para inpainting/erase")
-    parser.add_argument("--search", type=str, default=None, help="Texto para search-and-replace")
+    parser.add_argument(
+        "--mask", type=str, default=None, help="Mascara para inpainting/erase"
+    )
+    parser.add_argument(
+        "--search", type=str, default=None, help="Texto para search-and-replace"
+    )
 
     # Output
     parser.add_argument("--output", type=Path, default=None, help="Diretorio de saida")
 
     # Utilidades
-    parser.add_argument("--analyze", action="store_true", help="Analisar prompt e sugerir config")
-    parser.add_argument("--list-models", action="store_true", help="Listar modelos disponiveis")
-    parser.add_argument("--list-styles", action="store_true", help="Listar estilos disponiveis")
+    parser.add_argument(
+        "--analyze", action="store_true", help="Analisar prompt e sugerir config"
+    )
+    parser.add_argument(
+        "--list-models", action="store_true", help="Listar modelos disponiveis"
+    )
+    parser.add_argument(
+        "--list-styles", action="store_true", help="Listar estilos disponiveis"
+    )
     parser.add_argument("--json", action="store_true", help="Saida em JSON")
 
     args = parser.parse_args()
@@ -630,8 +732,23 @@ def main():
         return
 
     # --- Validacao ---
-    needs_prompt = args.mode in ("generate", "ultra", "core", "img2img", "inpaint", "search-replace")
-    needs_image = args.mode in ("img2img", "upscale", "upscale-creative", "remove-bg", "inpaint", "search-replace", "erase")
+    needs_prompt = args.mode in (
+        "generate",
+        "ultra",
+        "core",
+        "img2img",
+        "inpaint",
+        "search-replace",
+    )
+    needs_image = args.mode in (
+        "img2img",
+        "upscale",
+        "upscale-creative",
+        "remove-bg",
+        "inpaint",
+        "search-replace",
+        "erase",
+    )
 
     if needs_prompt and not args.prompt:
         print(f"ERRO: modo '{args.mode}' requer --prompt", file=sys.stderr)
@@ -658,11 +775,18 @@ def main():
 
     results = generate_image(
         prompt=args.prompt or "",
-        mode=args.mode, model=args.model, aspect_ratio=aspect,
-        style=args.style, negative_prompt=args.negative_prompt,
-        image_path=args.image, mask_path=args.mask,
-        search_prompt=args.search, strength=args.strength,
-        seed=args.seed, raw=args.raw, output_dir=args.output,
+        mode=args.mode,
+        model=args.model,
+        aspect_ratio=aspect,
+        style=args.style,
+        negative_prompt=args.negative_prompt,
+        image_path=args.image,
+        mask_path=args.mask,
+        search_prompt=args.search,
+        strength=args.strength,
+        seed=args.seed,
+        raw=args.raw,
+        output_dir=args.output,
     )
 
     if args.json:
@@ -670,12 +794,15 @@ def main():
             "generated": [str(r["path"]) for r in results],
             "count": len(results),
             "output_dir": str(results[0]["path"].parent) if results else None,
-            "details": [{
-                "path": str(r["path"]),
-                "size_kb": r["size_kb"],
-                "time_s": r["time_s"],
-                "seed": r.get("seed"),
-            } for r in results],
+            "details": [
+                {
+                    "path": str(r["path"]),
+                    "size_kb": r["size_kb"],
+                    "time_s": r["time_s"],
+                    "seed": r.get("seed"),
+                }
+                for r in results
+            ],
         }
         print(json.dumps(output, indent=2, ensure_ascii=False))
 

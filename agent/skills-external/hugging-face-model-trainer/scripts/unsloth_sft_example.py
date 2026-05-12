@@ -62,9 +62,7 @@ def check_cuda():
     if not torch.cuda.is_available():
         logger.error("CUDA is not available. This script requires a GPU.")
         logger.error("Run on a machine with a CUDA-capable GPU or use HF Jobs:")
-        logger.error(
-            "  hf jobs uv run unsloth_sft_example.py --flavor a10g-small ..."
-        )
+        logger.error("  hf jobs uv run unsloth_sft_example.py --flavor a10g-small ...")
         sys.exit(1)
     logger.info(f"CUDA available: {torch.cuda.get_device_name(0)}")
 
@@ -233,10 +231,14 @@ def main():
     print(f"  Base model:      {args.base_model}")
     print(f"  Dataset:         {args.dataset}")
     print(f"  Num samples:     {args.num_samples or 'all'}")
-    print(f"  Eval split:      {args.eval_split if args.eval_split > 0 else '(disabled)'}")
+    print(
+        f"  Eval split:      {args.eval_split if args.eval_split > 0 else '(disabled)'}"
+    )
     print(f"  Seed:            {args.seed}")
     print(f"  Training:        {duration_str}")
-    print(f"  Batch size:      {args.batch_size} x {args.gradient_accumulation} = {args.batch_size * args.gradient_accumulation}")
+    print(
+        f"  Batch size:      {args.batch_size} x {args.gradient_accumulation} = {args.batch_size * args.gradient_accumulation}"
+    )
     print(f"  Learning rate:   {args.learning_rate}")
     print(f"  LoRA rank:       {args.lora_r}")
     print(f"  Max seq length:  {args.max_seq_length}")
@@ -253,14 +255,16 @@ def main():
     # Set Trackio space if provided
     if args.trackio_space:
         os.environ["TRACKIO_SPACE_ID"] = args.trackio_space
-        logger.info(f"Trackio dashboard: https://huggingface.co/spaces/{args.trackio_space}")
+        logger.info(
+            f"Trackio dashboard: https://huggingface.co/spaces/{args.trackio_space}"
+        )
 
     # Import heavy dependencies
+    from datasets import load_dataset
+    from huggingface_hub import login
+    from trl import SFTConfig, SFTTrainer
     from unsloth import FastLanguageModel
     from unsloth.chat_templates import standardize_data_formats, train_on_responses_only
-    from datasets import load_dataset
-    from trl import SFTTrainer, SFTConfig
-    from huggingface_hub import login
 
     # Login to Hub
     token = os.environ.get("HF_TOKEN") or os.environ.get("hfjob")
@@ -287,7 +291,16 @@ def main():
     model = FastLanguageModel.get_peft_model(
         model,
         r=args.lora_r,
-        target_modules=["q_proj", "k_proj", "v_proj", "out_proj", "in_proj", "w1", "w2", "w3"],
+        target_modules=[
+            "q_proj",
+            "k_proj",
+            "v_proj",
+            "out_proj",
+            "in_proj",
+            "w1",
+            "w2",
+            "w3",
+        ],
         lora_alpha=args.lora_alpha,
         lora_dropout=0,
         bias="none",
@@ -421,13 +434,17 @@ def main():
     # 4. Train
     print(f"\n[4/5] Training for {duration_str}...")
     if args.num_epochs:
-        print(f"  (~{steps_per_epoch} steps/epoch, {int(steps_per_epoch * args.num_epochs)} total steps)")
+        print(
+            f"  (~{steps_per_epoch} steps/epoch, {int(steps_per_epoch * args.num_epochs)} total steps)"
+        )
     start = time.time()
 
     train_result = trainer.train()
 
     train_time = time.time() - start
-    total_steps = train_result.metrics.get("train_steps", args.max_steps or steps_per_epoch * args.num_epochs)
+    total_steps = train_result.metrics.get(
+        "train_steps", args.max_steps or steps_per_epoch * args.num_epochs
+    )
     print(f"\nTraining completed in {train_time / 60:.1f} minutes")
     print(f"  Speed: {total_steps / train_time:.2f} steps/s")
 
@@ -447,9 +464,13 @@ def main():
                 if train_loss:
                     ratio = eval_loss / train_loss
                     if ratio > 1.5:
-                        print(f"  Warning: Eval loss is {ratio:.1f}x train loss - possible overfitting")
+                        print(
+                            f"  Warning: Eval loss is {ratio:.1f}x train loss - possible overfitting"
+                        )
                     else:
-                        print(f"  Eval/train ratio: {ratio:.2f} - model generalizes well")
+                        print(
+                            f"  Eval/train ratio: {ratio:.2f} - model generalizes well"
+                        )
         except Exception as e:
             print(f"  Warning: Final evaluation failed: {e}")
             print("  Continuing to save model...")

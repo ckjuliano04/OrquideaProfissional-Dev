@@ -83,10 +83,10 @@ def send_test(to: str, message: str) -> None:
             msg_id = data.get("messages", [{}])[0].get("id", "N/A")
             print("Message sent successfully!")
             print(f"  Message ID: {msg_id}")
-            print(f"  Status: 200 OK")
+            print("  Status: 200 OK")
         else:
             error = data.get("error", {})
-            print(f"Error sending message:")
+            print("Error sending message:")
             print(f"  Code: {error.get('code', '?')}")
             print(f"  Message: {error.get('message', 'Unknown error')}")
             if error.get("error_data"):
@@ -103,7 +103,9 @@ def send_test(to: str, message: str) -> None:
         print("Error: Request timed out.")
         sys.exit(1)
     except Exception as exc:
-        print(f"Error: unexpected {exc.__class__.__name__} while sending the test message.")
+        print(
+            f"Error: unexpected {exc.__class__.__name__} while sending the test message."
+        )
         sys.exit(1)
 
 

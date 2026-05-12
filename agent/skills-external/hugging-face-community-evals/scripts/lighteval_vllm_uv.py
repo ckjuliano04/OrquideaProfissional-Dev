@@ -74,10 +74,14 @@ def run_lighteval_vllm(
         "vllm",
         model_id,
         tasks,
-        "--batch-size", str(batch_size),
-        "--tensor-parallel-size", str(tensor_parallel_size),
-        "--gpu-memory-utilization", str(gpu_memory_utilization),
-        "--dtype", dtype,
+        "--batch-size",
+        str(batch_size),
+        "--tensor-parallel-size",
+        str(tensor_parallel_size),
+        "--gpu-memory-utilization",
+        str(gpu_memory_utilization),
+        "--dtype",
+        dtype,
     ]
 
     if output_dir:
@@ -140,8 +144,10 @@ def run_lighteval_accelerate(
         "accelerate",
         model_id,
         tasks,
-        "--batch-size", str(batch_size),
-        "--dtype", dtype,
+        "--batch-size",
+        str(batch_size),
+        "--dtype",
+        dtype,
     ]
 
     if output_dir:

@@ -18,8 +18,8 @@ import csv
 import io
 import json
 import re
-from datetime import datetime, timezone
 import time
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 import requests

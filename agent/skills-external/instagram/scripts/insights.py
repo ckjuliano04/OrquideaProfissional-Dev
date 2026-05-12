@@ -6,6 +6,7 @@ Uso:
     python scripts/insights.py --user --period day --since 7
     python scripts/insights.py --fetch-all --limit 20
 """
+
 from __future__ import annotations
 
 import argparse
@@ -43,20 +44,28 @@ async def media_insights(media_id: str, metrics: list = None) -> None:
         for item in result.get("data", []):
             values = item.get("values", [{}])
             value = values[0].get("value", 0) if values else 0
-            db.insert_insights([{
-                "account_id": account["id"],
-                "ig_media_id": media_id,
-                "metric_name": item.get("name", ""),
-                "metric_value": float(value) if isinstance(value, (int, float)) else 0,
-                "period": item.get("period", ""),
-                "raw_json": raw,
-            }])
+            db.insert_insights(
+                [
+                    {
+                        "account_id": account["id"],
+                        "ig_media_id": media_id,
+                        "metric_name": item.get("name", ""),
+                        "metric_value": float(value)
+                        if isinstance(value, (int, float))
+                        else 0,
+                        "period": item.get("period", ""),
+                        "raw_json": raw,
+                    }
+                ]
+            )
 
     await api.close()
     print(json.dumps(result, indent=2, ensure_ascii=False))
 
 
-async def user_insights(period: str = "day", since_days: int = 7, metrics: list = None) -> None:
+async def user_insights(
+    period: str = "day", since_days: int = 7, metrics: list = None
+) -> None:
     """Busca insights da conta."""
     await auto_refresh_if_needed()
     api = InstagramAPI()
@@ -77,13 +86,17 @@ async def user_insights(period: str = "day", since_days: int = 7, metrics: list 
     if account:
         for item in result.get("data", []):
             for value_entry in item.get("values", []):
-                db.insert_user_insights([{
-                    "account_id": account["id"],
-                    "metric_name": item.get("name", ""),
-                    "metric_value": float(value_entry.get("value", 0)),
-                    "period": period,
-                    "end_time": value_entry.get("end_time", ""),
-                }])
+                db.insert_user_insights(
+                    [
+                        {
+                            "account_id": account["id"],
+                            "metric_name": item.get("name", ""),
+                            "metric_value": float(value_entry.get("value", 0)),
+                            "period": period,
+                            "end_time": value_entry.get("end_time", ""),
+                        }
+                    ]
+                )
 
     await api.close()
     print(json.dumps(result, indent=2, ensure_ascii=False))
@@ -107,7 +120,15 @@ async def fetch_all_insights(limit: int = 20) -> None:
             if media_type == "VIDEO":
                 metrics.append("video_views")
             if media_type == "REELS" or "reel" in media.get("permalink", "").lower():
-                metrics = ["impressions", "reach", "likes", "comments", "saves", "shares", "plays"]
+                metrics = [
+                    "impressions",
+                    "reach",
+                    "likes",
+                    "comments",
+                    "saves",
+                    "shares",
+                    "plays",
+                ]
 
             insights = await api.get_media_insights(media_id, metrics=metrics)
 
@@ -118,29 +139,41 @@ async def fetch_all_insights(limit: int = 20) -> None:
                 for item in insights.get("data", []):
                     values = item.get("values", [{}])
                     value = values[0].get("value", 0) if values else 0
-                    db.insert_insights([{
-                        "account_id": account["id"],
-                        "ig_media_id": media_id,
-                        "metric_name": item.get("name", ""),
-                        "metric_value": float(value) if isinstance(value, (int, float)) else 0,
-                        "period": item.get("period", ""),
-                        "raw_json": raw,
-                    }])
+                    db.insert_insights(
+                        [
+                            {
+                                "account_id": account["id"],
+                                "ig_media_id": media_id,
+                                "metric_name": item.get("name", ""),
+                                "metric_value": float(value)
+                                if isinstance(value, (int, float))
+                                else 0,
+                                "period": item.get("period", ""),
+                                "raw_json": raw,
+                            }
+                        ]
+                    )
 
-            results.append({
-                "media_id": media_id,
-                "type": media_type,
-                "caption": (media.get("caption", "") or "")[:50],
-                "metrics": {
-                    d["name"]: d["values"][0]["value"] if d.get("values") else 0
-                    for d in insights.get("data", [])
-                },
-            })
+            results.append(
+                {
+                    "media_id": media_id,
+                    "type": media_type,
+                    "caption": (media.get("caption", "") or "")[:50],
+                    "metrics": {
+                        d["name"]: d["values"][0]["value"] if d.get("values") else 0
+                        for d in insights.get("data", [])
+                    },
+                }
+            )
         except Exception as e:
             results.append({"media_id": media_id, "error": str(e)})
 
     await api.close()
-    print(json.dumps({"fetched": len(results), "insights": results}, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"fetched": len(results), "insights": results}, indent=2, ensure_ascii=False
+        )
+    )
 
 
 def main():
@@ -148,12 +181,22 @@ def main():
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--media", action="store_true", help="Insights de um post")
     group.add_argument("--user", action="store_true", help="Insights da conta")
-    group.add_argument("--fetch-all", action="store_true", help="Buscar insights de todos os posts recentes")
+    group.add_argument(
+        "--fetch-all",
+        action="store_true",
+        help="Buscar insights de todos os posts recentes",
+    )
     parser.add_argument("--media-id", help="ID da mídia")
-    parser.add_argument("--period", default="day", choices=["day", "week", "days_28", "month", "lifetime"])
+    parser.add_argument(
+        "--period",
+        default="day",
+        choices=["day", "week", "days_28", "month", "lifetime"],
+    )
     parser.add_argument("--since", type=int, default=7, help="Dias atrás (default: 7)")
     parser.add_argument("--metrics", nargs="+", help="Métricas específicas")
-    parser.add_argument("--limit", type=int, default=20, help="Limite de posts para --fetch-all")
+    parser.add_argument(
+        "--limit", type=int, default=20, help="Limite de posts para --fetch-all"
+    )
     args = parser.parse_args()
 
     if args.media:

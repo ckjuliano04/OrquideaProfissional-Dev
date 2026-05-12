@@ -6,6 +6,7 @@ Uso:
     python scripts/schedule.py --list              # Lista posts pendentes
     python scripts/schedule.py --cancel --id 5     # Cancela agendamento
 """
+
 from __future__ import annotations
 
 import argparse
@@ -37,7 +38,11 @@ async def process_pending() -> None:
 
     posts = db.get_posts_for_publishing(account["id"])
     if not posts:
-        print(json.dumps({"message": "Nenhum post pendente para publicar", "count": 0}, indent=2))
+        print(
+            json.dumps(
+                {"message": "Nenhum post pendente para publicar", "count": 0}, indent=2
+            )
+        )
         return
 
     print(f"Processando {len(posts)} posts...")
@@ -48,7 +53,9 @@ async def process_pending() -> None:
         try:
             gov.check_rate_limit(f"publish_{post['media_type'].lower()}", account["id"])
         except RateLimitExceeded as e:
-            results.append({"post_id": post_id, "status": "rate_limited", "error": str(e)})
+            results.append(
+                {"post_id": post_id, "status": "rate_limited", "error": str(e)}
+            )
             break
 
         try:
@@ -58,12 +65,19 @@ async def process_pending() -> None:
                 ig_media_id = result.get("id")
                 details = await api.get_media_details(ig_media_id)
                 db.update_post_status(
-                    post_id, "published",
+                    post_id,
+                    "published",
                     ig_media_id=ig_media_id,
                     permalink=details.get("permalink", ""),
                     published_at=details.get("timestamp", ""),
                 )
-                results.append({"post_id": post_id, "status": "published", "ig_media_id": ig_media_id})
+                results.append(
+                    {
+                        "post_id": post_id,
+                        "status": "published",
+                        "ig_media_id": ig_media_id,
+                    }
+                )
                 continue
 
             # Publicação normal
@@ -73,11 +87,22 @@ async def process_pending() -> None:
                 db.update_post_status(post_id, post["status"], media_url=media_url)
 
             media_type = post["media_type"].upper()
-            ig_type_map = {"PHOTO": "IMAGE", "VIDEO": "VIDEO", "REEL": "REELS", "STORY": "STORIES"}
+            ig_type_map = {
+                "PHOTO": "IMAGE",
+                "VIDEO": "VIDEO",
+                "REEL": "REELS",
+                "STORY": "STORIES",
+            }
             ig_type = ig_type_map.get(media_type, "IMAGE")
 
             if media_type == "CAROUSEL":
-                results.append({"post_id": post_id, "status": "skipped", "reason": "Carrosséis precisam ser publicados via publish.py"})
+                results.append(
+                    {
+                        "post_id": post_id,
+                        "status": "skipped",
+                        "reason": "Carrosséis precisam ser publicados via publish.py",
+                    }
+                )
                 continue
 
             # Step 1: Container
@@ -91,7 +116,9 @@ async def process_pending() -> None:
 
             container = await api.create_media_container(**container_params)
             container_id = container["id"]
-            db.update_post_status(post_id, "container_created", ig_container_id=container_id)
+            db.update_post_status(
+                post_id, "container_created", ig_container_id=container_id
+            )
 
             # Para vídeos, aguardar processamento
             if media_type in ("VIDEO", "REEL"):
@@ -110,7 +137,8 @@ async def process_pending() -> None:
             permalink = details.get("permalink", "")
 
             db.update_post_status(
-                post_id, "published",
+                post_id,
+                "published",
                 ig_media_id=ig_media_id,
                 permalink=permalink,
                 published_at=details.get("timestamp", ""),
@@ -123,14 +151,27 @@ async def process_pending() -> None:
                 account_id=account["id"],
             )
 
-            results.append({"post_id": post_id, "status": "published", "ig_media_id": ig_media_id, "permalink": permalink})
+            results.append(
+                {
+                    "post_id": post_id,
+                    "status": "published",
+                    "ig_media_id": ig_media_id,
+                    "permalink": permalink,
+                }
+            )
 
         except Exception as e:
             db.update_post_status(post_id, "failed", error_msg=str(e))
             results.append({"post_id": post_id, "status": "failed", "error": str(e)})
 
     await api.close()
-    print(json.dumps({"processed": len(results), "results": results}, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"processed": len(results), "results": results},
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
 
 
 async def list_pending() -> None:
@@ -145,12 +186,18 @@ async def list_pending() -> None:
     scheduled = db.get_posts(account_id=account["id"], status="scheduled")
     failed = db.get_posts(account_id=account["id"], status="failed")
 
-    print(json.dumps({
-        "draft": {"count": len(drafts), "posts": drafts},
-        "approved": {"count": len(approved), "posts": approved},
-        "scheduled": {"count": len(scheduled), "posts": scheduled},
-        "failed": {"count": len(failed), "posts": failed},
-    }, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                "draft": {"count": len(drafts), "posts": drafts},
+                "approved": {"count": len(approved), "posts": approved},
+                "scheduled": {"count": len(scheduled), "posts": scheduled},
+                "failed": {"count": len(failed), "posts": failed},
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
 
 
 async def cancel_post(post_id: int) -> None:
@@ -160,7 +207,9 @@ async def cancel_post(post_id: int) -> None:
         print(json.dumps({"error": f"Post {post_id} não encontrado"}, indent=2))
         return
     if post["status"] == "published":
-        print(json.dumps({"error": "Não é possível cancelar post já publicado"}, indent=2))
+        print(
+            json.dumps({"error": "Não é possível cancelar post já publicado"}, indent=2)
+        )
         return
     db.update_post_status(post_id, "draft")
     print(json.dumps({"status": "cancelled", "post_id": post_id}, indent=2))
@@ -169,7 +218,9 @@ async def cancel_post(post_id: int) -> None:
 def main():
     parser = argparse.ArgumentParser(description="Agendamento de posts Instagram")
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--process", action="store_true", help="Processar posts pendentes")
+    group.add_argument(
+        "--process", action="store_true", help="Processar posts pendentes"
+    )
     group.add_argument("--list", action="store_true", help="Listar posts pendentes")
     group.add_argument("--cancel", action="store_true", help="Cancelar agendamento")
     parser.add_argument("--id", type=int, help="ID do post (para --cancel)")

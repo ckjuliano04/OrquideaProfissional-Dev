@@ -35,7 +35,7 @@ import argparse
 import os
 
 from collect_query_logs import collect
-from push_query_logs import push, _BATCH_SIZE
+from push_query_logs import _BATCH_SIZE, push
 
 
 def main() -> None:

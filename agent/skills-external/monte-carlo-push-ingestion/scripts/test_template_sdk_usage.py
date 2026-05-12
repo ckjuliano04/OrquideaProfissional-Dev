@@ -98,7 +98,9 @@ def test_metadata_models():
             ),
             fields=[
                 AssetField(name="id", type="INTEGER"),
-                AssetField(name="amount", type="DECIMAL(10,2)", description="Order total"),
+                AssetField(
+                    name="amount", type="DECIMAL(10,2)", description="Order total"
+                ),
             ],
             volume=AssetVolume(row_count=1000000, byte_count=111111111),
             freshness=AssetFreshness(last_update_time="2026-03-12T14:30:00Z"),
@@ -150,9 +152,7 @@ def test_lineage_models():
 
     check(
         "ColumnLineageSourceField(asset_id, field_name)",
-        lambda: ColumnLineageSourceField(
-            asset_id="db:sch.raw", field_name="amount"
-        ),
+        lambda: ColumnLineageSourceField(asset_id="db:sch.raw", field_name="amount"),
     )
 
     check(
@@ -331,7 +331,7 @@ if __name__ == "__main__":
     test_lineage_models()
     test_query_log_models()
     test_payload_builders()
-    print(f"\n{'='*40}")
+    print(f"\n{'=' * 40}")
     print(f"Results: {PASSED} passed, {FAILED} failed")
     if FAILED:
         print("SOME TESTS FAILED — templates use wrong parameter names!")

@@ -10,20 +10,19 @@ Uso:
   python dependency_graph.py C:/Users/renat/earbudllm --format dot --output deps.dot
 """
 
-import os
+import argparse
+import json
 import re
 import sys
-import json
-import argparse
+from dataclasses import dataclass
 from pathlib import Path
-from dataclasses import dataclass, field
-from typing import Dict, List, Set, Optional, Tuple
+from typing import Dict, List, Optional, Set
 
 # Fix Windows terminal encoding (cp1252 doesn't support emojis/unicode)
-if sys.platform == 'win32':
+if sys.platform == "win32":
     try:
-        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
     except AttributeError:
         pass  # Python < 3.7 fallback
 from collections import defaultdict, deque
@@ -41,8 +40,8 @@ class Node:
 
 @dataclass
 class Edge:
-    src: str   # node id
-    dst: str   # node id
+    src: str  # node id
+    dst: str  # node id
     kind: str  # 'implements', 'extends', 'uses', 'imports', 'delegates_to'
     weight: float = 1.0
 
@@ -53,8 +52,8 @@ class DependencyGraph:
     def __init__(self):
         self.nodes: Dict[str, Node] = {}
         self.edges: List[Edge] = []
-        self._adj: Dict[str, Set[str]] = defaultdict(set)    # adjacência direta
-        self._radj: Dict[str, Set[str]] = defaultdict(set)   # adjacência reversa
+        self._adj: Dict[str, Set[str]] = defaultdict(set)  # adjacência direta
+        self._radj: Dict[str, Set[str]] = defaultdict(set)  # adjacência reversa
 
     def add_node(self, node: Node) -> None:
         self.nodes[node.id] = node
@@ -223,7 +222,9 @@ class DependencyGraph:
 
         return dict(betweenness)
 
-    def page_rank(self, damping: float = 0.85, iterations: int = 100) -> Dict[str, float]:
+    def page_rank(
+        self, damping: float = 0.85, iterations: int = 100
+    ) -> Dict[str, float]:
         """
         PageRank para identificar classes/módulos mais "importantes".
         Nodes com alto PageRank são frequentemente usados por outros.
@@ -274,9 +275,12 @@ class DependencyGraph:
             instability = ce / (ca + ce) if (ca + ce) > 0 else 0.0
 
             # Abstração: razão de interfaces/abstratas para total
-            abstracts = sum(1 for n in nodes if
-                            n in self.nodes and
-                            (self.nodes[n].is_abstract or self.nodes[n].kind == 'interface'))
+            abstracts = sum(
+                1
+                for n in nodes
+                if n in self.nodes
+                and (self.nodes[n].is_abstract or self.nodes[n].kind == "interface")
+            )
             abstraction = abstracts / max(len(nodes), 1)
 
             # Distância da sequência principal: D = |A + I - 1|
@@ -284,15 +288,15 @@ class DependencyGraph:
             distance = abs(abstraction + instability - 1)
 
             metrics[module] = {
-                'Ca': ca,
-                'Ce': ce,
-                'instability': round(instability, 3),
-                'abstraction': round(abstraction, 3),
-                'distance_from_main_sequence': round(distance, 3),
-                'total_classes': len(nodes),
-                'abstract_classes': abstracts,
-                'depends_on_modules': list(efferent),
-                'used_by_modules': list(afferent),
+                "Ca": ca,
+                "Ce": ce,
+                "instability": round(instability, 3),
+                "abstraction": round(abstraction, 3),
+                "distance_from_main_sequence": round(distance, 3),
+                "total_classes": len(nodes),
+                "abstract_classes": abstracts,
+                "depends_on_modules": list(efferent),
+                "used_by_modules": list(afferent),
             }
 
         return metrics
@@ -316,36 +320,46 @@ class ProjectAnalyzer:
             self._analyze_file(kt_file, module)
 
     def _detect_module(self, file_path: Path) -> str:
-        known = ['app', 'bluetooth', 'audio', 'voice', 'llm', 'integrations', 'core-logging']
+        known = [
+            "app",
+            "bluetooth",
+            "audio",
+            "voice",
+            "llm",
+            "integrations",
+            "core-logging",
+        ]
         for part in file_path.parts:
             if part in known:
                 return part
-        return 'unknown'
+        return "unknown"
 
     def _analyze_file(self, file_path: Path, module: str) -> None:
         try:
-            content = file_path.read_text(encoding='utf-8', errors='ignore')
+            content = file_path.read_text(encoding="utf-8", errors="ignore")
         except Exception:
             return
 
         # Extrair package
-        pkg_match = re.search(r'^package\s+(.+)$', content, re.MULTILINE)
-        package = pkg_match.group(1).strip() if pkg_match else 'unknown'
+        pkg_match = re.search(r"^package\s+(.+)$", content, re.MULTILINE)
+        package = pkg_match.group(1).strip() if pkg_match else "unknown"
 
         # Extrair declarações de classe/interface/object
         class_patterns = [
-            (r'(?:abstract\s+)?(?:open\s+)?(?:data\s+)?class\s+(\w+)', 'class'),
-            (r'interface\s+(\w+)', 'interface'),
-            (r'object\s+(\w+)', 'object'),
-            (r'enum\s+class\s+(\w+)', 'enum'),
+            (r"(?:abstract\s+)?(?:open\s+)?(?:data\s+)?class\s+(\w+)", "class"),
+            (r"interface\s+(\w+)", "interface"),
+            (r"object\s+(\w+)", "object"),
+            (r"enum\s+class\s+(\w+)", "enum"),
         ]
 
         for pattern, kind in class_patterns:
             for match in re.finditer(pattern, content):
                 class_name = match.group(1)
                 node_id = f"{package}.{class_name}"
-                is_abstract = 'abstract' in content[max(0, match.start()-20):match.start()]
-                is_open = 'open' in content[max(0, match.start()-10):match.start()]
+                is_abstract = (
+                    "abstract" in content[max(0, match.start() - 20) : match.start()]
+                )
+                is_open = "open" in content[max(0, match.start() - 10) : match.start()]
 
                 node = Node(
                     id=node_id,
@@ -353,18 +367,18 @@ class ProjectAnalyzer:
                     package=package,
                     kind=kind,
                     is_abstract=is_abstract,
-                    is_open=is_open
+                    is_open=is_open,
                 )
                 self.graph.add_node(node)
 
                 # Extrair dependências via imports
-                imports = re.findall(r'^import\s+(.+)$', content, re.MULTILINE)
+                imports = re.findall(r"^import\s+(.+)$", content, re.MULTILINE)
                 for imp in imports:
                     imp = imp.strip()
-                    if imp.startswith('com.earllm'):
+                    if imp.startswith("com.earllm"):
                         dep_id = imp
                         if dep_id != node_id:
-                            edge = Edge(src=node_id, dst=dep_id, kind='imports')
+                            edge = Edge(src=node_id, dst=dep_id, kind="imports")
                             self.graph.add_edge(edge)
 
     def generate_full_report(self) -> Dict:
@@ -377,54 +391,52 @@ class ProjectAnalyzer:
         coupling = self.graph.coupling_metrics()
 
         # Top nodes por betweenness (single points of failure)
-        top_betweenness = sorted(
-            betweenness.items(), key=lambda x: x[1], reverse=True
-        )[:10]
+        top_betweenness = sorted(betweenness.items(), key=lambda x: x[1], reverse=True)[
+            :10
+        ]
 
         # Top nodes por pagerank (mais influentes)
-        top_pagerank = sorted(
-            pagerank.items(), key=lambda x: x[1], reverse=True
-        )[:10]
+        top_pagerank = sorted(pagerank.items(), key=lambda x: x[1], reverse=True)[:10]
 
         # SCCs com mais de 1 nó (ciclos reais)
         real_sccs = [scc for scc in sccs if len(scc) > 1]
 
         return {
-            'graph_summary': {
-                'nodes': len(self.graph.nodes),
-                'edges': len(self.graph.edges),
-                'is_dag': topo is not None,
-                'cycles_found': len(cycles),
-                'strongly_connected_components': len(real_sccs),
+            "graph_summary": {
+                "nodes": len(self.graph.nodes),
+                "edges": len(self.graph.edges),
+                "is_dag": topo is not None,
+                "cycles_found": len(cycles),
+                "strongly_connected_components": len(real_sccs),
             },
-            'cycles': cycles[:10],  # primeiros 10 ciclos
-            'real_sccs': real_sccs[:5],
-            'topological_order': topo[:20] if topo else None,
-            'top_betweenness_centrality': [
-                {'node': n, 'betweenness': round(b, 4)} for n, b in top_betweenness
+            "cycles": cycles[:10],  # primeiros 10 ciclos
+            "real_sccs": real_sccs[:5],
+            "topological_order": topo[:20] if topo else None,
+            "top_betweenness_centrality": [
+                {"node": n, "betweenness": round(b, 4)} for n, b in top_betweenness
             ],
-            'top_pagerank': [
-                {'node': n, 'pagerank': round(pr, 4)} for n, pr in top_pagerank
+            "top_pagerank": [
+                {"node": n, "pagerank": round(pr, 4)} for n, pr in top_pagerank
             ],
-            'module_coupling': coupling,
-            'modules': {mod: len(files) for mod, files in self.module_files.items()},
+            "module_coupling": coupling,
+            "modules": {mod: len(files) for mod, files in self.module_files.items()},
         }
 
     def to_dot(self) -> str:
         """Exporta grafo em formato DOT para visualização (Graphviz)."""
-        lines = ['digraph AuriDependencies {']
-        lines.append('  rankdir=LR;')
+        lines = ["digraph AuriDependencies {"]
+        lines.append("  rankdir=LR;")
         lines.append('  node [shape=box, fontname="Arial"];')
 
         # Cores por módulo
         module_colors = {
-            'app': '#4CAF50',
-            'bluetooth': '#2196F3',
-            'audio': '#FF9800',
-            'voice': '#9C27B0',
-            'llm': '#F44336',
-            'integrations': '#00BCD4',
-            'core-logging': '#607D8B',
+            "app": "#4CAF50",
+            "bluetooth": "#2196F3",
+            "audio": "#FF9800",
+            "voice": "#9C27B0",
+            "llm": "#F44336",
+            "integrations": "#00BCD4",
+            "core-logging": "#607D8B",
         }
 
         # Adicionar nós por módulo
@@ -433,75 +445,97 @@ class ProjectAnalyzer:
             modules_seen[node.module].append((node_id, node))
 
         for module, nodes in modules_seen.items():
-            color = module_colors.get(module, '#9E9E9E')
-            lines.append(f'  subgraph cluster_{module.replace("-", "_")} {{')
+            color = module_colors.get(module, "#9E9E9E")
+            lines.append(f"  subgraph cluster_{module.replace('-', '_')} {{")
             lines.append(f'    label="{module}";')
-            lines.append(f'    style=filled;')
+            lines.append("    style=filled;")
             lines.append(f'    fillcolor="{color}20";')  # 20 = ~12% opacity
             for node_id, node in nodes[:20]:  # limitar para visualização
-                short_name = node_id.split('.')[-1]
-                shape = 'diamond' if node.kind == 'interface' else 'box'
+                short_name = node_id.split(".")[-1]
+                shape = "diamond" if node.kind == "interface" else "box"
                 lines.append(f'    "{node_id}" [label="{short_name}", shape={shape}];')
-            lines.append('  }')
+            lines.append("  }")
 
         # Adicionar arestas (amostra)
         for edge in self.edges[:100]:  # limitar para visualização
             lines.append(f'  "{edge.src}" -> "{edge.dst}" [label="{edge.kind}"];')
 
-        lines.append('}')
-        return '\n'.join(lines)
+        lines.append("}")
+        return "\n".join(lines)
 
     @property
     def edges(self):
         return self.graph.edges
 
     def print_report(self, report: Dict) -> None:
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("  PROF. EULER — ANÁLISE DE GRAFOS DE DEPENDÊNCIAS")
-        print("="*70)
+        print("=" * 70)
 
-        gs = report['graph_summary']
+        gs = report["graph_summary"]
         print(f"\n📊 RESUMO DO GRAFO G = (V={gs['nodes']}, E={gs['edges']}):")
-        print(f"  É DAG (sem ciclos):          {'✅ SIM' if gs['is_dag'] else '❌ NÃO'}")
+        print(
+            f"  É DAG (sem ciclos):          {'✅ SIM' if gs['is_dag'] else '❌ NÃO'}"
+        )
         print(f"  Ciclos detectados:           {gs['cycles_found']}")
         print(f"  SCCs com mais de 1 nó:       {gs['strongly_connected_components']}")
 
-        if report['cycles']:
-            print(f"\n❌ CICLOS DE DEPENDÊNCIA (devem ser eliminados):")
-            for i, cycle in enumerate(report['cycles'][:5], 1):
+        if report["cycles"]:
+            print("\n❌ CICLOS DE DEPENDÊNCIA (devem ser eliminados):")
+            for i, cycle in enumerate(report["cycles"][:5], 1):
                 print(f"  {i}. {' → '.join(c.split('.')[-1] for c in cycle)}")
 
-        if report['top_betweenness_centrality']:
-            print(f"\n⚠️  TOP NÓDULOS CRÍTICOS (single points of failure — alto betweenness):")
-            for item in report['top_betweenness_centrality'][:5]:
-                short = item['node'].split('.')[-1]
+        if report["top_betweenness_centrality"]:
+            print(
+                "\n⚠️  TOP NÓDULOS CRÍTICOS (single points of failure — alto betweenness):"
+            )
+            for item in report["top_betweenness_centrality"][:5]:
+                short = item["node"].split(".")[-1]
                 print(f"  {short:<35} betweenness={item['betweenness']:.4f}")
 
-        print(f"\n📦 ACOPLAMENTO DE MÓDULOS (Princípio de Martin):")
-        print(f"  {'Módulo':<20} {'Ca':>5} {'Ce':>5} {'I':>8} {'A':>8} {'D':>8}  Status")
-        print(f"  {'-'*20} {'-'*5} {'-'*5} {'-'*8} {'-'*8} {'-'*8}  {'-'*20}")
-        for mod, data in sorted(report['module_coupling'].items()):
-            i = data['instability']
-            a = data['abstraction']
-            d = data['distance_from_main_sequence']
-            status = "✅ OK" if d < 0.3 else ("⚠️  ZONA DE PROBLEMA" if d < 0.5 else "❌ FORA DA SEQ.")
-            print(f"  {mod:<20} {data['Ca']:>5} {data['Ce']:>5} {i:>8.3f} {a:>8.3f} {d:>8.3f}  {status}")
+        print("\n📦 ACOPLAMENTO DE MÓDULOS (Princípio de Martin):")
+        print(
+            f"  {'Módulo':<20} {'Ca':>5} {'Ce':>5} {'I':>8} {'A':>8} {'D':>8}  Status"
+        )
+        print(
+            f"  {'-' * 20} {'-' * 5} {'-' * 5} {'-' * 8} {'-' * 8} {'-' * 8}  {'-' * 20}"
+        )
+        for mod, data in sorted(report["module_coupling"].items()):
+            i = data["instability"]
+            a = data["abstraction"]
+            d = data["distance_from_main_sequence"]
+            status = (
+                "✅ OK"
+                if d < 0.3
+                else ("⚠️  ZONA DE PROBLEMA" if d < 0.5 else "❌ FORA DA SEQ.")
+            )
+            print(
+                f"  {mod:<20} {data['Ca']:>5} {data['Ce']:>5} {i:>8.3f} {a:>8.3f} {d:>8.3f}  {status}"
+            )
 
         print("\n  I=instabilidade, A=abstração, D=distância da sequência principal")
         print("  D ideal < 0.3 (zona de exclusão = zona de dor/inutilidade)")
-        print("\n" + "="*70 + "\n")
+        print("\n" + "=" * 70 + "\n")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Prof. Euler — Análise de Grafos de Dependências'
+        description="Prof. Euler — Análise de Grafos de Dependências"
     )
-    parser.add_argument('path', nargs='?',
-                        default=r'C:\Users\renat\earbudllm',
-                        help='Caminho raiz do projeto')
-    parser.add_argument('--format', '-f', choices=['text', 'json', 'dot'],
-                        default='text', help='Formato de saída')
-    parser.add_argument('--output', '-o', help='Arquivo de saída')
+    parser.add_argument(
+        "path",
+        nargs="?",
+        default=r"C:\Users\renat\earbudllm",
+        help="Caminho raiz do projeto",
+    )
+    parser.add_argument(
+        "--format",
+        "-f",
+        choices=["text", "json", "dot"],
+        default="text",
+        help="Formato de saída",
+    )
+    parser.add_argument("--output", "-o", help="Arquivo de saída")
 
     args = parser.parse_args()
 
@@ -511,10 +545,10 @@ def main():
     analyzer.analyze()
     report = analyzer.generate_full_report()
 
-    if args.format == 'json':
+    if args.format == "json":
         output = json.dumps(report, indent=2, ensure_ascii=False)
         print(output)
-    elif args.format == 'dot':
+    elif args.format == "dot":
         output = analyzer.to_dot()
         print(output)
         if args.output:
@@ -524,15 +558,14 @@ def main():
     else:
         analyzer.print_report(report)
 
-    if args.output and args.format != 'dot':
+    if args.output and args.format != "dot":
         Path(args.output).write_text(
-            json.dumps(report, indent=2, ensure_ascii=False),
-            encoding='utf-8'
+            json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
         )
         print(f"✅ Relatório salvo: {args.output}")
 
     return report
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

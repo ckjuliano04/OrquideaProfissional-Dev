@@ -94,7 +94,11 @@ def _build_column_lineage_events(edges: list[dict]) -> list[LineageEvent]:
 
         dest_asset_id = f"{dest['database']}__{dest['schema']}__{dest['table']}"
         source_asset_ids = {
-            (s["database"], s["schema"], s["table"]): f"{s['database']}__{s['schema']}__{s['table']}"
+            (
+                s["database"],
+                s["schema"],
+                s["table"],
+            ): f"{s['database']}__{s['schema']}__{s['table']}"
             for s in sources
         }
 
@@ -110,9 +114,13 @@ def _build_column_lineage_events(edges: list[dict]) -> list[LineageEvent]:
             )
             if not match:
                 continue
-            src_aid = source_asset_ids[(match["database"], match["schema"], match["table"])]
+            src_aid = source_asset_ids[
+                (match["database"], match["schema"], match["table"])
+            ]
             if dest_col not in col_fields:
-                col_fields[dest_col] = ColumnLineageField(name=dest_col, source_fields=[])
+                col_fields[dest_col] = ColumnLineageField(
+                    name=dest_col, source_fields=[]
+                )
             col_fields[dest_col].source_fields.append(
                 ColumnLineageSourceField(asset_id=src_aid, field_name=src_col)
             )
@@ -132,7 +140,9 @@ def _build_column_lineage_events(edges: list[dict]) -> list[LineageEvent]:
                         name=s["table"],
                         database=s["database"],
                         schema=s["schema"],
-                        asset_id=source_asset_ids[(s["database"], s["schema"], s["table"])],
+                        asset_id=source_asset_ids[
+                            (s["database"], s["schema"], s["table"])
+                        ],
                     )
                     for s in sources
                 ],
@@ -195,7 +205,9 @@ def push(
     def _push_batch(batch: list, batch_num: int) -> str | None:
         """Push a single batch using a dedicated Session (thread-safe)."""
         print(f"  Pushing batch {batch_num}/{total_batches} ({len(batch)} events) ...")
-        client = Client(session=Session(mcd_id=key_id, mcd_token=key_token, scope="Ingestion"))
+        client = Client(
+            session=Session(mcd_id=key_id, mcd_token=key_token, scope="Ingestion")
+        )
         service = IngestionService(mc_client=client)
         result = service.send_lineage(
             resource_uuid=resource_uuid,
@@ -213,8 +225,7 @@ def push(
 
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         futures = {
-            pool.submit(_push_batch, batch, i + 1): i
-            for i, batch in enumerate(batches)
+            pool.submit(_push_batch, batch, i + 1): i for i, batch in enumerate(batches)
         }
         for future in as_completed(futures):
             idx = futures[future]

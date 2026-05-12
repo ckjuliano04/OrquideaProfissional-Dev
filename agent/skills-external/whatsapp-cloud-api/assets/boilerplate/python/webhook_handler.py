@@ -9,7 +9,6 @@ from typing import Any
 
 from flask import Response, abort, request
 
-
 _SAFE_CHALLENGE_RE = re.compile(r"^[A-Za-z0-9._-]{1,200}$")
 
 
@@ -31,9 +30,10 @@ def validate_hmac_signature(app_secret: str | None = None):
                 abort(401, "Missing signature header")
 
             raw_body = request.get_data()
-            expected = "sha256=" + hmac.new(
-                secret.encode(), raw_body, hashlib.sha256
-            ).hexdigest()
+            expected = (
+                "sha256="
+                + hmac.new(secret.encode(), raw_body, hashlib.sha256).hexdigest()
+            )
 
             if not hmac.compare_digest(signature, expected):
                 abort(401, "Invalid signature")
@@ -102,11 +102,19 @@ def extract_message_content(message: dict[str, Any]) -> dict[str, Any]:
 
         if int_type == "button_reply":
             reply = interactive.get("button_reply", {})
-            return {"type": "button", "button_id": reply.get("id"), "text": reply.get("title")}
+            return {
+                "type": "button",
+                "button_id": reply.get("id"),
+                "text": reply.get("title"),
+            }
 
         if int_type == "list_reply":
             reply = interactive.get("list_reply", {})
-            return {"type": "list", "list_id": reply.get("id"), "text": reply.get("title")}
+            return {
+                "type": "list",
+                "list_id": reply.get("id"),
+                "text": reply.get("title"),
+            }
 
         if int_type == "nfm_reply":
             return {

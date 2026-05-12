@@ -25,7 +25,7 @@ def setup_project(language: str, path: str, name: str | None = None) -> None:
 
     if not os.path.exists(boilerplate_dir):
         print(f"Error: Boilerplate not found for language '{language}'")
-        print(f"Available: nodejs, python")
+        print("Available: nodejs, python")
         sys.exit(1)
 
     target_path = os.path.abspath(path)
@@ -86,13 +86,17 @@ def setup_project(language: str, path: str, name: str | None = None) -> None:
     print()
     print("For local development with webhooks:")
     print("  ngrok http 3000")
-    print("  Then configure the ngrok URL in Meta Developers > WhatsApp > Configuration")
+    print(
+        "  Then configure the ngrok URL in Meta Developers > WhatsApp > Configuration"
+    )
     print()
     print("Need help with setup? Read: references/setup-guide.md")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Setup a new WhatsApp Cloud API project")
+    parser = argparse.ArgumentParser(
+        description="Setup a new WhatsApp Cloud API project"
+    )
     parser.add_argument(
         "--language",
         choices=["nodejs", "python"],

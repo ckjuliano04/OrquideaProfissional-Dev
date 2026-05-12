@@ -38,8 +38,8 @@ from __future__ import annotations
 import argparse
 import os
 
-from collect_lineage import collect, _LOOKBACK_HOURS
-from push_lineage import push, _BATCH_SIZE
+from collect_lineage import _LOOKBACK_HOURS, collect
+from push_lineage import _BATCH_SIZE, push
 
 
 def main() -> None:

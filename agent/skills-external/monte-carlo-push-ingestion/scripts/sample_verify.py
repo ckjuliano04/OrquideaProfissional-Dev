@@ -57,6 +57,7 @@ def graphql(query: str, variables: dict, key_id: str, key_token: str) -> dict:
 # Step 1: Resolve MCON from fullTableId
 # ---------------------------------------------------------------------------
 
+
 def get_table_mcon(full_table_id: str, dw_id: str, key_id: str, key_token: str) -> str:
     """Resolve a fullTableId + warehouse UUID to an MCON."""
     data = graphql(
@@ -66,7 +67,8 @@ def get_table_mcon(full_table_id: str, dw_id: str, key_id: str, key_token: str) 
              }
            }""",
         {"fullTableId": full_table_id, "dwId": dw_id},
-        key_id, key_token,
+        key_id,
+        key_token,
     )
     table = data.get("getTable")
     if not table:
@@ -79,7 +81,10 @@ def get_table_mcon(full_table_id: str, dw_id: str, key_id: str, key_token: str) 
 # Step 2: Verify schema (columns)
 # ---------------------------------------------------------------------------
 
-def verify_schema(mcon: str, expected_fields: list[str], key_id: str, key_token: str) -> bool:
+
+def verify_schema(
+    mcon: str, expected_fields: list[str], key_id: str, key_token: str
+) -> bool:
     """Check that the table's column names match expected_fields."""
     data = graphql(
         """query GetSchema($mcon: String!) {
@@ -94,7 +99,8 @@ def verify_schema(mcon: str, expected_fields: list[str], key_id: str, key_token:
              }
            }""",
         {"mcon": mcon},
-        key_id, key_token,
+        key_id,
+        key_token,
     )
     edges = (data.get("getTable") or {}).get("versions", {}).get("edges", [])
     if not edges:
@@ -102,19 +108,22 @@ def verify_schema(mcon: str, expected_fields: list[str], key_id: str, key_token:
         return False
     fields = edges[0]["node"]["fields"]
     got_names = {f["name"].lower() for f in fields}
-    print(f"  Schema: {len(fields)} column(s) — {', '.join(f['name'] for f in fields[:8])}{'...' if len(fields) > 8 else ''}")
+    print(
+        f"  Schema: {len(fields)} column(s) — {', '.join(f['name'] for f in fields[:8])}{'...' if len(fields) > 8 else ''}"
+    )
     if expected_fields:
         missing = [e for e in expected_fields if e.lower() not in got_names]
         if missing:
             print(f"  FAIL: missing columns: {missing}")
             return False
-        print(f"  PASS: all expected columns present")
+        print("  PASS: all expected columns present")
     return True
 
 
 # ---------------------------------------------------------------------------
 # Step 3: Verify volume/freshness metrics
 # ---------------------------------------------------------------------------
+
 
 def verify_metrics(mcon: str, key_id: str, key_token: str) -> None:
     """Fetch and display the latest row_count and freshness metrics."""
@@ -128,9 +137,14 @@ def verify_metrics(mcon: str, key_id: str, key_token: str) -> None:
                    metricsJson
                  }
                }""",
-            {"mcon": mcon, "metricName": metric_name,
-             "start": start.isoformat(), "end": end.isoformat()},
-            key_id, key_token,
+            {
+                "mcon": mcon,
+                "metricName": metric_name,
+                "start": start.isoformat(),
+                "end": end.isoformat(),
+            },
+            key_id,
+            key_token,
         )
         metrics_json = (data.get("getMetricsV4") or {}).get("metricsJson")
         if not metrics_json:
@@ -144,7 +158,9 @@ def verify_metrics(mcon: str, key_id: str, key_token: str) -> None:
         val = latest.get("value")
         ts = latest.get("measurementTimestamp")
         if metric_name == "total_row_count_last_changed_on" and val:
-            ts_fmt = datetime.fromtimestamp(float(val), tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            ts_fmt = datetime.fromtimestamp(float(val), tz=timezone.utc).strftime(
+                "%Y-%m-%dT%H:%M:%SZ"
+            )
             print(f"  {metric_name}: {ts_fmt}")
         else:
             print(f"  {metric_name}: {val} (at {ts})")
@@ -153,6 +169,7 @@ def verify_metrics(mcon: str, key_id: str, key_token: str) -> None:
 # ---------------------------------------------------------------------------
 # Step 3b: Verify detector status (freshness + volume)
 # ---------------------------------------------------------------------------
+
 
 def verify_detectors(mcon: str, key_id: str, key_token: str) -> None:
     """Check the status of freshness and volume anomaly detectors."""
@@ -166,7 +183,8 @@ def verify_detectors(mcon: str, key_id: str, key_token: str) -> None:
              }
            }""",
         {"mcon": mcon},
-        key_id, key_token,
+        key_id,
+        key_token,
     )
     thresholds = (data.get("getTable") or {}).get("thresholds") or {}
     freshness = thresholds.get("freshness") or {}
@@ -176,14 +194,19 @@ def verify_detectors(mcon: str, key_id: str, key_token: str) -> None:
     print(f"  Freshness detector: {freshness_status}")
     print(f"  Volume detector:    {size_status}")
     if freshness_status in ("no data", "training"):
-        print("  ↳ Freshness needs 7+ pushes with changed last_update_time over ~2 weeks")
+        print(
+            "  ↳ Freshness needs 7+ pushes with changed last_update_time over ~2 weeks"
+        )
     if size_status in ("no data", "training"):
-        print("  ↳ Volume needs 10-48 samples over ~42 days (push hourly, consistently)")
+        print(
+            "  ↳ Volume needs 10-48 samples over ~42 days (push hourly, consistently)"
+        )
 
 
 # ---------------------------------------------------------------------------
 # Step 4: Verify table lineage (upstream)
 # ---------------------------------------------------------------------------
+
 
 def verify_table_lineage(
     mcon: str,
@@ -200,11 +223,16 @@ def verify_table_lineage(
              }
            }""",
         {"mcon": mcon},
-        key_id, key_token,
+        key_id,
+        key_token,
     )
     lineage = data.get("getTableLineage") or {}
     connected = {n["mcon"] for n in lineage.get("connectedNodes", [])}
-    flat = {m for e in lineage.get("flattenedEdges", []) for m in e.get("directlyConnectedMcons", [])}
+    flat = {
+        m
+        for e in lineage.get("flattenedEdges", [])
+        for m in e.get("directlyConnectedMcons", [])
+    }
     all_found = connected | flat
     print(f"  Upstream nodes: {len(connected)}")
     if not expected_source_mcons:
@@ -220,6 +248,7 @@ def verify_table_lineage(
 # ---------------------------------------------------------------------------
 # Step 5: Verify column lineage
 # ---------------------------------------------------------------------------
+
 
 def verify_column_lineage(
     source_mcon: str,
@@ -240,22 +269,30 @@ def verify_column_lineage(
              }
            }""",
         {"mcon": source_mcon, "column": source_column},
-        key_id, key_token,
+        key_id,
+        key_token,
     )
-    destinations = (data.get("getDerivedTablesPartialLineage") or {}).get("destinations", [])
+    destinations = (data.get("getDerivedTablesPartialLineage") or {}).get(
+        "destinations", []
+    )
     for dest in destinations:
         if dest["table"]["mcon"] == expected_dest_mcon:
             cols = {c["columnName"] for c in dest.get("columns", [])}
             if expected_dest_column in cols:
-                print(f"  PASS: {source_column} → {dest['table']['displayName']}.{expected_dest_column}")
+                print(
+                    f"  PASS: {source_column} → {dest['table']['displayName']}.{expected_dest_column}"
+                )
                 return True
-    print(f"  FAIL: {source_column} → {expected_dest_mcon}.{expected_dest_column} not found")
+    print(
+        f"  FAIL: {source_column} → {expected_dest_mcon}.{expected_dest_column} not found"
+    )
     return False
 
 
 # ---------------------------------------------------------------------------
 # Step 6: Verify query logs
 # ---------------------------------------------------------------------------
+
 
 def verify_query_logs(
     mcon: str,
@@ -278,10 +315,15 @@ def verify_query_logs(
                        pageInfo { hasNextPage endCursor }
                      }
                    }""",
-                {"mcon": mcon, "type": query_type,
-                 "start": start_time.isoformat(), "end": end_time.isoformat(),
-                 "after": cursor},
-                key_id, key_token,
+                {
+                    "mcon": mcon,
+                    "type": query_type,
+                    "start": start_time.isoformat(),
+                    "end": end_time.isoformat(),
+                    "after": cursor,
+                },
+                key_id,
+                key_token,
             )
             result = data.get("getAggregatedQueries") or {}
             total += sum(e["node"]["queryCount"] for e in result.get("edges", []))
@@ -296,37 +338,68 @@ def verify_query_logs(
 # CLI
 # ---------------------------------------------------------------------------
 
+
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Verify Monte Carlo push-ingested data via GraphQL")
-    parser.add_argument("--key-id",    default=os.environ.get("MCD_ID"))
+    parser = argparse.ArgumentParser(
+        description="Verify Monte Carlo push-ingested data via GraphQL"
+    )
+    parser.add_argument("--key-id", default=os.environ.get("MCD_ID"))
     parser.add_argument("--key-token", default=os.environ.get("MCD_TOKEN"))
-    parser.add_argument("--resource-uuid", default=os.environ.get("MCD_RESOURCE_UUID"), required=False)
-    parser.add_argument("--full-table-id", required=True, help="e.g. analytics:public.orders")
-    parser.add_argument("--mcon", help="Use MCON directly instead of resolving from fullTableId")
-    parser.add_argument("--check-schema",  action="store_true")
+    parser.add_argument(
+        "--resource-uuid", default=os.environ.get("MCD_RESOURCE_UUID"), required=False
+    )
+    parser.add_argument(
+        "--full-table-id", required=True, help="e.g. analytics:public.orders"
+    )
+    parser.add_argument(
+        "--mcon", help="Use MCON directly instead of resolving from fullTableId"
+    )
+    parser.add_argument("--check-schema", action="store_true")
     parser.add_argument("--check-metrics", action="store_true")
-    parser.add_argument("--check-detectors", action="store_true", help="Check freshness/volume detector status")
+    parser.add_argument(
+        "--check-detectors",
+        action="store_true",
+        help="Check freshness/volume detector status",
+    )
     parser.add_argument("--check-lineage", action="store_true")
     parser.add_argument("--check-query-logs", action="store_true")
     parser.add_argument("--expected-fields", nargs="*", default=[])
-    parser.add_argument("--expected-sources", nargs="*", default=[], help="Source MCONs for lineage check")
-    parser.add_argument("--lookback-hours", type=int, default=24, help="For query log check (default: 24)")
+    parser.add_argument(
+        "--expected-sources",
+        nargs="*",
+        default=[],
+        help="Source MCONs for lineage check",
+    )
+    parser.add_argument(
+        "--lookback-hours",
+        type=int,
+        default=24,
+        help="For query log check (default: 24)",
+    )
     args = parser.parse_args()
 
     if not args.key_id or not args.key_token:
-        print("ERROR: Provide --key-id/--key-token or set MCD_ID/MCD_TOKEN", file=sys.stderr)
+        print(
+            "ERROR: Provide --key-id/--key-token or set MCD_ID/MCD_TOKEN",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Verifying: {args.full_table_id}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     mcon = args.mcon
     if not mcon:
         if not args.resource_uuid:
-            print("ERROR: --resource-uuid required when --mcon is not provided", file=sys.stderr)
+            print(
+                "ERROR: --resource-uuid required when --mcon is not provided",
+                file=sys.stderr,
+            )
             sys.exit(1)
-        mcon = get_table_mcon(args.full_table_id, args.resource_uuid, args.key_id, args.key_token)
+        mcon = get_table_mcon(
+            args.full_table_id, args.resource_uuid, args.key_id, args.key_token
+        )
 
     if args.check_schema:
         print("\n[Schema]")

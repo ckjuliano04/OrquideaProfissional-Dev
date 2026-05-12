@@ -9,6 +9,7 @@ Uso:
     db.insert_post({...})
     stats = db.get_stats()
 """
+
 from __future__ import annotations
 
 import json
@@ -133,11 +134,25 @@ CREATE INDEX IF NOT EXISTS idx_hashtag_searched    ON hashtag_searches (searched
 """
 
 
-_POSTS_COLUMNS = frozenset({
-    "account_id", "media_type", "media_url", "local_path", "caption",
-    "hashtags", "template_id", "status", "scheduled_at", "published_at",
-    "ig_media_id", "ig_container_id", "permalink", "error_msg", "created_at",
-})
+_POSTS_COLUMNS = frozenset(
+    {
+        "account_id",
+        "media_type",
+        "media_url",
+        "local_path",
+        "caption",
+        "hashtags",
+        "template_id",
+        "status",
+        "scheduled_at",
+        "published_at",
+        "ig_media_id",
+        "ig_container_id",
+        "permalink",
+        "error_msg",
+        "created_at",
+    }
+)
 
 
 class Database:
@@ -180,8 +195,7 @@ class Database:
         with self._connect() as conn:
             conn.execute(sql, data)
             row = conn.execute(
-                "SELECT id FROM accounts WHERE ig_user_id = ?",
-                [data["ig_user_id"]]
+                "SELECT id FROM accounts WHERE ig_user_id = ?", [data["ig_user_id"]]
             ).fetchone()
             return row["id"]
 
@@ -350,7 +364,9 @@ class Database:
         """
         with self._connect() as conn:
             conn.execute(sql, data)
-            row = conn.execute("SELECT id FROM templates WHERE name = ?", [data["name"]]).fetchone()
+            row = conn.execute(
+                "SELECT id FROM templates WHERE name = ?", [data["name"]]
+            ).fetchone()
             return row["id"]
 
     def get_templates(self) -> List[Dict[str, Any]]:
@@ -360,7 +376,9 @@ class Database:
 
     def get_template_by_name(self, name: str) -> Optional[Dict[str, Any]]:
         with self._connect() as conn:
-            row = conn.execute("SELECT * FROM templates WHERE name = ?", [name]).fetchone()
+            row = conn.execute(
+                "SELECT * FROM templates WHERE name = ?", [name]
+            ).fetchone()
         return dict(row) if row else None
 
     def delete_template(self, name: str) -> bool:
@@ -396,7 +414,9 @@ class Database:
         with self._connect() as conn:
             conn.execute(sql, data)
 
-    def get_recent_actions(self, limit: int = 20, action: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_recent_actions(
+        self, limit: int = 20, action: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
         if action:
             sql = "SELECT * FROM action_log WHERE action = ? ORDER BY created_at DESC LIMIT ?"
             params = [action, limit]
@@ -412,13 +432,23 @@ class Database:
     def get_stats(self) -> Dict[str, Any]:
         """Retorna estatísticas gerais do banco."""
         with self._connect() as conn:
-            accounts = conn.execute("SELECT COUNT(*) FROM accounts WHERE is_active = 1").fetchone()[0]
+            accounts = conn.execute(
+                "SELECT COUNT(*) FROM accounts WHERE is_active = 1"
+            ).fetchone()[0]
             posts_total = conn.execute("SELECT COUNT(*) FROM posts").fetchone()[0]
-            posts_published = conn.execute("SELECT COUNT(*) FROM posts WHERE status = 'published'").fetchone()[0]
-            posts_draft = conn.execute("SELECT COUNT(*) FROM posts WHERE status = 'draft'").fetchone()[0]
-            posts_scheduled = conn.execute("SELECT COUNT(*) FROM posts WHERE status = 'scheduled'").fetchone()[0]
+            posts_published = conn.execute(
+                "SELECT COUNT(*) FROM posts WHERE status = 'published'"
+            ).fetchone()[0]
+            posts_draft = conn.execute(
+                "SELECT COUNT(*) FROM posts WHERE status = 'draft'"
+            ).fetchone()[0]
+            posts_scheduled = conn.execute(
+                "SELECT COUNT(*) FROM posts WHERE status = 'scheduled'"
+            ).fetchone()[0]
             comments_total = conn.execute("SELECT COUNT(*) FROM comments").fetchone()[0]
-            comments_unreplied = conn.execute("SELECT COUNT(*) FROM comments WHERE replied = 0").fetchone()[0]
+            comments_unreplied = conn.execute(
+                "SELECT COUNT(*) FROM comments WHERE replied = 0"
+            ).fetchone()[0]
             templates = conn.execute("SELECT COUNT(*) FROM templates").fetchone()[0]
             actions_today = conn.execute(
                 "SELECT COUNT(*) FROM action_log WHERE created_at >= date('now')"

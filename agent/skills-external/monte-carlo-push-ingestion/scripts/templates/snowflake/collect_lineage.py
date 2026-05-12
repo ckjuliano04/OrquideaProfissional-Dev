@@ -54,7 +54,7 @@ def _check_available_memory(min_gb: float = 2.0) -> None:
         if hasattr(os, "sysconf"):  # Linux / macOS
             page_size = os.sysconf("SC_PAGE_SIZE")
             avail_pages = os.sysconf("SC_AVPHYS_PAGES")
-            avail_gb = (page_size * avail_pages) / (1024 ** 3)
+            avail_gb = (page_size * avail_pages) / (1024**3)
         else:
             return  # Windows — skip check
     except (ValueError, OSError):
@@ -65,6 +65,7 @@ def _check_available_memory(min_gb: float = 2.0) -> None:
             f"(minimum recommended: {min_gb:.1f} GB). "
             f"Consider reducing the lookback window or increasing available memory."
         )
+
 
 # Hours to look back in ACCOUNT_USAGE.QUERY_HISTORY
 # ← SUBSTITUTE: adjust the lookback window to match your collection cadence
@@ -106,9 +107,31 @@ _JOIN_RE = re.compile(
 # Simple column alias extraction from SELECT clause
 _COL_RE = re.compile(r"(?:(\w+)\.)?(\w+)(?:\s+AS\s+(\w+))?", re.IGNORECASE)
 _SQL_KEYWORDS = {
-    "FROM", "SELECT", "WHERE", "JOIN", "ON", "AS", "*", "AND", "OR",
-    "GROUP", "ORDER", "BY", "HAVING", "LIMIT", "DISTINCT", "CASE", "WHEN",
-    "THEN", "ELSE", "END", "NULL", "NOT", "IN", "IS", "BETWEEN",
+    "FROM",
+    "SELECT",
+    "WHERE",
+    "JOIN",
+    "ON",
+    "AS",
+    "*",
+    "AND",
+    "OR",
+    "GROUP",
+    "ORDER",
+    "BY",
+    "HAVING",
+    "LIMIT",
+    "DISTINCT",
+    "CASE",
+    "WHEN",
+    "THEN",
+    "ELSE",
+    "END",
+    "NULL",
+    "NOT",
+    "IN",
+    "IS",
+    "BETWEEN",
 }
 
 
@@ -122,7 +145,9 @@ class _LineageEdge:
     col_mappings: list[tuple[str, str, str]] = field(default_factory=list)
 
 
-def _parse_select_cols(select_clause: str, src_table: str) -> list[tuple[str, str, str]]:
+def _parse_select_cols(
+    select_clause: str, src_table: str
+) -> list[tuple[str, str, str]]:
     mappings = []
     for m in _COL_RE.finditer(select_clause):
         src_col = m.group(2)

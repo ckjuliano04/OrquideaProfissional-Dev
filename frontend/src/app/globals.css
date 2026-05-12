@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 @theme {
-  --color-orquidea-green: #006437;    /* Verde Identidade */
-  --color-orquidea-gold: #c5a059;     /* Destaque Ouro */
-  --color-orquidea-red: #e31e24;      /* Vermelho Ação Primária */
-  --color-orquidea-cream: #f2ede4;    /* Fundo Creme para Catálogo */
-  --color-orquidea-light: #e6f4ea;    /* Verde Ultra Leve para BG */
-  
+  --color-orquidea-green: #006437; /* Verde Identidade */
+  --color-orquidea-gold: #c5a059; /* Destaque Ouro */
+  --color-orquidea-red: #e31e24; /* Vermelho Ação Primária */
+  --color-orquidea-cream: #f2ede4; /* Fundo Creme para Catálogo */
+  --color-orquidea-light: #e6f4ea; /* Verde Ultra Leve para BG */
+
   /* Variações de Área Restrita */
-  --color-orquidea-tech: #004d2a;     /* Verde mais saturado/profundo */
-  --color-orquidea-seller: #1a7a4d;   /* Verde mais aberto/vibrante */
-  --color-orquidea-night: #0a2118;    /* Verde Floresta Noturno */
+  --color-orquidea-tech: #004d2a; /* Verde mais saturado/profundo */
+  --color-orquidea-seller: #1a7a4d; /* Verde mais aberto/vibrante */
+  --color-orquidea-night: #0a2118; /* Verde Floresta Noturno */
 
   /* Design Tokens */
   --radius-xs: 0.5rem;
@@ -20,12 +20,11 @@
   --radius-xl: 1.5rem;
   --radius-2xl: 2rem;
   --radius-3xl: 3rem;
-  
+
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-cormorant), Georgia, serif;
 
   --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-
 }
 
 /* Custom base styles that complement Tailwind */

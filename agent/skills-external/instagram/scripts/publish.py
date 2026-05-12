@@ -16,6 +16,7 @@ Uso:
     python scripts/publish.py --template promo --vars produto=Tênis desconto=30 --type photo --image foto.jpg
     python scripts/publish.py --confirm yes --action-id abc123
 """
+
 from __future__ import annotations
 
 import argparse
@@ -49,6 +50,7 @@ def _convert_to_jpeg(path: str) -> str:
         return path
     try:
         from PIL import Image
+
         img = Image.open(path)
         if img.mode in ("RGBA", "P"):
             img = img.convert("RGB")
@@ -83,14 +85,16 @@ async def publish_photo(
     image_url = await upload_if_local(api, image)
 
     if as_draft:
-        post_id = db.insert_post({
-            "account_id": api.account_id,
-            "media_type": "PHOTO",
-            "media_url": image_url,
-            "local_path": image if _is_local_file(image) else None,
-            "caption": caption,
-            "status": "draft",
-        })
+        post_id = db.insert_post(
+            {
+                "account_id": api.account_id,
+                "media_type": "PHOTO",
+                "media_url": image_url,
+                "local_path": image if _is_local_file(image) else None,
+                "caption": caption,
+                "status": "draft",
+            }
+        )
         return {"status": "draft", "post_id": post_id, "message": "Rascunho criado"}
 
     # Confirmação
@@ -123,15 +127,17 @@ async def _do_publish_photo(
     container_id = container["id"]
 
     # Salvar no banco com status container_created (para recovery)
-    post_id = db.insert_post({
-        "account_id": api.account_id,
-        "media_type": "PHOTO",
-        "media_url": image_url,
-        "local_path": local_path,
-        "caption": caption,
-        "status": "container_created",
-        "ig_container_id": container_id,
-    })
+    post_id = db.insert_post(
+        {
+            "account_id": api.account_id,
+            "media_type": "PHOTO",
+            "media_url": image_url,
+            "local_path": local_path,
+            "caption": caption,
+            "status": "container_created",
+            "ig_container_id": container_id,
+        }
+    )
 
     # Step 2: Publicar
     result = await api.publish_media(container_id)
@@ -143,7 +149,8 @@ async def _do_publish_photo(
 
     # Atualizar banco
     db.update_post_status(
-        post_id, "published",
+        post_id,
+        "published",
         ig_media_id=ig_media_id,
         permalink=permalink,
         published_at=details.get("timestamp", ""),
@@ -176,14 +183,16 @@ async def publish_video(
     video_url = await upload_if_local(api, video)
 
     if as_draft:
-        post_id = db.insert_post({
-            "account_id": api.account_id,
-            "media_type": media_type.upper(),
-            "media_url": video_url,
-            "local_path": video if _is_local_file(video) else None,
-            "caption": caption,
-            "status": "draft",
-        })
+        post_id = db.insert_post(
+            {
+                "account_id": api.account_id,
+                "media_type": media_type.upper(),
+                "media_url": video_url,
+                "local_path": video if _is_local_file(video) else None,
+                "caption": caption,
+                "status": "draft",
+            }
+        )
         return {"status": "draft", "post_id": post_id}
 
     action_name = f"publish_{media_type.lower()}"
@@ -195,7 +204,9 @@ async def publish_video(
         )
 
     # Step 1: Container
-    ig_type = {"VIDEO": "VIDEO", "REEL": "REELS", "STORY": "STORIES"}[media_type.upper()]
+    ig_type = {"VIDEO": "VIDEO", "REEL": "REELS", "STORY": "STORIES"}[
+        media_type.upper()
+    ]
     container = await api.create_media_container(
         media_type=ig_type,
         video_url=video_url,
@@ -204,14 +215,16 @@ async def publish_video(
     )
     container_id = container["id"]
 
-    post_id = db.insert_post({
-        "account_id": api.account_id,
-        "media_type": media_type.upper(),
-        "media_url": video_url,
-        "caption": caption,
-        "status": "container_created",
-        "ig_container_id": container_id,
-    })
+    post_id = db.insert_post(
+        {
+            "account_id": api.account_id,
+            "media_type": media_type.upper(),
+            "media_url": video_url,
+            "caption": caption,
+            "status": "container_created",
+            "ig_container_id": container_id,
+        }
+    )
 
     # Aguardar processamento do vídeo
     print("Aguardando processamento do vídeo...")
@@ -233,7 +246,8 @@ async def publish_video(
     permalink = details.get("permalink", "")
 
     db.update_post_status(
-        post_id, "published",
+        post_id,
+        "published",
         ig_media_id=ig_media_id,
         permalink=permalink,
         published_at=details.get("timestamp", ""),
@@ -260,12 +274,14 @@ async def publish_carousel(
         return {"status": "error", "message": "Carrossel precisa de 2-10 imagens"}
 
     if as_draft:
-        post_id = db.insert_post({
-            "account_id": api.account_id,
-            "media_type": "CAROUSEL",
-            "caption": caption,
-            "status": "draft",
-        })
+        post_id = db.insert_post(
+            {
+                "account_id": api.account_id,
+                "media_type": "CAROUSEL",
+                "caption": caption,
+                "status": "draft",
+            }
+        )
         return {"status": "draft", "post_id": post_id}
 
     if gov.requires_confirmation("publish_carousel"):
@@ -280,23 +296,29 @@ async def publish_carousel(
     for img in images:
         img_url = await upload_if_local(api, img)
         child = await api.create_media_container(
-            media_type="IMAGE", image_url=img_url, is_carousel_item=True,
+            media_type="IMAGE",
+            image_url=img_url,
+            is_carousel_item=True,
         )
         children_ids.append(child["id"])
 
     # Container do carrossel
     container = await api.create_media_container(
-        media_type="CAROUSEL", caption=caption, children=children_ids,
+        media_type="CAROUSEL",
+        caption=caption,
+        children=children_ids,
     )
     container_id = container["id"]
 
-    post_id = db.insert_post({
-        "account_id": api.account_id,
-        "media_type": "CAROUSEL",
-        "caption": caption,
-        "status": "container_created",
-        "ig_container_id": container_id,
-    })
+    post_id = db.insert_post(
+        {
+            "account_id": api.account_id,
+            "media_type": "CAROUSEL",
+            "caption": caption,
+            "status": "container_created",
+            "ig_container_id": container_id,
+        }
+    )
 
     # Publicar
     result = await api.publish_media(container_id)
@@ -305,8 +327,10 @@ async def publish_carousel(
     permalink = details.get("permalink", "")
 
     db.update_post_status(
-        post_id, "published",
-        ig_media_id=ig_media_id, permalink=permalink,
+        post_id,
+        "published",
+        ig_media_id=ig_media_id,
+        permalink=permalink,
         published_at=details.get("timestamp", ""),
     )
 
@@ -326,13 +350,21 @@ async def approve_post(post_id: int) -> dict:
     if not post:
         return {"status": "error", "message": f"Post {post_id} não encontrado"}
     if post["status"] != "draft":
-        return {"status": "error", "message": f"Post {post_id} não é rascunho (status: {post['status']})"}
+        return {
+            "status": "error",
+            "message": f"Post {post_id} não é rascunho (status: {post['status']})",
+        }
     db.update_post_status(post_id, "approved")
-    return {"status": "approved", "post_id": post_id, "message": "Post aprovado. Use schedule.py --process para publicar."}
+    return {
+        "status": "approved",
+        "post_id": post_id,
+        "message": "Post aprovado. Use schedule.py --process para publicar.",
+    }
 
 
 async def do_confirmed_publish(
-    action: str, details: dict,
+    action: str,
+    details: dict,
 ) -> dict:
     """Executa publicação após confirmação do usuário."""
     await auto_refresh_if_needed()
@@ -348,7 +380,10 @@ async def do_confirmed_publish(
                 details.get("local_path"),
             )
         else:
-            result = {"status": "error", "message": f"Ação confirmada não reconhecida: {action}"}
+            result = {
+                "status": "error",
+                "message": f"Ação confirmada não reconhecida: {action}",
+            }
     finally:
         await api.close()
 
@@ -387,11 +422,16 @@ async def run(args) -> None:
         # Aplicar template se especificado
         if args.template:
             from db import Database
+
             tpl = Database().get_template_by_name(args.template)
             if tpl:
                 caption = tpl["caption_template"]
                 if tpl.get("hashtag_set"):
-                    hashtags = json.loads(tpl["hashtag_set"]) if isinstance(tpl["hashtag_set"], str) else tpl["hashtag_set"]
+                    hashtags = (
+                        json.loads(tpl["hashtag_set"])
+                        if isinstance(tpl["hashtag_set"], str)
+                        else tpl["hashtag_set"]
+                    )
                     caption = f"{caption}\n\n{' '.join(hashtags)}"
             if args.vars:
                 variables = dict(v.split("=", 1) for v in args.vars)
@@ -406,12 +446,16 @@ async def run(args) -> None:
             if not media:
                 print("ERRO: --video ou --image é obrigatório")
                 return
-            result = await publish_video(api, media, caption, media_type=media_type, as_draft=args.draft)
+            result = await publish_video(
+                api, media, caption, media_type=media_type, as_draft=args.draft
+            )
         elif media_type == "CAROUSEL":
             if not args.images or len(args.images) < 2:
                 print("ERRO: --images precisa de 2-10 arquivos")
                 return
-            result = await publish_carousel(api, args.images, caption, as_draft=args.draft)
+            result = await publish_carousel(
+                api, args.images, caption, as_draft=args.draft
+            )
         else:
             result = {"status": "error", "message": f"Tipo desconhecido: {args.type}"}
 
@@ -423,8 +467,11 @@ async def run(args) -> None:
 
 def main():
     parser = argparse.ArgumentParser(description="Publicar no Instagram")
-    parser.add_argument("--type", choices=["photo", "video", "reel", "story", "carousel"],
-                        help="Tipo de conteúdo")
+    parser.add_argument(
+        "--type",
+        choices=["photo", "video", "reel", "story", "carousel"],
+        help="Tipo de conteúdo",
+    )
     parser.add_argument("--image", help="Caminho da imagem ou URL")
     parser.add_argument("--video", help="Caminho do vídeo ou URL")
     parser.add_argument("--images", nargs="+", help="Imagens do carrossel")
@@ -435,7 +482,9 @@ def main():
     parser.add_argument("--template", help="Nome do template a usar")
     parser.add_argument("--vars", nargs="+", help="Variáveis do template (key=value)")
     parser.add_argument("--confirm", help="Confirmar ação (yes/no)")
-    parser.add_argument("--confirm-action", dest="confirm_action", help="Ação a confirmar")
+    parser.add_argument(
+        "--confirm-action", dest="confirm_action", help="Ação a confirmar"
+    )
     parser.add_argument("--action-id", help="ID da ação a confirmar")
     args = parser.parse_args()
 

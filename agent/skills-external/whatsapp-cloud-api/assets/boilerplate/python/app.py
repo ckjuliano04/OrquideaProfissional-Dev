@@ -5,15 +5,14 @@ import logging
 import os
 
 from dotenv import load_dotenv
-from flask import Flask, request, jsonify
-
-from whatsapp_client import WhatsAppClient
+from flask import Flask, jsonify, request
 from webhook_handler import (
+    extract_message_content,
+    parse_webhook_payload,
     validate_hmac_signature,
     verify_webhook,
-    parse_webhook_payload,
-    extract_message_content,
 )
+from whatsapp_client import WhatsAppClient
 
 load_dotenv()
 
@@ -75,7 +74,9 @@ async def handle_incoming_message(message: dict) -> None:
     # Example responses intentionally avoid reflecting user-provided content.
     match content["type"]:
         case "text":
-            await whatsapp.send_text(from_number, "Recebi sua mensagem. Como posso ajudar?")
+            await whatsapp.send_text(
+                from_number, "Recebi sua mensagem. Como posso ajudar?"
+            )
 
         case "button":
             await whatsapp.send_text(from_number, "Recebi sua selecao com sucesso.")
@@ -87,7 +88,9 @@ async def handle_incoming_message(message: dict) -> None:
             await whatsapp.send_text(from_number, "Recebi sua midia com sucesso.")
 
         case _:
-            await whatsapp.send_text(from_number, "Desculpe, nao entendi. Como posso ajudar?")
+            await whatsapp.send_text(
+                from_number, "Desculpe, nao entendi. Como posso ajudar?"
+            )
 
 
 # === Status Handler ===
@@ -95,7 +98,9 @@ async def handle_incoming_message(message: dict) -> None:
 
 def handle_status_update(status: dict) -> None:
     """Process a message status update."""
-    logger.info("WhatsApp status update id=%s status=%s", status["id"], status["status"])
+    logger.info(
+        "WhatsApp status update id=%s status=%s", status["id"], status["status"]
+    )
 
     if status["status"] == "failed":
         errors = status.get("errors", [])

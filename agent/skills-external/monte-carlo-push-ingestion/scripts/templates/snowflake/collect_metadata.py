@@ -46,7 +46,7 @@ def _check_available_memory(min_gb: float = 2.0) -> None:
         if hasattr(os, "sysconf"):  # Linux / macOS
             page_size = os.sysconf("SC_PAGE_SIZE")
             avail_pages = os.sysconf("SC_AVPHYS_PAGES")
-            avail_gb = (page_size * avail_pages) / (1024 ** 3)
+            avail_gb = (page_size * avail_pages) / (1024**3)
         else:
             return  # Windows — skip check
     except (ValueError, OSError):
@@ -57,6 +57,7 @@ def _check_available_memory(min_gb: float = 2.0) -> None:
             f"(minimum recommended: {min_gb:.1f} GB). "
             f"Consider reducing the lookback window or increasing available memory."
         )
+
 
 # Databases that are Snowflake system databases — skip them
 _SKIP_DATABASES = {"SNOWFLAKE", "SNOWFLAKE_SAMPLE_DATA"}
@@ -148,7 +149,9 @@ def _collect_assets(conn) -> list[dict]:
                 """
             )
         except Exception as exc:
-            print(f"  WARNING: could not query INFORMATION_SCHEMA.TABLES in {db}: {exc}")
+            print(
+                f"  WARNING: could not query INFORMATION_SCHEMA.TABLES in {db}: {exc}"
+            )
             continue
 
         table_rows = []
@@ -203,7 +206,16 @@ def _collect_assets(conn) -> list[dict]:
 
         # Build asset dicts
         for row in table_rows:
-            tbl_catalog, tbl_schema, tbl_name, tbl_type, row_count, byte_count, last_altered, tbl_comment = row
+            (
+                tbl_catalog,
+                tbl_schema,
+                tbl_name,
+                tbl_type,
+                row_count,
+                byte_count,
+                last_altered,
+                tbl_comment,
+            ) = row
 
             volume = None
             if row_count is not None or byte_count is not None:
@@ -215,7 +227,9 @@ def _collect_assets(conn) -> list[dict]:
             freshness = None
             if last_altered is not None:
                 freshness = {
-                    "last_update_time": last_altered.isoformat() if hasattr(last_altered, "isoformat") else str(last_altered),
+                    "last_update_time": last_altered.isoformat()
+                    if hasattr(last_altered, "isoformat")
+                    else str(last_altered),
                 }
 
             fields = columns_by_table.get((tbl_schema, tbl_name), [])
@@ -232,7 +246,9 @@ def _collect_assets(conn) -> list[dict]:
                     "freshness": freshness,
                 }
             )
-            print(f"    + {tbl_catalog}.{tbl_schema}.{tbl_name} ({len(fields)} columns)")
+            print(
+                f"    + {tbl_catalog}.{tbl_schema}.{tbl_name} ({len(fields)} columns)"
+            )
 
     cursor.close()
     return assets

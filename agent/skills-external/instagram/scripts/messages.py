@@ -6,6 +6,7 @@ Uso:
     python scripts/messages.py --conversations
     python scripts/messages.py --thread --conversation-id 12345
 """
+
 from __future__ import annotations
 
 import argparse
@@ -50,7 +51,9 @@ async def send_message(user_id: str, text: str) -> None:
         account_id=account["id"] if account else None,
     )
 
-    print(json.dumps({"status": "sent", "result": result}, indent=2, ensure_ascii=False))
+    print(
+        json.dumps({"status": "sent", "result": result}, indent=2, ensure_ascii=False)
+    )
 
 
 async def list_conversations(limit: int = 20) -> None:
@@ -80,7 +83,9 @@ def main():
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--send", action="store_true", help="Enviar DM")
     group.add_argument("--conversations", action="store_true", help="Listar conversas")
-    group.add_argument("--thread", action="store_true", help="Ver mensagens de uma conversa")
+    group.add_argument(
+        "--thread", action="store_true", help="Ver mensagens de uma conversa"
+    )
     parser.add_argument("--user-id", help="ID do destinatário")
     parser.add_argument("--text", help="Texto da mensagem")
     parser.add_argument("--conversation-id", help="ID da conversa")

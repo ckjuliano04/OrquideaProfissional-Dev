@@ -37,7 +37,9 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 log = logging.getLogger(__name__)
 
 RESOURCE_TYPE = "databricks"
-DEFAULT_BATCH_SIZE = 500  # ← SUBSTITUTE: conservative default to stay under 1 MB compressed
+DEFAULT_BATCH_SIZE = (
+    500  # ← SUBSTITUTE: conservative default to stay under 1 MB compressed
+)
 
 
 def _ref_from_dict(d: dict[str, Any]) -> LineageAssetRef:
@@ -64,7 +66,9 @@ def _event_from_dict(d: dict[str, Any]) -> LineageEvent:
         for cl in d["column_lineage"]:
             src_fields = []
             for s in cl.get("sources", []):
-                asset_id = f"{s.get('database', '')}__{s.get('schema', '')}__{s['asset_name']}"
+                asset_id = (
+                    f"{s.get('database', '')}__{s.get('schema', '')}__{s['asset_name']}"
+                )
                 src_fields.append(
                     ColumnLineageSourceField(
                         asset_id=asset_id,
@@ -111,8 +115,12 @@ def push(
 
     def _push_batch(batch: list, batch_num: int) -> str | None:
         """Push a single batch using a dedicated Session (thread-safe)."""
-        log.info("Pushing batch %d/%d (%d events) ...", batch_num, total_batches, len(batch))
-        client = Client(session=Session(mcd_id=key_id, mcd_token=key_token, scope="Ingestion"))
+        log.info(
+            "Pushing batch %d/%d (%d events) ...", batch_num, total_batches, len(batch)
+        )
+        client = Client(
+            session=Session(mcd_id=key_id, mcd_token=key_token, scope="Ingestion")
+        )
         service = IngestionService(mc_client=client)
         result = service.send_lineage(
             resource_uuid=resource_uuid,
@@ -130,8 +138,7 @@ def push(
 
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         futures = {
-            pool.submit(_push_batch, batch, i + 1): i
-            for i, batch in enumerate(batches)
+            pool.submit(_push_batch, batch, i + 1): i for i, batch in enumerate(batches)
         }
         for future in as_completed(futures):
             idx = futures[future]
@@ -166,7 +173,9 @@ def push(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Push Databricks lineage to Monte Carlo from manifest")
+    parser = argparse.ArgumentParser(
+        description="Push Databricks lineage to Monte Carlo from manifest"
+    )
     parser.add_argument("--manifest", default="manifest_lineage.json")
     parser.add_argument("--resource-uuid", default=os.getenv("MCD_RESOURCE_UUID"))
     parser.add_argument("--key-id", default=os.getenv("MCD_INGEST_ID"))

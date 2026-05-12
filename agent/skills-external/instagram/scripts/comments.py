@@ -8,6 +8,7 @@ Uso:
     python scripts/comments.py --mentions
     python scripts/comments.py --unreplied
 """
+
 from __future__ import annotations
 
 import argparse
@@ -41,16 +42,24 @@ async def list_comments(media_id: str, limit: int = 50) -> None:
     account = db.get_active_account()
     if account:
         for c in comments:
-            db.upsert_comments([{
-                "account_id": account["id"],
-                "ig_comment_id": c["id"],
-                "ig_media_id": media_id,
-                "username": c.get("username", ""),
-                "text": c.get("text", ""),
-                "timestamp": c.get("timestamp", ""),
-            }])
+            db.upsert_comments(
+                [
+                    {
+                        "account_id": account["id"],
+                        "ig_comment_id": c["id"],
+                        "ig_media_id": media_id,
+                        "username": c.get("username", ""),
+                        "text": c.get("text", ""),
+                        "timestamp": c.get("timestamp", ""),
+                    }
+                ]
+            )
 
-    print(json.dumps({"total": len(comments), "comments": comments}, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"total": len(comments), "comments": comments}, indent=2, ensure_ascii=False
+        )
+    )
 
 
 async def reply_to_comment(comment_id: str, text: str) -> None:
@@ -76,7 +85,11 @@ async def reply_to_comment(comment_id: str, text: str) -> None:
         account_id=db.get_active_account()["id"] if db.get_active_account() else None,
     )
 
-    print(json.dumps({"status": "replied", "result": result}, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"status": "replied", "result": result}, indent=2, ensure_ascii=False
+        )
+    )
 
 
 async def delete_comment(comment_id: str) -> None:
@@ -102,7 +115,13 @@ async def delete_comment(comment_id: str) -> None:
         account_id=db.get_active_account()["id"] if db.get_active_account() else None,
     )
 
-    print(json.dumps({"status": "deleted", "comment_id": comment_id}, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"status": "deleted", "comment_id": comment_id},
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
 
 
 async def show_mentions(limit: int = 25) -> None:
@@ -121,7 +140,13 @@ async def show_unreplied() -> None:
         print(json.dumps({"error": "Nenhuma conta configurada"}, indent=2))
         return
     comments = db.get_comments(account_id=account["id"], unreplied_only=True)
-    print(json.dumps({"total": len(comments), "unreplied": comments}, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"total": len(comments), "unreplied": comments},
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
 
 
 def main():
@@ -131,7 +156,9 @@ def main():
     group.add_argument("--reply", action="store_true", help="Responder comentário")
     group.add_argument("--delete", action="store_true", help="Deletar comentário")
     group.add_argument("--mentions", action="store_true", help="Ver menções")
-    group.add_argument("--unreplied", action="store_true", help="Comentários não respondidos")
+    group.add_argument(
+        "--unreplied", action="store_true", help="Comentários não respondidos"
+    )
     parser.add_argument("--media-id", help="ID da mídia")
     parser.add_argument("--comment-id", help="ID do comentário")
     parser.add_argument("--text", help="Texto da resposta")

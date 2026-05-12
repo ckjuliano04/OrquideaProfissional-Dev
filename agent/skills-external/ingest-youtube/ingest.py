@@ -19,6 +19,7 @@ Defaults:
     --whisper: accepted as a future fallback flag; this version writes a stub
                if subtitles are unavailable
 """
+
 from __future__ import annotations
 
 import argparse
@@ -33,12 +34,22 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 VTT_TIMING_RE = re.compile(r"\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3}.*")
-VTT_HEADER_RE = re.compile(r"^(WEBVTT|Kind:|Language:|NOTE\s|X-TIMESTAMP-MAP)", re.MULTILINE)
+VTT_HEADER_RE = re.compile(
+    r"^(WEBVTT|Kind:|Language:|NOTE\s|X-TIMESTAMP-MAP)", re.MULTILINE
+)
 SLUG_RE = re.compile(r"[^a-z0-9]+")
 SEED_KEYWORDS = (
-    "decision", "framework", "model", "principle", "the lesson is",
-    "playbook", "anti-pattern", "case study", "what i learned",
-    "the trick is", "the insight is",
+    "decision",
+    "framework",
+    "model",
+    "principle",
+    "the lesson is",
+    "playbook",
+    "anti-pattern",
+    "case study",
+    "what i learned",
+    "the trick is",
+    "the insight is",
 )
 
 
@@ -61,7 +72,9 @@ def require_bin(name: str) -> str:
 def fetch_metadata(url: str, ytdlp: str) -> dict:
     proc = subprocess.run(
         [ytdlp, "--skip-download", "--print-json", "--no-warnings", url],
-        capture_output=True, text=True, check=False,
+        capture_output=True,
+        text=True,
+        check=False,
     )
     if proc.returncode != 0:
         sys.stderr.write(f"yt-dlp metadata fetch failed:\n{proc.stderr}\n")
@@ -72,7 +85,9 @@ def fetch_metadata(url: str, ytdlp: str) -> dict:
 def list_subs(url: str, ytdlp: str) -> str:
     proc = subprocess.run(
         [ytdlp, "--list-subs", "--skip-download", "--no-warnings", url],
-        capture_output=True, text=True, check=False,
+        capture_output=True,
+        text=True,
+        check=False,
     )
     return proc.stdout
 
@@ -99,7 +114,9 @@ def parse_available_subs(listing: str) -> tuple[set[str], set[str]]:
     return manual, auto
 
 
-def pick_lang(prefs: list[str], manual: set[str], auto: set[str]) -> tuple[str, str] | None:
+def pick_lang(
+    prefs: list[str], manual: set[str], auto: set[str]
+) -> tuple[str, str] | None:
     """Return (lang_code, source) where source is 'manual' or 'auto', or None."""
     for code in prefs:
         if code in manual:
@@ -118,9 +135,22 @@ def download_subs(url: str, lang: str, source: str, ytdlp: str, workdir: Path) -
     flag = "--write-sub" if source == "manual" else "--write-auto-sub"
     out_template = str(workdir / "%(id)s.%(ext)s")
     proc = subprocess.run(
-        [ytdlp, flag, "--sub-lang", lang, "--skip-download",
-         "--sub-format", "vtt", "-o", out_template, "--no-warnings", url],
-        capture_output=True, text=True, check=False,
+        [
+            ytdlp,
+            flag,
+            "--sub-lang",
+            lang,
+            "--skip-download",
+            "--sub-format",
+            "vtt",
+            "-o",
+            out_template,
+            "--no-warnings",
+            url,
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
     )
     if proc.returncode != 0:
         sys.stderr.write(f"yt-dlp subtitle download failed:\n{proc.stderr}\n")
@@ -163,8 +193,12 @@ def detect_seeds(transcript: str) -> list[str]:
 
 
 def write_vault_file(
-    vault_root: Path, channel_slug: str, upload_date: str,
-    video_slug: str, frontmatter: dict, body: str,
+    vault_root: Path,
+    channel_slug: str,
+    upload_date: str,
+    video_slug: str,
+    frontmatter: dict,
+    body: str,
 ) -> Path:
     target_dir = vault_root / "External Inputs" / "YouTube" / channel_slug
     target_dir.mkdir(parents=True, exist_ok=True)
@@ -182,8 +216,13 @@ def write_vault_file(
 
 
 def write_seed_stub(
-    vault_root: Path, upload_date: str, channel_slug: str, video_id: str,
-    seeds: list[str], video_url: str, video_title: str,
+    vault_root: Path,
+    upload_date: str,
+    channel_slug: str,
+    video_id: str,
+    seeds: list[str],
+    video_url: str,
+    video_title: str,
 ) -> Path:
     captures_dir = vault_root / "Meta" / "Captures"
     captures_dir.mkdir(parents=True, exist_ok=True)
@@ -208,11 +247,19 @@ def write_seed_stub(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Ingest a YouTube video transcript into the vault")
+    parser = argparse.ArgumentParser(
+        description="Ingest a YouTube video transcript into the vault"
+    )
     parser.add_argument("url", help="YouTube video URL")
-    parser.add_argument("--vault", default=None, help="Vault root path (default: $VAULT_ROOT or .)")
-    parser.add_argument("--lang", default="en,es", help="Comma-separated language preference")
-    parser.add_argument("--whisper", action="store_true", help="Enable Whisper fallback if no subs")
+    parser.add_argument(
+        "--vault", default=None, help="Vault root path (default: $VAULT_ROOT or .)"
+    )
+    parser.add_argument(
+        "--lang", default="en,es", help="Comma-separated language preference"
+    )
+    parser.add_argument(
+        "--whisper", action="store_true", help="Enable Whisper fallback if no subs"
+    )
     args = parser.parse_args()
 
     vault_root = Path(args.vault or os.environ.get("VAULT_ROOT") or ".").resolve()
@@ -232,8 +279,8 @@ def main() -> int:
     upload_date_raw = meta.get("upload_date", "")
     upload_date = (
         f"{upload_date_raw[:4]}-{upload_date_raw[4:6]}-{upload_date_raw[6:8]}"
-        if len(upload_date_raw) == 8 else
-        datetime.now().strftime("%Y-%m-%d")
+        if len(upload_date_raw) == 8
+        else datetime.now().strftime("%Y-%m-%d")
     )
 
     listing = list_subs(args.url, ytdlp)
@@ -250,11 +297,17 @@ def main() -> int:
             vtt = download_subs(args.url, lang_code, sub_source, ytdlp, Path(td))
             transcript = clean_vtt(vtt)
     elif args.whisper:
-        sys.stderr.write("Whisper fallback requested but not yet implemented in v0.1.\n")
-        sys.stderr.write("Install whisper-cpp + ggml model and re-run, or pre-add subs to the video.\n")
+        sys.stderr.write(
+            "Whisper fallback requested but not yet implemented in v0.1.\n"
+        )
+        sys.stderr.write(
+            "Install whisper-cpp + ggml model and re-run, or pre-add subs to the video.\n"
+        )
         sub_source = "none"
     else:
-        sys.stderr.write("No subtitles available and --whisper not set. Writing stub.\n")
+        sys.stderr.write(
+            "No subtitles available and --whisper not set. Writing stub.\n"
+        )
         sub_source = "none"
 
     word_count = len(transcript.split()) if transcript else 0
@@ -284,14 +337,20 @@ def main() -> int:
         "ingested_at": datetime.now(timezone.utc).isoformat(),
     }
 
-    target = write_vault_file(vault_root, channel_slug, upload_date, video_slug, fm, body)
+    target = write_vault_file(
+        vault_root, channel_slug, upload_date, video_slug, fm, body
+    )
     seed_paths: list[Path] = []
     if seeds:
         seed_paths.append(
-            write_seed_stub(vault_root, upload_date, channel_slug, video_id, seeds, args.url, title)
+            write_seed_stub(
+                vault_root, upload_date, channel_slug, video_id, seeds, args.url, title
+            )
         )
 
-    seed_str = f" Seeds at: {', '.join(str(p) for p in seed_paths)}." if seed_paths else ""
+    seed_str = (
+        f" Seeds at: {', '.join(str(p) for p in seed_paths)}." if seed_paths else ""
+    )
     print(
         f"Wrote {word_count} words to {target}. "
         f"Language: {lang_code}. Subtitle source: {sub_source}.{seed_str}"

@@ -94,7 +94,9 @@ def main() -> None:
     args = parser.parse_args()
 
     if not args.key_id or not args.key_token:
-        parser.error("--key-id and --key-token are required (or set MCD_INGEST_ID / MCD_INGEST_TOKEN)")
+        parser.error(
+            "--key-id and --key-token are required (or set MCD_INGEST_ID / MCD_INGEST_TOKEN)"
+        )
 
     manifest = collect(log_file=args.log_file, op_logs_dir=args.op_logs_dir)
 

@@ -28,7 +28,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 
 from dateutil.parser import isoparse
-
 from pycarlo.core import Client, Session
 from pycarlo.features.ingestion import IngestionService
 from pycarlo.features.ingestion.models import QueryLogEntry
@@ -79,7 +78,11 @@ def _build_query_log_entries(queries: list[dict]) -> list[QueryLogEntry]:
         entries.append(entry)
 
     if truncated:
-        log.info("Truncated %d query text(s) exceeding %d chars", truncated, _MAX_QUERY_TEXT_LEN)
+        log.info(
+            "Truncated %d query text(s) exceeding %d chars",
+            truncated,
+            _MAX_QUERY_TEXT_LEN,
+        )
     return entries
 
 
@@ -122,9 +125,14 @@ def push(
     total_batches = len(batches)
 
     def _push_batch(batch: list[QueryLogEntry], batch_num: int) -> str | None:
-        client = Client(session=Session(
-            mcd_id=key_id, mcd_token=key_token, scope="Ingestion", endpoint=endpoint,
-        ))
+        client = Client(
+            session=Session(
+                mcd_id=key_id,
+                mcd_token=key_token,
+                scope="Ingestion",
+                endpoint=endpoint,
+            )
+        )
         service = IngestionService(mc_client=client)
         result = service.send_query_logs(
             resource_uuid=resource_uuid,
@@ -134,7 +142,10 @@ def push(
         invocation_id = service.extract_invocation_id(result)
         log.info(
             "Pushed batch %d/%d (%d entries) — invocation_id=%s",
-            batch_num, total_batches, len(batch), invocation_id,
+            batch_num,
+            total_batches,
+            len(batch),
+            invocation_id,
         )
         return invocation_id
 
@@ -143,8 +154,7 @@ def push(
 
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         futures = {
-            pool.submit(_push_batch, batch, i + 1): i
-            for i, batch in enumerate(batches)
+            pool.submit(_push_batch, batch, i + 1): i for i, batch in enumerate(batches)
         }
         for future in as_completed(futures):
             idx = futures[future]

@@ -8,6 +8,7 @@ Uso:
     python scripts/export.py --type all --format csv
     python scripts/export.py --type actions --format json --output /caminho/
 """
+
 from __future__ import annotations
 
 import argparse
@@ -32,8 +33,14 @@ def export_json(records: list, output_dir: Path, name: str) -> Path:
     path = output_dir / f"instagram_{name}_{ts}.json"
     with open(path, "w", encoding="utf-8") as f:
         json.dump(
-            {"exported_at": datetime.now(timezone.utc).isoformat(), "total": len(records), "data": records},
-            f, ensure_ascii=False, indent=2,
+            {
+                "exported_at": datetime.now(timezone.utc).isoformat(),
+                "total": len(records),
+                "data": records,
+            },
+            f,
+            ensure_ascii=False,
+            indent=2,
         )
     print(f"[JSON] {len(records)} registros ->{path}")
     return path
@@ -58,7 +65,9 @@ def export_csv_file(records: list, output_dir: Path, name: str) -> Path:
     ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     path = output_dir / f"instagram_{name}_{ts}.csv"
     with open(path, "w", newline="", encoding="utf-8-sig") as f:
-        writer = csv.DictWriter(f, fieldnames=list(records[0].keys()), extrasaction="ignore")
+        writer = csv.DictWriter(
+            f, fieldnames=list(records[0].keys()), extrasaction="ignore"
+        )
         writer.writeheader()
         writer.writerows(records)
     print(f"[CSV] {len(records)} registros ->{path}")
@@ -84,13 +93,17 @@ def get_data(data_type: str) -> tuple:
         """).fetchall()
         return [dict(r) for r in rows], "insights"
     elif data_type == "user_insights":
-        rows = conn.execute("SELECT * FROM user_insights ORDER BY end_time DESC").fetchall()
+        rows = conn.execute(
+            "SELECT * FROM user_insights ORDER BY end_time DESC"
+        ).fetchall()
         return [dict(r) for r in rows], "user_insights"
     elif data_type == "templates":
         rows = conn.execute("SELECT * FROM templates ORDER BY name").fetchall()
         return [dict(r) for r in rows], "templates"
     elif data_type == "actions":
-        rows = conn.execute("SELECT * FROM action_log ORDER BY created_at DESC").fetchall()
+        rows = conn.execute(
+            "SELECT * FROM action_log ORDER BY created_at DESC"
+        ).fetchall()
         return [dict(r) for r in rows], "actions"
     elif data_type == "all":
         return None, "all"
@@ -109,18 +122,42 @@ def do_export(records: list, name: str, fmt: str, output_dir: Path) -> None:
 
 def main():
     parser = argparse.ArgumentParser(description="Exportar dados do Instagram")
-    parser.add_argument("--type", required=True,
-                        choices=["posts", "comments", "insights", "user_insights", "templates", "actions", "all"],
-                        help="Tipo de dados")
-    parser.add_argument("--format", default="csv", choices=["json", "jsonl", "csv", "all"],
-                        help="Formato (default: csv)")
-    parser.add_argument("--output", default=str(EXPORTS_DIR), help=f"Diretório (default: {EXPORTS_DIR})")
+    parser.add_argument(
+        "--type",
+        required=True,
+        choices=[
+            "posts",
+            "comments",
+            "insights",
+            "user_insights",
+            "templates",
+            "actions",
+            "all",
+        ],
+        help="Tipo de dados",
+    )
+    parser.add_argument(
+        "--format",
+        default="csv",
+        choices=["json", "jsonl", "csv", "all"],
+        help="Formato (default: csv)",
+    )
+    parser.add_argument(
+        "--output", default=str(EXPORTS_DIR), help=f"Diretório (default: {EXPORTS_DIR})"
+    )
     args = parser.parse_args()
 
     output_dir = Path(args.output)
 
     if args.type == "all":
-        for dtype in ["posts", "comments", "insights", "user_insights", "templates", "actions"]:
+        for dtype in [
+            "posts",
+            "comments",
+            "insights",
+            "user_insights",
+            "templates",
+            "actions",
+        ]:
             records, name = get_data(dtype)
             if records:
                 do_export(records, name, args.format, output_dir)

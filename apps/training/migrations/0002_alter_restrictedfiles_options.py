@@ -4,14 +4,17 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('training', '0001_initial'),
+        ("training", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='restrictedfiles',
-            options={'managed': True, 'verbose_name': 'Arquivo do Treinamento', 'verbose_name_plural': 'Arquivos do Treinamento'},
+            name="restrictedfiles",
+            options={
+                "managed": True,
+                "verbose_name": "Arquivo do Treinamento",
+                "verbose_name_plural": "Arquivos do Treinamento",
+            },
         ),
     ]

@@ -77,7 +77,11 @@ def _build_query_log_entries(queries: list[dict]) -> list[QueryLogEntry]:
         )
         entries.append(entry)
     if truncated:
-        log.info("Truncated %d query text(s) exceeding %d chars", truncated, _MAX_QUERY_TEXT_LEN)
+        log.info(
+            "Truncated %d query text(s) exceeding %d chars",
+            truncated,
+            _MAX_QUERY_TEXT_LEN,
+        )
     return entries
 
 
@@ -125,7 +129,9 @@ def push(
 
     def _push_batch(batch: list, batch_num: int) -> str | None:
         """Push a single batch using a dedicated Session (thread-safe)."""
-        client = Client(session=Session(mcd_id=key_id, mcd_token=key_token, scope="Ingestion"))
+        client = Client(
+            session=Session(mcd_id=key_id, mcd_token=key_token, scope="Ingestion")
+        )
         service = IngestionService(mc_client=client)
         result = service.send_query_logs(
             resource_uuid=resource_uuid,
@@ -133,7 +139,13 @@ def push(
             events=batch,
         )
         invocation_id = service.extract_invocation_id(result)
-        log.info("Pushed batch %d/%d (%d entries) — invocation_id=%s", batch_num, total_batches, len(batch), invocation_id)
+        log.info(
+            "Pushed batch %d/%d (%d entries) — invocation_id=%s",
+            batch_num,
+            total_batches,
+            len(batch),
+            invocation_id,
+        )
         return invocation_id
 
     # Push batches in parallel (each thread gets its own pycarlo Session)
@@ -142,8 +154,7 @@ def push(
 
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         futures = {
-            pool.submit(_push_batch, batch, i + 1): i
-            for i, batch in enumerate(batches)
+            pool.submit(_push_batch, batch, i + 1): i for i, batch in enumerate(batches)
         }
         for future in as_completed(futures):
             idx = futures[future]

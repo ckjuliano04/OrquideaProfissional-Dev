@@ -18,12 +18,11 @@ import logging
 import os
 import sys
 from dataclasses import dataclass, field
-from functools import partial
-from typing import Any
 
 import evaluate
 import numpy as np
-import torch
+import trackio
+import transformers
 from datasets import load_dataset
 from torchvision.transforms import (
     CenterCrop,
@@ -34,10 +33,6 @@ from torchvision.transforms import (
     Resize,
     ToTensor,
 )
-
-import trackio
-
-import transformers
 from transformers import (
     AutoConfig,
     AutoImageProcessor,
@@ -50,7 +45,6 @@ from transformers import (
 from transformers.trainer import EvalPrediction
 from transformers.utils import check_min_version
 from transformers.utils.versions import require_version
-
 
 logger = logging.getLogger(__name__)
 
@@ -66,15 +60,21 @@ class DataTrainingArguments:
     )
     dataset_config_name: str | None = field(
         default=None,
-        metadata={"help": "The configuration name of the dataset to use (via the datasets library)."},
+        metadata={
+            "help": "The configuration name of the dataset to use (via the datasets library)."
+        },
     )
     train_val_split: float | None = field(
         default=0.15,
-        metadata={"help": "Fraction to split off of train for validation (used only when no validation split exists)."},
+        metadata={
+            "help": "Fraction to split off of train for validation (used only when no validation split exists)."
+        },
     )
     max_train_samples: int | None = field(
         default=None,
-        metadata={"help": "Truncate training set to this many samples (for debugging / quick tests)."},
+        metadata={
+            "help": "Truncate training set to this many samples (for debugging / quick tests)."
+        },
     )
     max_eval_samples: int | None = field(
         default=None,
@@ -94,11 +94,15 @@ class DataTrainingArguments:
 class ModelArguments:
     model_name_or_path: str = field(
         default="timm/mobilenetv3_small_100.lamb_in1k",
-        metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models."},
+        metadata={
+            "help": "Path to pretrained model or model identifier from huggingface.co/models."
+        },
     )
     config_name: str | None = field(
         default=None,
-        metadata={"help": "Pretrained config name or path if not the same as model_name."},
+        metadata={
+            "help": "Pretrained config name or path if not the same as model_name."
+        },
     )
     cache_dir: str | None = field(
         default=None,
@@ -106,7 +110,9 @@ class ModelArguments:
     )
     model_revision: str = field(
         default="main",
-        metadata={"help": "The specific model version to use (branch, tag, or commit id)."},
+        metadata={
+            "help": "The specific model version to use (branch, tag, or commit id)."
+        },
     )
     image_processor_name: str | None = field(
         default=None,
@@ -114,7 +120,9 @@ class ModelArguments:
     )
     ignore_mismatched_sizes: bool = field(
         default=True,
-        metadata={"help": "Allow loading weights when num_labels differs from pretrained checkpoint."},
+        metadata={
+            "help": "Allow loading weights when num_labels differs from pretrained checkpoint."
+        },
     )
     token: str | None = field(
         default=None,
@@ -140,39 +148,50 @@ def build_transforms(image_processor, is_training: bool):
         img_size = 224
 
     if hasattr(image_processor, "image_mean") and image_processor.image_mean:
-        normalize = Normalize(mean=image_processor.image_mean, std=image_processor.image_std)
+        normalize = Normalize(
+            mean=image_processor.image_mean, std=image_processor.image_std
+        )
     else:
         normalize = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
     if is_training:
-        return Compose([
-            RandomResizedCrop(img_size),
-            RandomHorizontalFlip(),
-            ToTensor(),
-            normalize,
-        ])
+        return Compose(
+            [
+                RandomResizedCrop(img_size),
+                RandomHorizontalFlip(),
+                ToTensor(),
+                normalize,
+            ]
+        )
     else:
         if isinstance(img_size, int):
             resize_size = int(img_size / 0.875)  # standard 87.5% center crop ratio
         else:
             resize_size = tuple(int(s / 0.875) for s in img_size)
-        return Compose([
-            Resize(resize_size),
-            CenterCrop(img_size),
-            ToTensor(),
-            normalize,
-        ])
+        return Compose(
+            [
+                Resize(resize_size),
+                CenterCrop(img_size),
+                ToTensor(),
+                normalize,
+            ]
+        )
 
 
 def main():
-    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
+    parser = HfArgumentParser(
+        (ModelArguments, DataTrainingArguments, TrainingArguments)
+    )
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
-        model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
+        model_args, data_args, training_args = parser.parse_json_file(
+            json_file=os.path.abspath(sys.argv[1])
+        )
     else:
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
     # --- Hub authentication ---
     from huggingface_hub import login
+
     hf_token = os.environ.get("HF_TOKEN") or os.environ.get("hfjob")
     if hf_token:
         login(token=hf_token)
@@ -217,10 +236,16 @@ def main():
     # --- Resolve label column ---
     label_col = data_args.label_column_name
     if label_col not in dataset["train"].column_names:
-        candidates = [c for c in dataset["train"].column_names if c in ("label", "labels", "class", "fine_label")]
+        candidates = [
+            c
+            for c in dataset["train"].column_names
+            if c in ("label", "labels", "class", "fine_label")
+        ]
         if candidates:
             label_col = candidates[0]
-            logger.info(f"Label column '{data_args.label_column_name}' not found, using '{label_col}'")
+            logger.info(
+                f"Label column '{data_args.label_column_name}' not found, using '{label_col}'"
+            )
         else:
             raise ValueError(
                 f"Label column '{data_args.label_column_name}' not found. "
@@ -255,9 +280,13 @@ def main():
     # --- Shuffle + Train/val split ---
     dataset["train"] = dataset["train"].shuffle(seed=training_args.seed)
 
-    data_args.train_val_split = None if "validation" in dataset else data_args.train_val_split
+    data_args.train_val_split = (
+        None if "validation" in dataset else data_args.train_val_split
+    )
     if isinstance(data_args.train_val_split, float) and data_args.train_val_split > 0.0:
-        split = dataset["train"].train_test_split(data_args.train_val_split, seed=training_args.seed)
+        split = dataset["train"].train_test_split(
+            data_args.train_val_split, seed=training_args.seed
+        )
         dataset["train"] = split["train"]
         dataset["validation"] = split["test"]
 
@@ -307,13 +336,17 @@ def main():
 
     def preprocess_train(examples):
         return {
-            "pixel_values": [train_transforms(img.convert("RGB")) for img in examples[image_col]],
+            "pixel_values": [
+                train_transforms(img.convert("RGB")) for img in examples[image_col]
+            ],
             "labels": examples[label_col],
         }
 
     def preprocess_val(examples):
         return {
-            "pixel_values": [val_transforms(img.convert("RGB")) for img in examples[image_col]],
+            "pixel_values": [
+                val_transforms(img.convert("RGB")) for img in examples[image_col]
+            ],
             "labels": examples[label_col],
         }
 
@@ -328,7 +361,9 @@ def main():
 
     def compute_metrics(eval_pred: EvalPrediction):
         predictions = np.argmax(eval_pred.predictions, axis=1)
-        return accuracy_metric.compute(predictions=predictions, references=eval_pred.label_ids)
+        return accuracy_metric.compute(
+            predictions=predictions, references=eval_pred.label_ids
+        )
 
     # --- Trainer ---
     eval_dataset = None
@@ -350,7 +385,9 @@ def main():
 
     # --- Train ---
     if training_args.do_train:
-        train_result = trainer.train(resume_from_checkpoint=training_args.resume_from_checkpoint)
+        train_result = trainer.train(
+            resume_from_checkpoint=training_args.resume_from_checkpoint
+        )
         trainer.save_model()
         trainer.log_metrics("train", train_result.metrics)
         trainer.save_metrics("train", train_result.metrics)
@@ -361,7 +398,9 @@ def main():
         test_dataset = dataset.get("test", dataset.get("validation"))
         test_prefix = "test" if "test" in dataset else "eval"
         if test_dataset is not None:
-            metrics = trainer.evaluate(eval_dataset=test_dataset, metric_key_prefix=test_prefix)
+            metrics = trainer.evaluate(
+                eval_dataset=test_dataset, metric_key_prefix=test_prefix
+            )
             trainer.log_metrics(test_prefix, metrics)
             trainer.save_metrics(test_prefix, metrics)
 

@@ -1,4 +1,4 @@
-"use client"; 
+"use client";
 
 import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
@@ -43,8 +43,8 @@ const Tab = ({ children, setPosition, href }) => {
       }}
       className="relative z-10"
     >
-      <Link 
-        href={href} 
+      <Link
+        href={href}
         className="block px-3 py-1.5 text-xs font-black uppercase text-orquidea-cream mix-blend-difference lg:px-6 lg:py-3 lg:text-sm transition-all duration-300 outline-none"
       >
         {children}

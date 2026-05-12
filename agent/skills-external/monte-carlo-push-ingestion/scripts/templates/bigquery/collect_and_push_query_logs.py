@@ -20,13 +20,17 @@ from __future__ import annotations
 import argparse
 import os
 
-from collect_query_logs import collect, LOOKBACK_HOURS, LOOKBACK_LAG_HOURS
-from push_query_logs import push, _BATCH_SIZE
+from collect_query_logs import LOOKBACK_HOURS, LOOKBACK_LAG_HOURS, collect
+from push_query_logs import _BATCH_SIZE, push
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Push BigQuery query logs to Monte Carlo")
-    parser.add_argument("--project-id", default=os.getenv("BIGQUERY_PROJECT_ID"))  # ← SUBSTITUTE
+    parser = argparse.ArgumentParser(
+        description="Push BigQuery query logs to Monte Carlo"
+    )
+    parser.add_argument(
+        "--project-id", default=os.getenv("BIGQUERY_PROJECT_ID")
+    )  # ← SUBSTITUTE
     parser.add_argument("--resource-uuid", default=os.getenv("MCD_RESOURCE_UUID"))
     parser.add_argument("--key-id", default=os.getenv("MCD_INGEST_ID"))
     parser.add_argument("--key-token", default=os.getenv("MCD_INGEST_TOKEN"))

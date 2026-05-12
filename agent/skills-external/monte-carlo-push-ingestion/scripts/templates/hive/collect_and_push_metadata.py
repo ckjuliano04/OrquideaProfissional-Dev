@@ -91,7 +91,9 @@ def main() -> None:
     if not args.hive_host:
         parser.error("--hive-host is required (or set HIVE_HOST)")
     if not args.key_id or not args.key_token:
-        parser.error("--key-id and --key-token are required (or set MCD_INGEST_ID / MCD_INGEST_TOKEN)")
+        parser.error(
+            "--key-id and --key-token are required (or set MCD_INGEST_ID / MCD_INGEST_TOKEN)"
+        )
     if not args.resource_uuid:
         parser.error("--resource-uuid is required (or set MCD_RESOURCE_UUID)")
 

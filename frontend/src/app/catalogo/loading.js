@@ -1,10 +1,9 @@
-import { ProductSkeleton } from '@/components/ui/Skeleton';
+import { ProductSkeleton } from "@/components/ui/Skeleton";
 
 export default function CatalogoLoading() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col relative overflow-hidden">
       <div className="container mx-auto px-4 py-8 flex-grow flex flex-col md:flex-row gap-8 relative z-10">
-        
         {/* Sidebar Skeleton */}
         <aside className="w-full md:w-72 flex-shrink-0">
           <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm animate-pulse">
@@ -31,7 +30,7 @@ export default function CatalogoLoading() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map(i => (
+            {[1, 2, 3, 4, 5, 6].map((i) => (
               <ProductSkeleton key={i} />
             ))}
           </div>

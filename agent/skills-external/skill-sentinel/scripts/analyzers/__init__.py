@@ -5,6 +5,7 @@ Cada analyzer recebe os dados de uma skill (do scanner) e retorna:
 - score (0-100)
 - findings (lista de problemas/recomendacoes)
 """
+
 from __future__ import annotations
 
 from typing import Any, Dict, List, Tuple

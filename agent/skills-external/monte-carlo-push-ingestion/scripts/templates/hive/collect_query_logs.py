@@ -219,7 +219,9 @@ def collect(
     rows_by_id: dict[str, int] | None = None
     if op_logs_dir:
         rows_by_id = _load_returned_rows(op_logs_dir)
-        print(f"  Loaded row counts for {len(rows_by_id)} query/queries from {op_logs_dir}")
+        print(
+            f"  Loaded row counts for {len(rows_by_id)} query/queries from {op_logs_dir}"
+        )
 
     queries = _build_query_log_entries(raw_entries, rows_by_id)
 

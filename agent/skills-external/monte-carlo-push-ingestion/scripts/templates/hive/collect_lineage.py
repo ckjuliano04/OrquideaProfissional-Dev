@@ -76,18 +76,91 @@ _COMMAND_START_RE = re.compile(
 # Tokens that are almost never real column names — SQL keywords, functions, casts, etc.
 _SQL_SCAN_NOISE = frozenset(
     {
-        "ROW_NUMBER", "RANK", "DENSE_RANK", "NTILE", "OVER", "PARTITION",
-        "ORDER", "BY", "CASE", "WHEN", "THEN", "ELSE", "END", "AND", "OR",
-        "NOT", "IN", "IS", "DISTINCT", "CAST", "CONVERT", "CURRENT_TIMESTAMP",
-        "CURRENT_DATE", "TRUE", "FALSE", "NULL", "BETWEEN", "LIKE", "EXISTS",
-        "ASC", "DESC", "LIMIT", "OFFSET", "GROUP", "HAVING", "UNION", "ALL",
-        "INNER", "LEFT", "RIGHT", "FULL", "OUTER", "CROSS", "JOIN", "ON",
-        "WHERE", "SELECT", "FROM", "AS", "STRING", "BIGINT", "INT", "SMALLINT",
-        "TINYINT", "DOUBLE", "FLOAT", "REAL", "DECIMAL", "BOOLEAN", "DATE",
-        "TIMESTAMP", "VARCHAR", "CHAR", "BINARY", "ARRAY", "MAP", "STRUCT",
-        "SUM", "AVG", "COUNT", "MIN", "MAX", "STDDEV", "VARIANCE", "VAR_POP",
-        "COALESCE", "IF", "SUBSTRING", "YEAR", "MONTH", "DAY", "LEAD", "LAG",
-        "FIRST_VALUE", "LAST_VALUE",
+        "ROW_NUMBER",
+        "RANK",
+        "DENSE_RANK",
+        "NTILE",
+        "OVER",
+        "PARTITION",
+        "ORDER",
+        "BY",
+        "CASE",
+        "WHEN",
+        "THEN",
+        "ELSE",
+        "END",
+        "AND",
+        "OR",
+        "NOT",
+        "IN",
+        "IS",
+        "DISTINCT",
+        "CAST",
+        "CONVERT",
+        "CURRENT_TIMESTAMP",
+        "CURRENT_DATE",
+        "TRUE",
+        "FALSE",
+        "NULL",
+        "BETWEEN",
+        "LIKE",
+        "EXISTS",
+        "ASC",
+        "DESC",
+        "LIMIT",
+        "OFFSET",
+        "GROUP",
+        "HAVING",
+        "UNION",
+        "ALL",
+        "INNER",
+        "LEFT",
+        "RIGHT",
+        "FULL",
+        "OUTER",
+        "CROSS",
+        "JOIN",
+        "ON",
+        "WHERE",
+        "SELECT",
+        "FROM",
+        "AS",
+        "STRING",
+        "BIGINT",
+        "INT",
+        "SMALLINT",
+        "TINYINT",
+        "DOUBLE",
+        "FLOAT",
+        "REAL",
+        "DECIMAL",
+        "BOOLEAN",
+        "DATE",
+        "TIMESTAMP",
+        "VARCHAR",
+        "CHAR",
+        "BINARY",
+        "ARRAY",
+        "MAP",
+        "STRUCT",
+        "SUM",
+        "AVG",
+        "COUNT",
+        "MIN",
+        "MAX",
+        "STDDEV",
+        "VARIANCE",
+        "VAR_POP",
+        "COALESCE",
+        "IF",
+        "SUBSTRING",
+        "YEAR",
+        "MONTH",
+        "DAY",
+        "LEAD",
+        "LAG",
+        "FIRST_VALUE",
+        "LAST_VALUE",
     }
 )
 
@@ -108,7 +181,9 @@ def _prepare_select_for_col_scan(select_clause: str) -> str:
     return s
 
 
-def _dedupe_col_mappings(mappings: list[tuple[str, str, str]]) -> list[tuple[str, str, str]]:
+def _dedupe_col_mappings(
+    mappings: list[tuple[str, str, str]],
+) -> list[tuple[str, str, str]]:
     seen: set[tuple[str, str, str]] = set()
     out: list[tuple[str, str, str]] = []
     for t in mappings:
@@ -124,7 +199,9 @@ def _extract_query_blocks(log_text: str) -> list[str]:
     return [m.group("query").strip() for m in _COMMAND_START_RE.finditer(log_text)]
 
 
-def _parse_select_cols(select_clause: str, src_table: str) -> list[tuple[str, str, str]]:
+def _parse_select_cols(
+    select_clause: str, src_table: str
+) -> list[tuple[str, str, str]]:
     """
     Lightweight column mapping: for each `alias.col AS dest` or `col AS dest`
     in the SELECT clause, return (dest_col, src_table, src_col).
@@ -221,7 +298,9 @@ def collect(log_file: str) -> dict:
         "edges": [
             {
                 "destination": {"database": e.dest_db, "table": e.dest_table},
-                "sources": [{"database": sdb, "table": stbl} for sdb, stbl in e.sources],
+                "sources": [
+                    {"database": sdb, "table": stbl} for sdb, stbl in e.sources
+                ],
                 "col_mappings": [
                     {"dest_col": dc, "src_table": st, "src_col": sc}
                     for dc, st, sc in e.col_mappings
@@ -252,7 +331,9 @@ def main() -> None:
     manifest = collect(log_file=args.log_file)
 
     if not manifest["edges"]:
-        print("No lineage edges detected — no CTAS or INSERT INTO ... SELECT patterns found.")
+        print(
+            "No lineage edges detected — no CTAS or INSERT INTO ... SELECT patterns found."
+        )
         return
 
     with open(args.output_file, "w") as fh:

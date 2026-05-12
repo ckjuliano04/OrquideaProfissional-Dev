@@ -62,8 +62,7 @@ def _build_events(edges: list[dict]) -> list[LineageEvent]:
             LineageEvent(
                 destination=_make_ref(dest["database"], dest["schema"], dest["table"]),
                 sources=[
-                    _make_ref(s["database"], s["schema"], s["table"])
-                    for s in sources
+                    _make_ref(s["database"], s["schema"], s["table"]) for s in sources
                 ],
             )
         )
@@ -114,8 +113,12 @@ def push(
 
     def _push_batch(batch: list, batch_num: int) -> str | None:
         """Push a single batch using a dedicated Session (thread-safe)."""
-        log.info("Pushing batch %d/%d (%d events) ...", batch_num, total_batches, len(batch))
-        client = Client(session=Session(mcd_id=key_id, mcd_token=key_token, scope="Ingestion"))
+        log.info(
+            "Pushing batch %d/%d (%d events) ...", batch_num, total_batches, len(batch)
+        )
+        client = Client(
+            session=Session(mcd_id=key_id, mcd_token=key_token, scope="Ingestion")
+        )
         service = IngestionService(mc_client=client)
         result = service.send_lineage(
             resource_uuid=resource_uuid,
@@ -133,8 +136,7 @@ def push(
 
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         futures = {
-            pool.submit(_push_batch, batch, i + 1): i
-            for i, batch in enumerate(batches)
+            pool.submit(_push_batch, batch, i + 1): i for i, batch in enumerate(batches)
         }
         for future in as_completed(futures):
             idx = futures[future]

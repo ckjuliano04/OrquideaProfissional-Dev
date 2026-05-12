@@ -11,8 +11,8 @@ import argparse
 import json
 import os
 import sys
-from urllib.request import urlopen, Request
-from urllib.error import URLError, HTTPError
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 
 def _mask_token(token: str) -> str:
@@ -30,7 +30,7 @@ def test_bot(token: str) -> dict:
         "token_valid": False,
         "bot_info": None,
         "webhook_info": None,
-        "errors": []
+        "errors": [],
     }
 
     # Test 1: getMe
@@ -47,15 +47,23 @@ def test_bot(token: str) -> dict:
                 print(f"       Name: {bot.get('first_name', 'N/A')}")
                 print(f"       ID: {bot.get('id', 'N/A')}")
                 print(f"       Can join groups: {bot.get('can_join_groups', 'N/A')}")
-                print(f"       Can read group messages: {bot.get('can_read_all_group_messages', 'N/A')}")
-                print(f"       Supports inline: {bot.get('supports_inline_queries', 'N/A')}")
+                print(
+                    f"       Can read group messages: {bot.get('can_read_all_group_messages', 'N/A')}"
+                )
+                print(
+                    f"       Supports inline: {bot.get('supports_inline_queries', 'N/A')}"
+                )
             else:
                 results["errors"].append(f"getMe returned ok=false: {data}")
                 print(f"  FAIL - {data.get('description', 'Unknown error')}")
     except HTTPError as e:
         error_body = e.read().decode()
         # Mask token in error body to prevent credential leakage
-        safe_error = error_body.replace(token, masked_token) if token in error_body else error_body
+        safe_error = (
+            error_body.replace(token, masked_token)
+            if token in error_body
+            else error_body
+        )
         results["errors"].append(f"HTTP {e.code}: {safe_error}")
         print(f"  FAIL - HTTP {e.code}: {safe_error}")
         if e.code == 401:
@@ -123,7 +131,9 @@ def test_bot(token: str) -> dict:
 
 def main():
     parser = argparse.ArgumentParser(description="Test Telegram Bot token")
-    parser.add_argument("--token", type=str, help="Bot token (or set TELEGRAM_BOT_TOKEN env var)")
+    parser.add_argument(
+        "--token", type=str, help="Bot token (or set TELEGRAM_BOT_TOKEN env var)"
+    )
     parser.add_argument("--json", action="store_true", help="Output results as JSON")
     args = parser.parse_args()
 

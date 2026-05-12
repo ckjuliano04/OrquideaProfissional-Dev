@@ -11,6 +11,7 @@ Uso:
     for s in skills:
         print(s["name"], s["path"], s["file_count"])
 """
+
 from __future__ import annotations
 
 import ast
@@ -92,31 +93,39 @@ def _extract_functions(filepath: Path) -> List[Dict[str, Any]]:
     functions = []
     for node in ast.walk(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            functions.append({
-                "name": node.name,
-                "type": "async_function" if isinstance(node, ast.AsyncFunctionDef) else "function",
-                "line": node.lineno,
-                "end_line": getattr(node, "end_lineno", node.lineno),
-                "has_docstring": (
-                    isinstance(node.body[0], ast.Expr)
-                    and isinstance(node.body[0].value, (ast.Constant, ast.Str))
-                    if node.body else False
-                ),
-                "args_count": len(node.args.args),
-            })
+            functions.append(
+                {
+                    "name": node.name,
+                    "type": "async_function"
+                    if isinstance(node, ast.AsyncFunctionDef)
+                    else "function",
+                    "line": node.lineno,
+                    "end_line": getattr(node, "end_lineno", node.lineno),
+                    "has_docstring": (
+                        isinstance(node.body[0], ast.Expr)
+                        and isinstance(node.body[0].value, (ast.Constant, ast.Str))
+                        if node.body
+                        else False
+                    ),
+                    "args_count": len(node.args.args),
+                }
+            )
         elif isinstance(node, ast.ClassDef):
-            functions.append({
-                "name": node.name,
-                "type": "class",
-                "line": node.lineno,
-                "end_line": getattr(node, "end_lineno", node.lineno),
-                "has_docstring": (
-                    isinstance(node.body[0], ast.Expr)
-                    and isinstance(node.body[0].value, (ast.Constant, ast.Str))
-                    if node.body else False
-                ),
-                "args_count": 0,
-            })
+            functions.append(
+                {
+                    "name": node.name,
+                    "type": "class",
+                    "line": node.lineno,
+                    "end_line": getattr(node, "end_lineno", node.lineno),
+                    "has_docstring": (
+                        isinstance(node.body[0], ast.Expr)
+                        and isinstance(node.body[0].value, (ast.Constant, ast.Str))
+                        if node.body
+                        else False
+                    ),
+                    "args_count": 0,
+                }
+            )
     return functions
 
 
@@ -132,13 +141,15 @@ def _parse_requirements(skill_dir: Path) -> List[Dict[str, str]]:
             if not line or line.startswith("#") or line.startswith("-"):
                 continue
             # Parse "package==1.0" ou "package>=1.0" ou "package"
-            match = re.match(r'^([a-zA-Z0-9_-]+)\s*([><=!~]+)?\s*([\d.]*)', line)
+            match = re.match(r"^([a-zA-Z0-9_-]+)\s*([><=!~]+)?\s*([\d.]*)", line)
             if match:
-                deps.append({
-                    "name": match.group(1),
-                    "version_spec": (match.group(2) or "") + (match.group(3) or ""),
-                    "pinned": "==" in (match.group(2) or ""),
-                })
+                deps.append(
+                    {
+                        "name": match.group(1),
+                        "version_spec": (match.group(2) or "") + (match.group(3) or ""),
+                        "pinned": "==" in (match.group(2) or ""),
+                    }
+                )
     except OSError:
         pass
     return deps
@@ -256,7 +267,6 @@ class SkillScanner:
 
 # -- CLI -----------------------------------------------------------------------
 if __name__ == "__main__":
-    import json
     scanner = SkillScanner()
     skills = scanner.discover_all()
     print(f"Skills encontradas: {len(skills)}\n")
@@ -265,7 +275,9 @@ if __name__ == "__main__":
         print(f"    Path: {s['path']}")
         print(f"    Files: {s['file_count']} Python ({s['line_count']} lines)")
         print(f"    Refs: {len(s['reference_files'])} docs")
-        print(f"    Gov: {'sim' if s['has_governance'] else 'nao'} | "
-              f"DB: {'sim' if s['has_db'] else 'nao'} | "
-              f"Config: {'sim' if s['has_config'] else 'nao'}")
+        print(
+            f"    Gov: {'sim' if s['has_governance'] else 'nao'} | "
+            f"DB: {'sim' if s['has_db'] else 'nao'} | "
+            f"Config: {'sim' if s['has_config'] else 'nao'}"
+        )
         print()

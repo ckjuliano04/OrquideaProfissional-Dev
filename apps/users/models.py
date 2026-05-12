@@ -1,5 +1,5 @@
-from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.db import models
 
 
 class UsersManager(BaseUserManager):
@@ -24,11 +24,34 @@ class UsersManager(BaseUserManager):
 class Users(AbstractBaseUser):
     # Mapeamento direto do schema_dump (MSSQL)
     id = models.AutoField(primary_key=True)
-    full_name = models.CharField(max_length=150, db_collation="Latin1_General_CI_AS", verbose_name="Nome Completo")
-    email = models.CharField(unique=True, max_length=150, db_collation="Latin1_General_CI_AS", verbose_name="E-mail")
-    password = models.CharField(max_length=255, db_column="password_hash", verbose_name="Senha (Hash)")
-    phone = models.CharField(max_length=30, db_collation="Latin1_General_CI_AS", blank=True, null=True, verbose_name="Telefone")
-    document_number = models.CharField(max_length=30, db_collation="Latin1_General_CI_AS", blank=True, null=True, verbose_name="CPF/CNPJ")
+    full_name = models.CharField(
+        max_length=150,
+        db_collation="Latin1_General_CI_AS",
+        verbose_name="Nome Completo",
+    )
+    email = models.CharField(
+        unique=True,
+        max_length=150,
+        db_collation="Latin1_General_CI_AS",
+        verbose_name="E-mail",
+    )
+    password = models.CharField(
+        max_length=255, db_column="password_hash", verbose_name="Senha (Hash)"
+    )
+    phone = models.CharField(
+        max_length=30,
+        db_collation="Latin1_General_CI_AS",
+        blank=True,
+        null=True,
+        verbose_name="Telefone",
+    )
+    document_number = models.CharField(
+        max_length=30,
+        db_collation="Latin1_General_CI_AS",
+        blank=True,
+        null=True,
+        verbose_name="CPF/CNPJ",
+    )
     # Definição completa de tipos (Suportada após atualização da constraint no DB)
     USER_TYPE_CHOICES = [
         ("admin", "Administrador"),
@@ -37,14 +60,23 @@ class Users(AbstractBaseUser):
         ("tecnico", "Técnico"),
         ("cliente", "Cliente"),
     ]
-    user_type = models.CharField(max_length=30, db_collation="Latin1_General_CI_AS", choices=USER_TYPE_CHOICES, verbose_name="Tipo de Usuário")
-    status = models.CharField(max_length=20, db_collation="Latin1_General_CI_AS", verbose_name="Status")
+    user_type = models.CharField(
+        max_length=30,
+        db_collation="Latin1_General_CI_AS",
+        choices=USER_TYPE_CHOICES,
+        verbose_name="Tipo de Usuário",
+    )
+    status = models.CharField(
+        max_length=20, db_collation="Latin1_General_CI_AS", verbose_name="Status"
+    )
     is_active = models.BooleanField(default=True, verbose_name="Conta Ativa")
     last_login = models.DateTimeField(db_column="last_login_at", blank=True, null=True)
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField(blank=True, null=True)
     must_change_password = models.BooleanField(default=False)
-    password_reset_token = models.CharField(max_length=255, db_collation="Latin1_General_CI_AS", blank=True, null=True)
+    password_reset_token = models.CharField(
+        max_length=255, db_collation="Latin1_General_CI_AS", blank=True, null=True
+    )
     password_reset_expires_at = models.DateTimeField(blank=True, null=True)
 
     # Configurações de autenticação Django
@@ -67,7 +99,7 @@ class Users(AbstractBaseUser):
         """
         Define quem pode entrar no Django Admin (CMS).
         """
-        return self.user_type in ['admin', 'interno']
+        return self.user_type in ["admin", "interno"]
 
     @property
     def is_superuser(self):
@@ -86,6 +118,7 @@ class Users(AbstractBaseUser):
 
     def set_password(self, raw_password):
         import bcrypt
+
         if raw_password:
             hashed = bcrypt.hashpw(raw_password.encode("utf-8"), bcrypt.gensalt())
             self.password = hashed.decode("utf-8")
@@ -100,8 +133,12 @@ class Users(AbstractBaseUser):
 
 
 class Roles(models.Model):
-    name = models.CharField(unique=True, max_length=50, db_collation="Latin1_General_CI_AS")
-    description = models.CharField(max_length=255, db_collation="Latin1_General_CI_AS", blank=True, null=True)
+    name = models.CharField(
+        unique=True, max_length=50, db_collation="Latin1_General_CI_AS"
+    )
+    description = models.CharField(
+        max_length=255, db_collation="Latin1_General_CI_AS", blank=True, null=True
+    )
     access_area = models.CharField(max_length=30, db_collation="Latin1_General_CI_AS")
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField(blank=True, null=True)

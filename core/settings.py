@@ -29,7 +29,7 @@ try:
             dsn=SENTRY_DSN,
             integrations=[DjangoIntegration()],
             traces_sample_rate=1.0,
-            send_default_pii=True
+            send_default_pii=True,
         )
 except ImportError:
     # Sentry não está instalado, ignora silenciosamente
@@ -207,10 +207,10 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.UserRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
-        "anon": "2000/day",     # Aumentado para evitar bloqueios em dev
-        "user": "5000/day",    # Usuários logados
-        "burst": "120/min",     # Limite de segurança para rajadas
-        "login": "10/min",      # Limite de tentativas de login por IP
+        "anon": "2000/day",  # Aumentado para evitar bloqueios em dev
+        "user": "5000/day",  # Usuários logados
+        "burst": "120/min",  # Limite de segurança para rajadas
+        "login": "10/min",  # Limite de tentativas de login por IP
     },
 }
 

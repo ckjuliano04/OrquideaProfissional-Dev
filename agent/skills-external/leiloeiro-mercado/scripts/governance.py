@@ -4,10 +4,10 @@ Modulo de governanca para leiloeiro-ia.
 Implementa action_log, rate_limit, confirmation_request e warning_threshold
 para skills baseadas em conhecimento (knowledge-only).
 """
+
 from __future__ import annotations
 
 import json
-import os
 from datetime import datetime
 from pathlib import Path
 
@@ -49,7 +49,9 @@ def check_rate(action: str = "query") -> bool:
             except (json.JSONDecodeError, KeyError, ValueError):
                 continue
     if count >= RATE_LIMIT_MAX:
-        raise RateLimitExceeded(f"Rate limit excedido: {count}/{RATE_LIMIT_MAX} em {RATE_LIMIT_WINDOW}s")
+        raise RateLimitExceeded(
+            f"Rate limit excedido: {count}/{RATE_LIMIT_MAX} em {RATE_LIMIT_WINDOW}s"
+        )
     return True
 
 
@@ -64,16 +66,20 @@ def requires_confirmation(action: str, risk_level: str = "alto") -> dict:
     }
 
 
-def check_warning_threshold(current_value: float, threshold: float = WARNING_THRESHOLD) -> list:
+def check_warning_threshold(
+    current_value: float, threshold: float = WARNING_THRESHOLD
+) -> list:
     """Verifica warning_threshold e retorna warnings se ultrapassado."""
     warnings = []
     if current_value >= threshold:
-        warnings.append({
-            "type": "RATE_LIMIT_WARNING",
-            "message": f"warning_threshold atingido: {current_value:.0%} do limite",
-            "threshold": threshold,
-            "current": current_value,
-        })
+        warnings.append(
+            {
+                "type": "RATE_LIMIT_WARNING",
+                "message": f"warning_threshold atingido: {current_value:.0%} do limite",
+                "threshold": threshold,
+                "current": current_value,
+            }
+        )
     return warnings
 
 
@@ -93,11 +99,11 @@ def get_recent_actions(limit: int = 20) -> list:
 
 class RateLimitExceeded(Exception):
     """Excecao quando rate limit e excedido."""
+
     pass
 
 
 if __name__ == "__main__":
-    import sys
     recent = get_recent_actions(20)
     if recent:
         for a in recent:

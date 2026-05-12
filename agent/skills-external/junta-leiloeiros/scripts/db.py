@@ -10,6 +10,7 @@ Uso:
     rows = db.get_by_estado("SP")
     stats = db.get_stats()
 """
+
 from __future__ import annotations
 
 import json
@@ -199,6 +200,7 @@ class Database:
 # ── CLI rápido para verificação ──────────────────────────────────────────────
 if __name__ == "__main__":
     import sys
+
     db = Database()
     db.init()
     stats = db.get_stats()

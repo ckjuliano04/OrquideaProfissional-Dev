@@ -191,8 +191,11 @@ def collect(
         assets.append(asset)
         log.info(
             "Collected %s.%s.%s — rows=%s, bytes=%s",
-            project_id, dataset, name,
-            row["total_rows"], row["current_physical_bytes"],
+            project_id,
+            dataset,
+            name,
+            row["total_rows"],
+            row["current_physical_bytes"],
         )
 
     manifest = {
@@ -232,7 +235,7 @@ def main() -> None:
         "--only-freshness-and-volume",
         action="store_true",
         help="Skip field/schema collection — only collect freshness and volume. "
-             "Use for periodic hourly pushes after the initial full metadata push.",
+        "Use for periodic hourly pushes after the initial full metadata push.",
     )
     parser.add_argument("--output-file", default="metadata_output.json")
     args = parser.parse_args()

@@ -1,7 +1,7 @@
 """WhatsApp Cloud API Client with async support and retry logic."""
 
-import os
 import asyncio
+import os
 from typing import Any
 
 import httpx
@@ -32,12 +32,14 @@ class WhatsAppClient:
 
     async def send_text(self, to: str, body: str, preview_url: bool = False) -> dict:
         """Send a text message."""
-        return await self.send_message({
-            "messaging_product": "whatsapp",
-            "to": to,
-            "type": "text",
-            "text": {"body": body, "preview_url": preview_url},
-        })
+        return await self.send_message(
+            {
+                "messaging_product": "whatsapp",
+                "to": to,
+                "type": "text",
+                "text": {"body": body, "preview_url": preview_url},
+            }
+        )
 
     async def send_template(
         self,
@@ -60,29 +62,38 @@ class WhatsAppClient:
             payload["template"]["components"] = components
         return await self.send_message(payload)
 
-    async def send_image(self, to: str, image_url: str, caption: str | None = None) -> dict:
+    async def send_image(
+        self, to: str, image_url: str, caption: str | None = None
+    ) -> dict:
         """Send an image message."""
-        return await self.send_message({
-            "messaging_product": "whatsapp",
-            "to": to,
-            "type": "image",
-            "image": {"link": image_url, **({"caption": caption} if caption else {})},
-        })
+        return await self.send_message(
+            {
+                "messaging_product": "whatsapp",
+                "to": to,
+                "type": "image",
+                "image": {
+                    "link": image_url,
+                    **({"caption": caption} if caption else {}),
+                },
+            }
+        )
 
     async def send_document(
         self, to: str, document_url: str, filename: str, caption: str | None = None
     ) -> dict:
         """Send a document message."""
-        return await self.send_message({
-            "messaging_product": "whatsapp",
-            "to": to,
-            "type": "document",
-            "document": {
-                "link": document_url,
-                "filename": filename,
-                **({"caption": caption} if caption else {}),
-            },
-        })
+        return await self.send_message(
+            {
+                "messaging_product": "whatsapp",
+                "to": to,
+                "type": "document",
+                "document": {
+                    "link": document_url,
+                    "filename": filename,
+                    **({"caption": caption} if caption else {}),
+                },
+            }
+        )
 
     async def send_interactive_buttons(
         self,
@@ -108,12 +119,14 @@ class WhatsAppClient:
         if footer_text:
             interactive["footer"] = {"text": footer_text}
 
-        return await self.send_message({
-            "messaging_product": "whatsapp",
-            "to": to,
-            "type": "interactive",
-            "interactive": interactive,
-        })
+        return await self.send_message(
+            {
+                "messaging_product": "whatsapp",
+                "to": to,
+                "type": "interactive",
+                "interactive": interactive,
+            }
+        )
 
     async def send_interactive_list(
         self,
@@ -135,21 +148,25 @@ class WhatsAppClient:
         if footer_text:
             interactive["footer"] = {"text": footer_text}
 
-        return await self.send_message({
-            "messaging_product": "whatsapp",
-            "to": to,
-            "type": "interactive",
-            "interactive": interactive,
-        })
+        return await self.send_message(
+            {
+                "messaging_product": "whatsapp",
+                "to": to,
+                "type": "interactive",
+                "interactive": interactive,
+            }
+        )
 
     async def send_reaction(self, to: str, message_id: str, emoji: str) -> dict:
         """React to a message with an emoji."""
-        return await self.send_message({
-            "messaging_product": "whatsapp",
-            "to": to,
-            "type": "reaction",
-            "reaction": {"message_id": message_id, "emoji": emoji},
-        })
+        return await self.send_message(
+            {
+                "messaging_product": "whatsapp",
+                "to": to,
+                "type": "reaction",
+                "reaction": {"message_id": message_id, "emoji": emoji},
+            }
+        )
 
     async def send_location(
         self,
@@ -160,17 +177,19 @@ class WhatsAppClient:
         address: str | None = None,
     ) -> dict:
         """Send a location message."""
-        return await self.send_message({
-            "messaging_product": "whatsapp",
-            "to": to,
-            "type": "location",
-            "location": {
-                "latitude": latitude,
-                "longitude": longitude,
-                **({"name": name} if name else {}),
-                **({"address": address} if address else {}),
-            },
-        })
+        return await self.send_message(
+            {
+                "messaging_product": "whatsapp",
+                "to": to,
+                "type": "location",
+                "location": {
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    **({"name": name} if name else {}),
+                    **({"address": address} if address else {}),
+                },
+            }
+        )
 
     async def mark_as_read(self, message_id: str) -> None:
         """Mark a message as read (blue checkmarks)."""
@@ -205,7 +224,9 @@ class WhatsAppClient:
                 error_message = error_data.get("message", str(e))
 
                 if error_code in non_retryable_codes:
-                    raise RuntimeError(f"WhatsApp API Error {error_code}: {error_message}")
+                    raise RuntimeError(
+                        f"WhatsApp API Error {error_code}: {error_message}"
+                    )
 
                 if attempt < max_retries:
                     delay = 2**attempt

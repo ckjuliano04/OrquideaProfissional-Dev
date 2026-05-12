@@ -1,4 +1,4 @@
-import { TrainingSkeleton } from '@/components/ui/Skeleton';
+import { TrainingSkeleton } from "@/components/ui/Skeleton";
 
 export default function TreinamentosLoading() {
   return (
@@ -14,7 +14,7 @@ export default function TreinamentosLoading() {
       {/* Grid Skeleton */}
       <div className="container mx-auto px-4 mt-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {[1, 2, 3, 4, 5, 6].map(i => (
+          {[1, 2, 3, 4, 5, 6].map((i) => (
             <TrainingSkeleton key={i} />
           ))}
         </div>

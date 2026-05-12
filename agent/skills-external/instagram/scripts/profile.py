@@ -5,6 +5,7 @@ Uso:
     python scripts/profile.py --view     # Ver perfil completo
     python scripts/profile.py --json     # Saída JSON
 """
+
 from __future__ import annotations
 
 import argparse

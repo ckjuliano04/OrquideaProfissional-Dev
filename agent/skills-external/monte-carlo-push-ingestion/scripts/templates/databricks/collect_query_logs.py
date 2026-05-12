@@ -33,9 +33,9 @@ log = logging.getLogger(__name__)
 
 LOG_TYPE = "databricks"
 
-LOOKBACK_HOURS: int = int(os.getenv("LOOKBACK_HOURS", "25"))        # ← SUBSTITUTE
-LOOKBACK_LAG_HOURS: int = int(os.getenv("LOOKBACK_LAG_HOURS", "1")) # ← SUBSTITUTE
-MAX_ROWS: int = int(os.getenv("MAX_ROWS", "10000"))                  # ← SUBSTITUTE
+LOOKBACK_HOURS: int = int(os.getenv("LOOKBACK_HOURS", "25"))  # ← SUBSTITUTE
+LOOKBACK_LAG_HOURS: int = int(os.getenv("LOOKBACK_LAG_HOURS", "1"))  # ← SUBSTITUTE
+MAX_ROWS: int = int(os.getenv("MAX_ROWS", "10000"))  # ← SUBSTITUTE
 
 _QUERY_LOG_SQL = """\
 SELECT
@@ -63,7 +63,7 @@ def _check_available_memory(min_gb: float = 2.0) -> None:
         if hasattr(os, "sysconf"):  # Linux / macOS
             page_size = os.sysconf("SC_PAGE_SIZE")
             avail_pages = os.sysconf("SC_AVPHYS_PAGES")
-            avail_gb = (page_size * avail_pages) / (1024 ** 3)
+            avail_gb = (page_size * avail_pages) / (1024**3)
         else:
             return  # Windows — skip check
     except (ValueError, OSError):
@@ -106,7 +106,8 @@ def collect_query_logs(
     max_rows: int,
 ) -> list[dict[str, Any]]:
     rendered_sql = _QUERY_LOG_SQL.format(
-        lookback_hours=lookback_hours + lag_hours,  # offset from NOW() to cover the window
+        lookback_hours=lookback_hours
+        + lag_hours,  # offset from NOW() to cover the window
         lag_hours=lag_hours,
         max_rows=max_rows,
     )
@@ -149,12 +150,14 @@ def collect(
     collected_at = datetime.now(timezone.utc).isoformat()
 
     with sql.connect(
-        server_hostname=host,    # ← SUBSTITUTE
-        http_path=http_path,     # ← SUBSTITUTE
-        access_token=token,      # ← SUBSTITUTE
+        server_hostname=host,  # ← SUBSTITUTE
+        http_path=http_path,  # ← SUBSTITUTE
+        access_token=token,  # ← SUBSTITUTE
     ) as conn:
         with conn.cursor() as cursor:
-            entries = collect_query_logs(cursor, lookback_hours, lookback_lag_hours, max_rows)
+            entries = collect_query_logs(
+                cursor, lookback_hours, lookback_lag_hours, max_rows
+            )
 
     log.info("Collected %d query log entries", len(entries))
 
@@ -174,10 +177,16 @@ def collect(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Collect Databricks query logs to a manifest file")
-    parser.add_argument("--host", default=os.getenv("DATABRICKS_HOST"))           # ← SUBSTITUTE
-    parser.add_argument("--http-path", default=os.getenv("DATABRICKS_HTTP_PATH")) # ← SUBSTITUTE
-    parser.add_argument("--token", default=os.getenv("DATABRICKS_TOKEN"))         # ← SUBSTITUTE
+    parser = argparse.ArgumentParser(
+        description="Collect Databricks query logs to a manifest file"
+    )
+    parser.add_argument("--host", default=os.getenv("DATABRICKS_HOST"))  # ← SUBSTITUTE
+    parser.add_argument(
+        "--http-path", default=os.getenv("DATABRICKS_HTTP_PATH")
+    )  # ← SUBSTITUTE
+    parser.add_argument(
+        "--token", default=os.getenv("DATABRICKS_TOKEN")
+    )  # ← SUBSTITUTE
     parser.add_argument("--lookback-hours", type=int, default=LOOKBACK_HOURS)
     parser.add_argument("--lookback-lag-hours", type=int, default=LOOKBACK_LAG_HOURS)
     parser.add_argument("--max-rows", type=int, default=MAX_ROWS)

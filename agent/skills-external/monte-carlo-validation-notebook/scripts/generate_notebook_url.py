@@ -86,12 +86,16 @@ def validate_yaml(content: str) -> None:
                 if cell_type == "parameter":
                     content_val = cell.get("content")
                     if not isinstance(content_val, dict):
-                        errors.append(f"{prefix}: parameter cell 'content' must be a mapping with 'name' and 'config'")
+                        errors.append(
+                            f"{prefix}: parameter cell 'content' must be a mapping with 'name' and 'config'"
+                        )
                     else:
                         if "name" not in content_val:
                             errors.append(f"{prefix}: parameter content missing 'name'")
                         if "config" not in content_val:
-                            errors.append(f"{prefix}: parameter content missing 'config'")
+                            errors.append(
+                                f"{prefix}: parameter content missing 'config'"
+                            )
 
     if errors:
         print("Invalid notebook:", file=sys.stderr)
@@ -122,7 +126,9 @@ def main() -> None:
     print(f"URL length: {len(url)} chars")
 
     # Save URL to file alongside the YAML
-    url_file = os.path.join(os.path.dirname(os.path.abspath(args.yaml_path)), "notebook_url.txt")
+    url_file = os.path.join(
+        os.path.dirname(os.path.abspath(args.yaml_path)), "notebook_url.txt"
+    )
     with open(url_file, "w") as f:
         f.write(url)
     print(f"URL saved to: {url_file}")

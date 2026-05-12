@@ -15,6 +15,7 @@ O fluxo:
     5. Descobre Instagram User ID via Facebook Pages
     6. Salva tudo no banco SQLite (accounts table)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -25,7 +26,7 @@ import os
 import sys
 import webbrowser
 from datetime import datetime, timedelta, timezone
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Optional
 from urllib.parse import parse_qs, urlparse
@@ -33,7 +34,6 @@ from urllib.parse import parse_qs, urlparse
 sys.path.insert(0, str(Path(__file__).parent))
 
 import httpx
-
 from config import (
     GRAPH_API_BASE,
     OAUTH_AUTHORIZE_URL,
@@ -59,8 +59,10 @@ def _mask_secret(value: str, keep: int = 4) -> str:
 
 # ── OAuth Callback Server ────────────────────────────────────────────────────
 
+
 class OAuthCallbackHandler(BaseHTTPRequestHandler):
     """Servidor HTTP mínimo para capturar o callback OAuth."""
+
     authorization_code: Optional[str] = None
 
     def do_GET(self):
@@ -77,12 +79,16 @@ class OAuthCallbackHandler(BaseHTTPRequestHandler):
                 b"<p>Pode fechar esta janela e voltar ao terminal.</p></body></html>"
             )
         elif "error" in params:
-            error = params.get("error_description", params.get("error", ["desconhecido"]))[0]
+            error = params.get(
+                "error_description", params.get("error", ["desconhecido"])
+            )[0]
             self.send_response(400)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
             safe_error = html.escape(error, quote=True)
-            self.wfile.write(f"<html><body><h2>Erro: {safe_error}</h2></body></html>".encode())
+            self.wfile.write(
+                f"<html><body><h2>Erro: {safe_error}</h2></body></html>".encode()
+            )
         else:
             self.send_response(404)
             self.end_headers()
@@ -109,8 +115,11 @@ def wait_for_oauth_code() -> Optional[str]:
 
 # ── Token Exchange ────────────────────────────────────────────────────────────
 
+
 async def exchange_code_for_short_token(
-    code: str, app_id: str, app_secret: str,
+    code: str,
+    app_id: str,
+    app_secret: str,
 ) -> dict:
     """Troca authorization code por short-lived token (~1hr)."""
     async with httpx.AsyncClient(timeout=30) as client:
@@ -128,7 +137,9 @@ async def exchange_code_for_short_token(
 
 
 async def exchange_for_long_lived_token(
-    short_token: str, app_id: str, app_secret: str,
+    short_token: str,
+    app_id: str,
+    app_secret: str,
 ) -> dict:
     """Troca short-lived token por long-lived token (60 dias)."""
     async with httpx.AsyncClient(timeout=30) as client:
@@ -145,7 +156,9 @@ async def exchange_for_long_lived_token(
         return resp.json()
 
 
-async def refresh_long_lived_token(access_token: str, app_id: str, app_secret: str) -> dict:
+async def refresh_long_lived_token(
+    access_token: str, app_id: str, app_secret: str
+) -> dict:
     """Renova um long-lived token (deve ter mais de 24hr e menos de 60 dias)."""
     async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.get(
@@ -162,6 +175,7 @@ async def refresh_long_lived_token(access_token: str, app_id: str, app_secret: s
 
 
 # ── Instagram User Discovery ─────────────────────────────────────────────────
+
 
 async def discover_instagram_account(access_token: str) -> dict:
     """
@@ -204,7 +218,7 @@ async def discover_instagram_account(access_token: str) -> dict:
                     params={
                         "access_token": access_token,
                         "fields": "id,username,account_type,name,profile_picture_url,"
-                                  "followers_count,follows_count,media_count",
+                        "followers_count,follows_count,media_count",
                     },
                 )
                 resp.raise_for_status()
@@ -225,12 +239,17 @@ async def discover_instagram_account(access_token: str) -> dict:
 
 # ── Auto-Refresh ──────────────────────────────────────────────────────────────
 
+
 async def auto_refresh_if_needed(account_id: Optional[int] = None) -> Optional[str]:
     """
     Verifica se o token está próximo de expirar (< 7 dias) e renova.
     Retorna o token atual (renovado ou não).
     """
-    account = db.get_active_account() if account_id is None else db.get_account_by_id(account_id)
+    account = (
+        db.get_active_account()
+        if account_id is None
+        else db.get_account_by_id(account_id)
+    )
     if not account:
         return None
 
@@ -255,7 +274,9 @@ async def auto_refresh_if_needed(account_id: Optional[int] = None) -> Optional[s
                 token, account["app_id"], account["app_secret"]
             )
             new_token = result["access_token"]
-            new_expires = (now + timedelta(seconds=result.get("expires_in", 5184000))).isoformat()
+            new_expires = (
+                now + timedelta(seconds=result.get("expires_in", 5184000))
+            ).isoformat()
             db.update_token(account["id"], new_token, new_expires)
             print(f"Token renovado. Nova expiração: {new_expires[:10]}")
             return new_token
@@ -267,6 +288,7 @@ async def auto_refresh_if_needed(account_id: Optional[int] = None) -> Optional[s
 
 
 # ── Setup Flow ────────────────────────────────────────────────────────────────
+
 
 async def setup() -> None:
     """Fluxo completo de setup OAuth."""
@@ -297,7 +319,9 @@ async def setup() -> None:
     )
 
     print("\nAbrindo browser para autorização...")
-    print("A URL de autorização e o App ID não serão exibidos para evitar vazamento de credenciais.\n")
+    print(
+        "A URL de autorização e o App ID não serão exibidos para evitar vazamento de credenciais.\n"
+    )
     webbrowser.open(auth_url)
 
     # Esperar callback
@@ -319,7 +343,9 @@ async def setup() -> None:
     long_result = await exchange_for_long_lived_token(short_token, app_id, app_secret)
     long_token = long_result["access_token"]
     expires_in = long_result.get("expires_in", 5184000)  # 60 dias default
-    expires_at = (datetime.now(timezone.utc) + timedelta(seconds=expires_in)).isoformat()
+    expires_at = (
+        datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+    ).isoformat()
     print(f"Token longo obtido. Expira em: {expires_at[:10]}")
 
     # Descobrir conta Instagram
@@ -327,16 +353,18 @@ async def setup() -> None:
     ig_info = await discover_instagram_account(long_token)
 
     # Salvar no banco
-    account_id = db.upsert_account({
-        "ig_user_id": ig_info["ig_user_id"],
-        "username": ig_info["username"],
-        "account_type": ig_info["account_type"],
-        "access_token": long_token,
-        "token_expires_at": expires_at,
-        "facebook_page_id": ig_info["facebook_page_id"],
-        "app_id": app_id,
-        "app_secret": app_secret,
-    })
+    account_id = db.upsert_account(
+        {
+            "ig_user_id": ig_info["ig_user_id"],
+            "username": ig_info["username"],
+            "account_type": ig_info["account_type"],
+            "access_token": long_token,
+            "token_expires_at": expires_at,
+            "facebook_page_id": ig_info["facebook_page_id"],
+            "app_id": app_id,
+            "app_secret": app_secret,
+        }
+    )
 
     print()
     print("=" * 60)
@@ -357,7 +385,15 @@ async def show_status() -> None:
     """Mostra status da autenticação."""
     account = db.get_active_account()
     if not account:
-        print(json.dumps({"status": "not_configured", "message": "Nenhuma conta configurada. Execute: python scripts/auth.py --setup"}, indent=2))
+        print(
+            json.dumps(
+                {
+                    "status": "not_configured",
+                    "message": "Nenhuma conta configurada. Execute: python scripts/auth.py --setup",
+                },
+                indent=2,
+            )
+        )
         return
 
     expires_at = account.get("token_expires_at", "")
@@ -395,10 +431,14 @@ async def do_refresh() -> None:
 def main():
     parser = argparse.ArgumentParser(description="Autenticação OAuth Instagram")
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--setup", action="store_true", help="Configuração inicial completa")
+    group.add_argument(
+        "--setup", action="store_true", help="Configuração inicial completa"
+    )
     group.add_argument("--refresh", action="store_true", help="Renovar token")
     group.add_argument("--status", action="store_true", help="Ver status do token")
-    group.add_argument("--revoke", action="store_true", help="Revogar token (desativar conta)")
+    group.add_argument(
+        "--revoke", action="store_true", help="Revogar token (desativar conta)"
+    )
     args = parser.parse_args()
 
     if args.setup:
@@ -410,7 +450,9 @@ def main():
     elif args.revoke:
         account = db.get_active_account()
         if account:
-            db._connect().execute("UPDATE accounts SET is_active = 0 WHERE id = ?", [account["id"]])
+            db._connect().execute(
+                "UPDATE accounts SET is_active = 0 WHERE id = ?", [account["id"]]
+            )
             print(f"Conta @{account['username']} desativada.")
         else:
             print("Nenhuma conta ativa para revogar.")

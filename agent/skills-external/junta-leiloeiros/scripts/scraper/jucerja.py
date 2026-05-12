@@ -10,6 +10,7 @@ Estrutura HTML: <ul class="ats-listaLnks ats-container--estrutura">
 Total: ~334 leiloeiros (108 Regular + 132 Cancelados + 94 outros)
 67 paginas x 5 registros/pagina com SituacaoFuncionalId em branco
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -37,10 +38,14 @@ class JucerjaScraper(AbstractJuntaScraper):
         records = []
 
         # Seletor primario: li dentro da lista de leiloeiros
-        items = soup.select("ul.ats-listaLnks li, ul.ats-container--estrutura li, #listaLeiloeiros li, .listagemLeiloeiros li")
+        items = soup.select(
+            "ul.ats-listaLnks li, ul.ats-container--estrutura li, #listaLeiloeiros li, .listagemLeiloeiros li"
+        )
         if not items:
             # Fallback: qualquer li com h5 e h6
-            items = [li for li in soup.find_all("li") if li.find("h5") and li.find("h6")]
+            items = [
+                li for li in soup.find_all("li") if li.find("h5") and li.find("h6")
+            ]
 
         for li in items:
             labels = [self.clean(h.get_text()) for h in li.find_all("h5")]
@@ -65,16 +70,18 @@ class JucerjaScraper(AbstractJuntaScraper):
             if not nome or len(nome) < 3:
                 continue
 
-            records.append({
-                "nome": nome,
-                "matricula": get_val("matr", "registro", "nº matr", "n° matr"),
-                "situacao": get_val("situ", "funcional", "status"),
-                "municipio": get_val("munic", "cidade"),
-                "telefone": get_val("tel", "fone"),
-                "email": get_val("email", "e-mail"),
-                "endereco": get_val("ender", "logr", "rua", "endere"),
-                "data_registro": get_val("data matrícula", "posse", "data"),
-            })
+            records.append(
+                {
+                    "nome": nome,
+                    "matricula": get_val("matr", "registro", "nº matr", "n° matr"),
+                    "situacao": get_val("situ", "funcional", "status"),
+                    "municipio": get_val("munic", "cidade"),
+                    "telefone": get_val("tel", "fone"),
+                    "email": get_val("email", "e-mail"),
+                    "endereco": get_val("ender", "logr", "rua", "endere"),
+                    "data_registro": get_val("data matrícula", "posse", "data"),
+                }
+            )
 
         return records
 
@@ -85,6 +92,7 @@ class JucerjaScraper(AbstractJuntaScraper):
         Pagina 5 registros por vez; SituacaoFuncionalId em branco = todos os status.
         """
         import httpx
+
         results: List[Leiloeiro] = []
         pagina = 1
         seen_names: set = set()
@@ -113,18 +121,25 @@ class JucerjaScraper(AbstractJuntaScraper):
                     try:
                         resp = await client.get(url_pagina)
                         if resp.status_code >= 400:
-                            logger.warning("[RJ] Pagina %d retornou HTTP %d", pagina, resp.status_code)
+                            logger.warning(
+                                "[RJ] Pagina %d retornou HTTP %d",
+                                pagina,
+                                resp.status_code,
+                            )
                             break
                     except Exception as exc:
                         logger.error("[RJ] Erro na pagina %d: %s", pagina, exc)
                         break
 
                     from bs4 import BeautifulSoup
+
                     soup = BeautifulSoup(resp.text, "lxml")
                     page_records = self._parse_lista(soup)
 
                     if not page_records:
-                        logger.debug("[RJ] Pagina %d sem registros — fim da paginacao", pagina)
+                        logger.debug(
+                            "[RJ] Pagina %d sem registros — fim da paginacao", pagina
+                        )
                         break
 
                     # Evita duplicatas (mesmo nome ja visto)
@@ -138,7 +153,12 @@ class JucerjaScraper(AbstractJuntaScraper):
                             results.append(self.make_leiloeiro(**r))
                             novos += 1
 
-                    logger.debug("[RJ] Pagina %d: %d novos (total=%d)", pagina, novos, len(results))
+                    logger.debug(
+                        "[RJ] Pagina %d: %d novos (total=%d)",
+                        pagina,
+                        novos,
+                        len(results),
+                    )
 
                     if novos == 0:
                         break  # Pagina repetiu dados — parar

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
 // ─────────────────────────────────────────────
 // Skeleton Base — Bloco animado de carregamento
 // ─────────────────────────────────────────────
-export default function Skeleton({ className = '', ...props }) {
+export default function Skeleton({ className = "", ...props }) {
   return (
     <div
       className={`animate-pulse rounded-xl bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 bg-[length:200%_100%] ${className}`}
@@ -132,7 +132,9 @@ export function PageSkeleton() {
     <div className="flex-grow flex flex-col items-center justify-center min-h-[60vh] bg-slate-50">
       <div className="flex flex-col items-center gap-4">
         <div className="w-12 h-12 border-4 border-orquidea-green border-t-transparent rounded-full animate-spin" />
-        <p className="text-slate-400 font-medium text-sm tracking-wide">Carregando...</p>
+        <p className="text-slate-400 font-medium text-sm tracking-wide">
+          Carregando...
+        </p>
       </div>
     </div>
   );

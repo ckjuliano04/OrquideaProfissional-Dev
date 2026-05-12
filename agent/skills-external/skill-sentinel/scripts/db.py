@@ -12,6 +12,7 @@ Uso:
     db.insert_skill_snapshot(run_id, {...})
     db.insert_finding(run_id, {...})
 """
+
 from __future__ import annotations
 
 import json
@@ -147,8 +148,12 @@ class Database:
             return cursor.lastrowid
 
     def complete_audit_run(
-        self, run_id: int, skills_scanned: int, total_findings: int,
-        overall_score: float, report_path: str
+        self,
+        run_id: int,
+        skills_scanned: int,
+        total_findings: int,
+        overall_score: float,
+        report_path: str,
     ) -> None:
         """Marca uma auditoria como completa."""
         now = datetime.now(timezone.utc).isoformat()
@@ -158,7 +163,14 @@ class Database:
                     completed_at = ?, skills_scanned = ?, total_findings = ?,
                     overall_score = ?, report_path = ?, status = 'completed'
                 WHERE id = ?""",
-                [now, skills_scanned, total_findings, overall_score, report_path, run_id],
+                [
+                    now,
+                    skills_scanned,
+                    total_findings,
+                    overall_score,
+                    report_path,
+                    run_id,
+                ],
             )
 
     def get_audit_runs(self, limit: int = 10) -> List[Dict[str, Any]]:
@@ -233,8 +245,11 @@ class Database:
         return count
 
     def get_findings_for_run(
-        self, run_id: int, skill_name: Optional[str] = None,
-        severity: Optional[str] = None, dimension: Optional[str] = None
+        self,
+        run_id: int,
+        skill_name: Optional[str] = None,
+        severity: Optional[str] = None,
+        dimension: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         conditions = ["audit_run_id = ?"]
         params: list = [run_id]
@@ -287,7 +302,9 @@ class Database:
 
     # -- Score History ---------------------------------------------------------
 
-    def insert_score_history(self, run_id: int, skill_name: str, dimension: str, score: float) -> None:
+    def insert_score_history(
+        self, run_id: int, skill_name: str, dimension: str, score: float
+    ) -> None:
         with self._connect() as conn:
             conn.execute(
                 "INSERT INTO score_history (audit_run_id, skill_name, dimension, score) "
@@ -295,7 +312,9 @@ class Database:
                 [run_id, skill_name, dimension, score],
             )
 
-    def get_score_trend(self, skill_name: str, dimension: str, limit: int = 10) -> List[Dict[str, Any]]:
+    def get_score_trend(
+        self, skill_name: str, dimension: str, limit: int = 10
+    ) -> List[Dict[str, Any]]:
         """Retorna historico de scores para uma skill/dimensao."""
         with self._connect() as conn:
             rows = conn.execute(
@@ -307,7 +326,9 @@ class Database:
 
     # -- Action Log (Auto-Governanca) ------------------------------------------
 
-    def log_action(self, action: str, params: Optional[Dict] = None, result: Optional[Dict] = None) -> None:
+    def log_action(
+        self, action: str, params: Optional[Dict] = None, result: Optional[Dict] = None
+    ) -> None:
         with self._connect() as conn:
             conn.execute(
                 "INSERT INTO action_log (action, params, result) VALUES (?, ?, ?)",
@@ -335,7 +356,9 @@ class Database:
                 "SELECT COUNT(*) FROM audit_runs WHERE status = 'completed'"
             ).fetchone()[0]
             total_findings = conn.execute("SELECT COUNT(*) FROM findings").fetchone()[0]
-            total_recs = conn.execute("SELECT COUNT(*) FROM skill_recommendations").fetchone()[0]
+            total_recs = conn.execute(
+                "SELECT COUNT(*) FROM skill_recommendations"
+            ).fetchone()[0]
         return {
             "audit_runs": {"total": total_runs, "completed": completed},
             "total_findings": total_findings,

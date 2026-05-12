@@ -1,6 +1,6 @@
 import unittest
-from unittest.mock import patch
 from typing import Optional
+from unittest.mock import patch
 
 from tools import market
 
@@ -39,9 +39,11 @@ class MarketTests(unittest.TestCase):
                 "beta": None,
             }
 
-        with patch("tools.market._fetch_yahoo", yahoo), patch(
-            "tools.market._fetch_finviz", finviz
-        ), patch("tools.market._fetch_stooq", stooq):
+        with (
+            patch("tools.market._fetch_yahoo", yahoo),
+            patch("tools.market._fetch_finviz", finviz),
+            patch("tools.market._fetch_stooq", stooq),
+        ):
             result = market.get_ratios("AAPL")
 
         self.assertEqual(result["provider"], "yahoo")
@@ -74,9 +76,11 @@ class MarketTests(unittest.TestCase):
             calls.append("stooq")
             return None
 
-        with patch("tools.market._fetch_yahoo", yahoo), patch(
-            "tools.market._fetch_finviz", finviz
-        ), patch("tools.market._fetch_stooq", stooq):
+        with (
+            patch("tools.market._fetch_yahoo", yahoo),
+            patch("tools.market._fetch_finviz", finviz),
+            patch("tools.market._fetch_stooq", stooq),
+        ):
             result = market.get_ratios("AAPL")
 
         self.assertEqual(result["provider"], "finviz")
@@ -84,7 +88,9 @@ class MarketTests(unittest.TestCase):
 
     def test_http_get_json_retries_then_succeeds(self) -> None:
         class FakeResponse:
-            def __init__(self, status_code: int, payload: Optional[dict] = None) -> None:
+            def __init__(
+                self, status_code: int, payload: Optional[dict] = None
+            ) -> None:
                 self.status_code = status_code
                 self._payload = payload or {}
 
@@ -95,9 +101,10 @@ class MarketTests(unittest.TestCase):
             def json(self) -> dict:
                 return self._payload
 
-        with patch("tools.market.requests.get") as get_mock, patch(
-            "tools.market.time.sleep"
-        ) as sleep_mock:
+        with (
+            patch("tools.market.requests.get") as get_mock,
+            patch("tools.market.time.sleep") as sleep_mock,
+        ):
             get_mock.side_effect = [
                 FakeResponse(503),
                 FakeResponse(200, {"ok": True}),

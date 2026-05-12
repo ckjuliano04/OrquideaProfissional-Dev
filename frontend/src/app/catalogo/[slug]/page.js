@@ -1,19 +1,23 @@
-import ProductDetailClient from './ProductDetailClient';
-import { normalizeProductDetail } from '@/services/normalizers';
+import ProductDetailClient from "./ProductDetailClient";
+import { normalizeProductDetail } from "@/services/normalizers";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
 // 1. Gerador de Metadados Dinâmicos (SEO / OpenGraph)
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  
+
   try {
-    const res = await fetch(`${API_URL}/products/${slug}/`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API_URL}/products/${slug}/`, {
+      next: { revalidate: 3600 },
+    });
     if (!res.ok) throw new Error();
     const product = await res.json();
 
     const title = `${product.name} | Orquídea Profissional`;
-    const description = product.short_description || `Confira os detalhes técnicos de ${product.name} no portal Orquídea Profissional.`;
+    const description =
+      product.short_description ||
+      `Confira os detalhes técnicos de ${product.name} no portal Orquídea Profissional.`;
 
     return {
       title,
@@ -22,20 +26,22 @@ export async function generateMetadata({ params }) {
         title,
         description,
         url: `https://orquideaprofissional.com.br/catalogo/${slug}`,
-        siteName: 'Orquídea Profissional',
+        siteName: "Orquídea Profissional",
         images: [
           {
-            url: product.image_url || 'https://orquideaprofissional.com.br/og-image.jpg',
+            url:
+              product.image_url ||
+              "https://orquideaprofissional.com.br/og-image.jpg",
             width: 1200,
             height: 630,
             alt: product.name,
           },
         ],
-        locale: 'pt_BR',
-        type: 'website',
+        locale: "pt_BR",
+        type: "website",
       },
       twitter: {
-        card: 'summary_large_image',
+        card: "summary_large_image",
         title,
         description,
         images: [product.image_url],
@@ -43,8 +49,8 @@ export async function generateMetadata({ params }) {
     };
   } catch (error) {
     return {
-      title: 'Produto | Orquídea Profissional',
-      description: 'Catálogo técnico de produtos Orquídea Profissional.',
+      title: "Produto | Orquídea Profissional",
+      description: "Catálogo técnico de produtos Orquídea Profissional.",
     };
   }
 }

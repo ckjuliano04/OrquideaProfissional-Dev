@@ -9,6 +9,7 @@ Metodo: httpx + BeautifulSoup
 Pagina /pagina/140 contem paragrafos com nome + matricula + endereco + telefone + email
 Total: 218 leiloeiros ativos (alguns com status inline: Suspenso, Licenciado)
 """
+
 from __future__ import annotations
 
 import logging
@@ -19,12 +20,17 @@ from .base_scraper import AbstractJuntaScraper, Leiloeiro
 
 logger = logging.getLogger(__name__)
 
-RE_MATRICULA_MG = re.compile(r"[Mm]atr[íi]cula:?\s*(\d+)\s+de\s+(\d{2}/\d{2}/\d{4})|[Mm]atr[íi]cula:?\s*n[º°]?\s*(\d+)", re.IGNORECASE)
+RE_MATRICULA_MG = re.compile(
+    r"[Mm]atr[íi]cula:?\s*(\d+)\s+de\s+(\d{2}/\d{2}/\d{4})|[Mm]atr[íi]cula:?\s*n[º°]?\s*(\d+)",
+    re.IGNORECASE,
+)
 RE_PREPOSTO = re.compile(r"[Pp]reposto:?\s*(.+)")
 RE_TELEFONE = re.compile(r"[Tt]elefones?:?\s*(.+)")
 RE_EMAIL = re.compile(r"(?:e-mail|email):?\s*(.+)", re.IGNORECASE)
 RE_SITE = re.compile(r"(?:site|www\.)(.+)", re.IGNORECASE)
-RE_STATUS_INLINE = re.compile(r"\((Suspen|Licencia|Cancel|Irregular)[^)]*\)", re.IGNORECASE)
+RE_STATUS_INLINE = re.compile(
+    r"\((Suspen|Licencia|Cancel|Irregular)[^)]*\)", re.IGNORECASE
+)
 
 
 class JucemgScraper(AbstractJuntaScraper):
@@ -107,11 +113,15 @@ class JucemgScraper(AbstractJuntaScraper):
                     record["email"] = self.clean(m.group(1))
                     continue
                 # Linha de endereco: contem cidade/MG ou CEP
-                if (re.search(r"/\s*MG\b|\bMG\s*,?\s*CEP|CEP\s*\d", line) or
-                        (len(line) > 10 and not RE_PREPOSTO.match(line) and
-                         not RE_SITE.match(line) and
-                         not record.get("endereco"))):
-                    m_cidade = re.search(r"([A-ZÁÉÍÓÚÀÃÕÇ][A-Za-záéíóúàãõç\s]+)\s*-?\s*MG", line)
+                if re.search(r"/\s*MG\b|\bMG\s*,?\s*CEP|CEP\s*\d", line) or (
+                    len(line) > 10
+                    and not RE_PREPOSTO.match(line)
+                    and not RE_SITE.match(line)
+                    and not record.get("endereco")
+                ):
+                    m_cidade = re.search(
+                        r"([A-ZÁÉÍÓÚÀÃÕÇ][A-Za-záéíóúàãõç\s]+)\s*-?\s*MG", line
+                    )
                     if m_cidade:
                         record["municipio"] = m_cidade.group(1).strip()
                     if not record.get("endereco"):
@@ -148,12 +158,14 @@ class JucemgScraper(AbstractJuntaScraper):
                     situacao = status_match.group(0).strip("()")
                     nome_raw = RE_STATUS_INLINE.sub("", nome_raw).strip()
 
-                records.append({
-                    "nome": nome_raw,
-                    "matricula": matricula,
-                    "situacao": situacao,
-                    "municipio": "Belo Horizonte",
-                })
+                records.append(
+                    {
+                        "nome": nome_raw,
+                        "matricula": matricula,
+                        "situacao": situacao,
+                        "municipio": "Belo Horizonte",
+                    }
+                )
             if records:
                 break
         return records
@@ -189,7 +201,9 @@ class JucemgScraper(AbstractJuntaScraper):
             rows = table.find_all("tr")
             if len(rows) < 2:
                 continue
-            headers = [self.clean(th.get_text()) for th in rows[0].find_all(["th", "td"])]
+            headers = [
+                self.clean(th.get_text()) for th in rows[0].find_all(["th", "td"])
+            ]
             col = {(h or "").lower(): i for i, h in enumerate(headers)}
 
             def gcol(cells, frags):
@@ -205,14 +219,16 @@ class JucemgScraper(AbstractJuntaScraper):
                 nome = gcol(cells, ["nome"]) or self.clean(cells[0].get_text())
                 if not nome or len(nome) < 3:
                     continue
-                results.append(self.make_leiloeiro(
-                    nome=nome,
-                    matricula=gcol(cells, ["matr", "registro"]),
-                    situacao=gcol(cells, ["situ", "status"]),
-                    municipio="Belo Horizonte",
-                    telefone=gcol(cells, ["tel", "fone"]),
-                    email=gcol(cells, ["email"]),
-                ))
+                results.append(
+                    self.make_leiloeiro(
+                        nome=nome,
+                        matricula=gcol(cells, ["matr", "registro"]),
+                        situacao=gcol(cells, ["situ", "status"]),
+                        municipio="Belo Horizonte",
+                        telefone=gcol(cells, ["tel", "fone"]),
+                        email=gcol(cells, ["email"]),
+                    )
+                )
 
         logger.info("[MG] Total: %d registros", len(results))
         return results

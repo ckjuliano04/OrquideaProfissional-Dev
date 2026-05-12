@@ -45,7 +45,7 @@ def _check_available_memory(min_gb: float = 2.0) -> None:
         if hasattr(os, "sysconf"):  # Linux / macOS
             page_size = os.sysconf("SC_PAGE_SIZE")
             avail_pages = os.sysconf("SC_AVPHYS_PAGES")
-            avail_gb = (page_size * avail_pages) / (1024 ** 3)
+            avail_gb = (page_size * avail_pages) / (1024**3)
         else:
             return  # Windows — skip check
     except (ValueError, OSError):
@@ -59,7 +59,9 @@ def _check_available_memory(min_gb: float = 2.0) -> None:
         )
 
 
-def _query(cursor: Any, sql_text: str, params: tuple | None = None) -> list[dict[str, Any]]:
+def _query(
+    cursor: Any, sql_text: str, params: tuple | None = None
+) -> list[dict[str, Any]]:
     cursor.execute(sql_text, params)
     cols = [d[0] for d in cursor.description]
     rows = []
@@ -83,7 +85,9 @@ def collect_tables(cursor: Any, catalog: str) -> list[dict[str, Any]]:
     )
 
 
-def collect_columns(cursor: Any, catalog: str, schema: str, table: str) -> list[dict[str, Any]]:
+def collect_columns(
+    cursor: Any, catalog: str, schema: str, table: str
+) -> list[dict[str, Any]]:
     return _query(
         cursor,
         f"""
@@ -95,12 +99,16 @@ def collect_columns(cursor: Any, catalog: str, schema: str, table: str) -> list[
     )
 
 
-def collect_detail(cursor: Any, catalog: str, schema: str, table: str) -> dict[str, Any] | None:
+def collect_detail(
+    cursor: Any, catalog: str, schema: str, table: str
+) -> dict[str, Any] | None:
     try:
         rows = _query(cursor, f"DESCRIBE DETAIL `{catalog}`.`{schema}`.`{table}`")
         return rows[0] if rows else None
     except Exception:
-        log.debug("DESCRIBE DETAIL failed for %s.%s.%s", catalog, schema, table, exc_info=True)
+        log.debug(
+            "DESCRIBE DETAIL failed for %s.%s.%s", catalog, schema, table, exc_info=True
+        )
         return None
 
 
@@ -120,9 +128,9 @@ def collect(
     assets: list[dict[str, Any]] = []
 
     with sql.connect(
-        server_hostname=host,    # ← SUBSTITUTE
-        http_path=http_path,     # ← SUBSTITUTE
-        access_token=token,      # ← SUBSTITUTE
+        server_hostname=host,  # ← SUBSTITUTE
+        http_path=http_path,  # ← SUBSTITUTE
+        access_token=token,  # ← SUBSTITUTE
     ) as conn:
         with conn.cursor() as cursor:
             tables = collect_tables(cursor, catalog)
@@ -159,9 +167,11 @@ def collect(
 
                 asset = {
                     "asset_name": table_name,
-                    "database": catalog,    # ← SUBSTITUTE: use catalog as database
+                    "database": catalog,  # ← SUBSTITUTE: use catalog as database
                     "schema": schema,
-                    "asset_type": "VIEW" if row.get("table_type", "").upper() == "VIEW" else "TABLE",
+                    "asset_type": "VIEW"
+                    if row.get("table_type", "").upper() == "VIEW"
+                    else "TABLE",
                     "description": row.get("comment") or None,
                     "fields": fields,
                     "row_count": row_count,
@@ -186,11 +196,19 @@ def collect(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Collect Databricks metadata to a manifest file")
-    parser.add_argument("--host", default=os.getenv("DATABRICKS_HOST"))           # ← SUBSTITUTE
-    parser.add_argument("--http-path", default=os.getenv("DATABRICKS_HTTP_PATH")) # ← SUBSTITUTE
-    parser.add_argument("--token", default=os.getenv("DATABRICKS_TOKEN"))         # ← SUBSTITUTE
-    parser.add_argument("--catalog", default=os.getenv("DATABRICKS_CATALOG", "hive_metastore"))
+    parser = argparse.ArgumentParser(
+        description="Collect Databricks metadata to a manifest file"
+    )
+    parser.add_argument("--host", default=os.getenv("DATABRICKS_HOST"))  # ← SUBSTITUTE
+    parser.add_argument(
+        "--http-path", default=os.getenv("DATABRICKS_HTTP_PATH")
+    )  # ← SUBSTITUTE
+    parser.add_argument(
+        "--token", default=os.getenv("DATABRICKS_TOKEN")
+    )  # ← SUBSTITUTE
+    parser.add_argument(
+        "--catalog", default=os.getenv("DATABRICKS_CATALOG", "hive_metastore")
+    )
     parser.add_argument("--manifest", default="manifest_metadata.json")
     args = parser.parse_args()
 

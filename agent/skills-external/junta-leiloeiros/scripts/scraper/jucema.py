@@ -11,6 +11,7 @@ Mecanismo real descoberto em 2026-02-25:
   - Ultima atualizacao: 2025-10-20 18:29:59
 Total: 53 leiloeiros (39 Regular + 12 Irregular + 2 Cancelada)
 """
+
 from __future__ import annotations
 
 import logging
@@ -24,7 +25,9 @@ from .base_scraper import AbstractJuntaScraper, Leiloeiro
 
 logger = logging.getLogger(__name__)
 
-RE_MATRICULA = re.compile(r"[Mm]atr[íi]cula\s+N[º°o]?\s*(\d+(?:/\d+)?)\s*[–\-]\s*[Ee]m:\s*(\d{2}/\d{2}/\d{4})")
+RE_MATRICULA = re.compile(
+    r"[Mm]atr[íi]cula\s+N[º°o]?\s*(\d+(?:/\d+)?)\s*[–\-]\s*[Ee]m:\s*(\d{2}/\d{2}/\d{4})"
+)
 RE_SITUACAO = re.compile(r"SITUA[ÇC][ÃA]O:\s*(.+)", re.IGNORECASE)
 RE_CONTATO = re.compile(r"[Cc]ontato:\s*(.+)")
 RE_EMAIL = re.compile(r"[Ee]-?[Mm]ail:\s*(.+)")
@@ -51,18 +54,16 @@ class JucemaScraper(AbstractJuntaScraper):
             ) as client:
                 resp = await client.get(self._API_URL)
                 if resp.status_code >= 400:
-                    logger.warning("[MA] API post/11 retornou HTTP %d", resp.status_code)
+                    logger.warning(
+                        "[MA] API post/11 retornou HTTP %d", resp.status_code
+                    )
                     return []
 
                 data = resp.json()
                 # O campo pode estar em data.content ou diretamente em content
                 # API retorna { success: true, data: { content: "..." }, message: "..." }
                 inner = data.get("data") or {}
-                content_html = (
-                    inner.get("content") or
-                    data.get("content") or
-                    ""
-                )
+                content_html = inner.get("content") or data.get("content") or ""
                 if not content_html:
                     logger.warning("[MA] Campo 'content' vazio na API")
                     return []
@@ -87,7 +88,11 @@ class JucemaScraper(AbstractJuntaScraper):
           <p>E-mail: ...</p>
         """
         records = []
-        paragraphs = [self.clean(p.get_text()) for p in soup.find_all("p") if self.clean(p.get_text())]
+        paragraphs = [
+            self.clean(p.get_text())
+            for p in soup.find_all("p")
+            if self.clean(p.get_text())
+        ]
 
         # Tambem tentar com outros elementos se nao houver <p>
         if len(paragraphs) < 3:
@@ -129,7 +134,9 @@ class JucemaScraper(AbstractJuntaScraper):
             if m_end:
                 if current:
                     current["endereco"] = self.clean(m_end.group(1))
-                    m_cidade = re.search(r"([A-ZÁÉÍÓÚÀÃÕÇ][A-Za-záéíóúàãõç\s]+)/MA", text)
+                    m_cidade = re.search(
+                        r"([A-ZÁÉÍÓÚÀÃÕÇ][A-Za-záéíóúàãõç\s]+)/MA", text
+                    )
                     if m_cidade:
                         current["municipio"] = m_cidade.group(1).strip()
                 continue
@@ -137,13 +144,20 @@ class JucemaScraper(AbstractJuntaScraper):
             # Detectar inicio de nova entrada: nome em maiusculas
             # Excluir titulos de secao como "RELACAO DOS LEILOEIROS", "CEP:", linhas curtas
             is_nome = (
-                len(text) > 8 and
-                not re.match(r"(SITUA|Matr|MATR|[Ee]ndere|[Cc]ontato|[Ee]-?mail|www\.|http|^\d|Site:|CEP:|RELA[ÇC])", text) and
-                not re.search(r"^(RELA[ÇC][ÃA]O|LISTA|CADASTRO|JUNTA|COMERCIAL|LEILOEIROS\s*$)", text, re.IGNORECASE) and
-                sum(1 for c in text if c.isupper()) > len(text) * 0.3 and
-                " " in text and
-                len(text.split()) >= 2 and
-                len(text) < 120
+                len(text) > 8
+                and not re.match(
+                    r"(SITUA|Matr|MATR|[Ee]ndere|[Cc]ontato|[Ee]-?mail|www\.|http|^\d|Site:|CEP:|RELA[ÇC])",
+                    text,
+                )
+                and not re.search(
+                    r"^(RELA[ÇC][ÃA]O|LISTA|CADASTRO|JUNTA|COMERCIAL|LEILOEIROS\s*$)",
+                    text,
+                    re.IGNORECASE,
+                )
+                and sum(1 for c in text if c.isupper()) > len(text) * 0.3
+                and " " in text
+                and len(text.split()) >= 2
+                and len(text) < 120
             )
 
             if is_nome:

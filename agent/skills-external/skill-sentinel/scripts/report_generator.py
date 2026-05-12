@@ -4,13 +4,13 @@ Gerador de relatorios Markdown.
 Produz relatorio estruturado com resumo executivo, scores por skill,
 findings por severidade, recomendacoes e plano de acao.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from config import DIMENSION_WEIGHTS, REPORTS_DIR, SEVERITY_ORDER, get_score_label
+from config import REPORTS_DIR, SEVERITY_ORDER, get_score_label
 
 
 def _severity_icon(severity: str) -> str:
@@ -48,7 +48,9 @@ def generate_report(
     lines.append("")
     lines.append(f"**Data:** {now}")
     lines.append(f"**Skills Analisadas:** {len(snapshots)}")
-    lines.append(f"**Score Geral:** {overall_score:.0f}/100 ({get_score_label(overall_score)})")
+    lines.append(
+        f"**Score Geral:** {overall_score:.0f}/100 ({get_score_label(overall_score)})"
+    )
     lines.append("")
     lines.append("---")
     lines.append("")
@@ -56,8 +58,12 @@ def generate_report(
     # -- Resumo Executivo (tabela) ---------------------------------------------
     lines.append("## Resumo Executivo")
     lines.append("")
-    lines.append("| Skill | Score | Qualidade | Seguranca | Performance | Governanca | Docs | Deps |")
-    lines.append("|-------|-------|-----------|-----------|-------------|------------|------|------|")
+    lines.append(
+        "| Skill | Score | Qualidade | Seguranca | Performance | Governanca | Docs | Deps |"
+    )
+    lines.append(
+        "|-------|-------|-----------|-----------|-------------|------------|------|------|"
+    )
 
     for snap in sorted(snapshots, key=lambda s: -(s.get("overall_score") or 0)):
         name = snap.get("skill_name", "?")
@@ -68,7 +74,9 @@ def generate_report(
         gov = _format_score(snap.get("governance"))
         doc = _format_score(snap.get("documentation"))
         deps = _format_score(snap.get("dependencies"))
-        lines.append(f"| {name} | {overall} | {cq} | {sec} | {perf} | {gov} | {doc} | {deps} |")
+        lines.append(
+            f"| {name} | {overall} | {cq} | {sec} | {perf} | {gov} | {doc} | {deps} |"
+        )
 
     lines.append("")
 
@@ -90,7 +98,9 @@ def generate_report(
                     trend = f"{delta:.0f} pts"
                 else:
                     trend = "sem alteracao"
-                lines.append(f"- **{name}**: {prev_score:.0f} -> {curr_score:.0f} ({trend})")
+                lines.append(
+                    f"- **{name}**: {prev_score:.0f} -> {curr_score:.0f} ({trend})"
+                )
         lines.append("")
 
     # -- Findings por Severidade ------------------------------------------------
@@ -140,22 +150,35 @@ def generate_report(
     for snap in sorted(snapshots, key=lambda s: s.get("skill_name", "")):
         name = snap.get("skill_name", "?")
         overall = snap.get("overall_score", 0)
-        lines.append(f"### {name} ({_format_score(overall)}/100 - {get_score_label(overall or 0)})")
+        lines.append(
+            f"### {name} ({_format_score(overall)}/100 - {get_score_label(overall or 0)})"
+        )
         lines.append("")
         lines.append(f"- Arquivos Python: {snap.get('file_count', 0)}")
         lines.append(f"- Linhas de codigo: {snap.get('line_count', 0)}")
-        lines.append(f"- Qualidade: {_format_score(snap.get('code_quality'))} | "
-                     f"Seguranca: {_format_score(snap.get('security'))} | "
-                     f"Performance: {_format_score(snap.get('performance'))}")
-        lines.append(f"- Governanca: {_format_score(snap.get('governance'))} | "
-                     f"Docs: {_format_score(snap.get('documentation'))} | "
-                     f"Deps: {_format_score(snap.get('dependencies'))}")
+        lines.append(
+            f"- Qualidade: {_format_score(snap.get('code_quality'))} | "
+            f"Seguranca: {_format_score(snap.get('security'))} | "
+            f"Performance: {_format_score(snap.get('performance'))}"
+        )
+        lines.append(
+            f"- Governanca: {_format_score(snap.get('governance'))} | "
+            f"Docs: {_format_score(snap.get('documentation'))} | "
+            f"Deps: {_format_score(snap.get('dependencies'))}"
+        )
         lines.append("")
 
         # Findings desta skill
-        skill_findings = [f for f in findings if f.get("skill_name") == name and f.get("severity") != "info"]
+        skill_findings = [
+            f
+            for f in findings
+            if f.get("skill_name") == name and f.get("severity") != "info"
+        ]
         if skill_findings:
-            for f in sorted(skill_findings, key=lambda x: SEVERITY_ORDER.get(x.get("severity", "info"), 9)):
+            for f in sorted(
+                skill_findings,
+                key=lambda x: SEVERITY_ORDER.get(x.get("severity", "info"), 9),
+            ):
                 lines.append(f"  - {_severity_icon(f['severity'])} {f['title']}")
         else:
             lines.append("  Nenhum finding significativo.")
@@ -185,13 +208,17 @@ def generate_report(
     lines.append("")
 
     actionable = [
-        f for f in findings
-        if f.get("severity") in ("critical", "high", "medium") and f.get("recommendation")
+        f
+        for f in findings
+        if f.get("severity") in ("critical", "high", "medium")
+        and f.get("recommendation")
     ]
-    actionable.sort(key=lambda x: (
-        SEVERITY_ORDER.get(x.get("severity", "info"), 9),
-        {"low": 0, "medium": 1, "high": 2}.get(x.get("effort", "medium"), 1),
-    ))
+    actionable.sort(
+        key=lambda x: (
+            SEVERITY_ORDER.get(x.get("severity", "info"), 9),
+            {"low": 0, "medium": 1, "high": 2}.get(x.get("effort", "medium"), 1),
+        )
+    )
 
     if actionable:
         lines.append("| # | Severidade | Skill | Acao | Esforco |")

@@ -34,8 +34,8 @@ LOG_TYPE = "bigquery"
 
 # Collect jobs from [now - LOOKBACK_HOURS] to [now - LOOKBACK_LAG_HOURS].
 # The lag avoids collecting in-flight jobs that have not yet completed.
-LOOKBACK_HOURS: int = int(os.getenv("LOOKBACK_HOURS", "25"))        # ← SUBSTITUTE
-LOOKBACK_LAG_HOURS: int = int(os.getenv("LOOKBACK_LAG_HOURS", "1")) # ← SUBSTITUTE
+LOOKBACK_HOURS: int = int(os.getenv("LOOKBACK_HOURS", "25"))  # ← SUBSTITUTE
+LOOKBACK_LAG_HOURS: int = int(os.getenv("LOOKBACK_LAG_HOURS", "1"))  # ← SUBSTITUTE
 
 # Limit statement types — e.g. ["SELECT", "CREATE_TABLE_AS_SELECT", "INSERT"]
 # Set to an empty list to collect all statement types.
@@ -64,7 +64,9 @@ def _collect_query_logs(
 
     log.info(
         "Listing jobs for project=%s from %s to %s",
-        project_id, start_dt.isoformat(), end_dt.isoformat(),
+        project_id,
+        start_dt.isoformat(),
+        end_dt.isoformat(),
     )
 
     for job in bq_client.list_jobs(
@@ -114,7 +116,9 @@ def collect(
 
     Returns the manifest dict.
     """
-    bq_client = bigquery.Client(project=project_id)  # ← SUBSTITUTE: adjust auth if needed
+    bq_client = bigquery.Client(
+        project=project_id
+    )  # ← SUBSTITUTE: adjust auth if needed
 
     end_dt = datetime.now(timezone.utc) - timedelta(hours=lookback_lag_hours)
     start_dt = end_dt - timedelta(hours=lookback_hours)
@@ -141,7 +145,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Collect BigQuery query logs and write to a manifest file",
     )
-    parser.add_argument("--project-id", default=os.getenv("BIGQUERY_PROJECT_ID"))  # ← SUBSTITUTE
+    parser.add_argument(
+        "--project-id", default=os.getenv("BIGQUERY_PROJECT_ID")
+    )  # ← SUBSTITUTE
     parser.add_argument("--lookback-hours", type=int, default=LOOKBACK_HOURS)
     parser.add_argument("--lookback-lag-hours", type=int, default=LOOKBACK_LAG_HOURS)
     parser.add_argument("--output-file", default="query_logs_output.json")

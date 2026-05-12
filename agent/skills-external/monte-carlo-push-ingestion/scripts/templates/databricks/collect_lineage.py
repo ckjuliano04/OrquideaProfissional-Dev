@@ -43,7 +43,7 @@ def _check_available_memory(min_gb: float = 2.0) -> None:
         if hasattr(os, "sysconf"):  # Linux / macOS
             page_size = os.sysconf("SC_PAGE_SIZE")
             avail_pages = os.sysconf("SC_AVPHYS_PAGES")
-            avail_gb = (page_size * avail_pages) / (1024 ** 3)
+            avail_gb = (page_size * avail_pages) / (1024**3)
         else:
             return  # Windows — skip check
     except (ValueError, OSError):
@@ -99,17 +99,33 @@ def collect_table_lineage(cursor: Any, lookback_days: int) -> list[dict[str, Any
 
     events: list[dict[str, Any]] = []
     for row in rows:
-        src_catalog, src_schema, src_table = _parse_full_name(row["source_table_full_name"])
-        dst_catalog, dst_schema, dst_table = _parse_full_name(row["target_table_full_name"])
+        src_catalog, src_schema, src_table = _parse_full_name(
+            row["source_table_full_name"]
+        )
+        dst_catalog, dst_schema, dst_table = _parse_full_name(
+            row["target_table_full_name"]
+        )
 
         if not src_table or not dst_table:
             continue
 
-        events.append({
-            "sources": [{"database": src_catalog, "schema": src_schema, "asset_name": src_table}],
-            "destination": {"database": dst_catalog, "schema": dst_schema, "asset_name": dst_table},
-            "lineage_type": "table",
-        })
+        events.append(
+            {
+                "sources": [
+                    {
+                        "database": src_catalog,
+                        "schema": src_schema,
+                        "asset_name": src_table,
+                    }
+                ],
+                "destination": {
+                    "database": dst_catalog,
+                    "schema": dst_schema,
+                    "asset_name": dst_table,
+                },
+                "lineage_type": "table",
+            }
+        )
     return events
 
 
@@ -146,23 +162,35 @@ def collect_column_lineage(cursor: Any, lookback_days: int) -> list[dict[str, An
 
         col_fields: list[dict[str, Any]] = []
         for row in group["columns"]:
-            src_catalog, src_schema, src_table = _parse_full_name(row["source_table_full_name"])
-            col_fields.append({
-                "destination_field": row["target_column_name"],
-                "sources": [{
-                    "database": src_catalog,
-                    "schema": src_schema,
-                    "asset_name": src_table,
-                    "field": row["source_column_name"],
-                }],
-            })
+            src_catalog, src_schema, src_table = _parse_full_name(
+                row["source_table_full_name"]
+            )
+            col_fields.append(
+                {
+                    "destination_field": row["target_column_name"],
+                    "sources": [
+                        {
+                            "database": src_catalog,
+                            "schema": src_schema,
+                            "asset_name": src_table,
+                            "field": row["source_column_name"],
+                        }
+                    ],
+                }
+            )
 
-        events.append({
-            "sources": [],  # column lineage carries source refs inside col_fields
-            "destination": {"database": dst_catalog, "schema": dst_schema, "asset_name": dst_table},
-            "column_lineage": col_fields,
-            "lineage_type": "column",
-        })
+        events.append(
+            {
+                "sources": [],  # column lineage carries source refs inside col_fields
+                "destination": {
+                    "database": dst_catalog,
+                    "schema": dst_schema,
+                    "asset_name": dst_table,
+                },
+                "column_lineage": col_fields,
+                "lineage_type": "column",
+            }
+        )
     return events
 
 
@@ -179,18 +207,24 @@ def collect(
     collected_at = datetime.now(timezone.utc).isoformat()
 
     with sql.connect(
-        server_hostname=host,    # ← SUBSTITUTE
-        http_path=http_path,     # ← SUBSTITUTE
-        access_token=token,      # ← SUBSTITUTE
+        server_hostname=host,  # ← SUBSTITUTE
+        http_path=http_path,  # ← SUBSTITUTE
+        access_token=token,  # ← SUBSTITUTE
     ) as conn:
         with conn.cursor() as cursor:
             table_events = collect_table_lineage(cursor, lookback_days)
-            col_events = collect_column_lineage(cursor, lookback_days) if include_column_lineage else []
+            col_events = (
+                collect_column_lineage(cursor, lookback_days)
+                if include_column_lineage
+                else []
+            )
 
     all_events = table_events + col_events
     log.info(
         "Collected %d lineage events (%d table, %d column)",
-        len(all_events), len(table_events), len(col_events),
+        len(all_events),
+        len(table_events),
+        len(col_events),
     )
 
     manifest = {
@@ -209,13 +243,20 @@ def collect(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Collect Databricks lineage to a manifest file")
-    parser.add_argument("--host", default=os.getenv("DATABRICKS_HOST"))           # ← SUBSTITUTE
-    parser.add_argument("--http-path", default=os.getenv("DATABRICKS_HTTP_PATH")) # ← SUBSTITUTE
-    parser.add_argument("--token", default=os.getenv("DATABRICKS_TOKEN"))         # ← SUBSTITUTE
+    parser = argparse.ArgumentParser(
+        description="Collect Databricks lineage to a manifest file"
+    )
+    parser.add_argument("--host", default=os.getenv("DATABRICKS_HOST"))  # ← SUBSTITUTE
+    parser.add_argument(
+        "--http-path", default=os.getenv("DATABRICKS_HTTP_PATH")
+    )  # ← SUBSTITUTE
+    parser.add_argument(
+        "--token", default=os.getenv("DATABRICKS_TOKEN")
+    )  # ← SUBSTITUTE
     parser.add_argument("--lookback-days", type=int, default=LOOKBACK_DAYS)
     parser.add_argument(
-        "--column-lineage", action="store_true",
+        "--column-lineage",
+        action="store_true",
         help="Also collect column-level lineage (requires system.access.column_lineage access)",
     )
     parser.add_argument("--manifest", default="manifest_lineage.json")

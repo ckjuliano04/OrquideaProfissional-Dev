@@ -14,18 +14,22 @@ Usage:
 
 from __future__ import annotations
 
-import os
-import sys
 import json
+import os
 import re
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
 
 # ── Configuration ──────────────────────────────────────────────────────────
 
 SKILLS_ROOT = Path(r"C:\Users\renat\skills")
 USER_HOME = Path(os.path.expanduser("~"))
-TEMP_DIR = Path(os.environ.get("TEMP", os.environ.get("TMP", str(USER_HOME / "AppData" / "Local" / "Temp"))))
+TEMP_DIR = Path(
+    os.environ.get(
+        "TEMP", os.environ.get("TMP", str(USER_HOME / "AppData" / "Local" / "Temp"))
+    )
+)
 
 # Where we consider skills "installed"
 INSTALLED_LOCATIONS = [
@@ -59,6 +63,7 @@ WORKSPACE_PATTERN = re.compile(r".*-workspace[/\\]v\d+[/\\]skill$", re.IGNORECAS
 
 # ── YAML Frontmatter Parser ───────────────────────────────────────────────
 
+
 def parse_yaml_frontmatter(path: Path) -> dict:
     """Extract YAML frontmatter from a SKILL.md file."""
     try:
@@ -72,6 +77,7 @@ def parse_yaml_frontmatter(path: Path) -> dict:
 
     try:
         import yaml
+
         return yaml.safe_load(match.group(1)) or {}
     except Exception:
         result = {}
@@ -82,7 +88,7 @@ def parse_yaml_frontmatter(path: Path) -> dict:
                 result[key] = m.group(1).strip()
             else:
                 m2 = re.search(
-                    rf'^{key}:\s*>-?\s*\n((?:\s+.+\n?)+)', block, re.MULTILINE
+                    rf"^{key}:\s*>-?\s*\n((?:\s+.+\n?)+)", block, re.MULTILINE
                 )
                 if m2:
                     lines = m2.group(1).strip().split("\n")
@@ -91,6 +97,7 @@ def parse_yaml_frontmatter(path: Path) -> dict:
 
 
 # ── Core Functions ─────────────────────────────────────────────────────────
+
 
 def get_installed_skill_names() -> set:
     """Get set of skill names already installed in the ecosystem."""
@@ -106,7 +113,13 @@ def get_installed_skill_names() -> set:
                 continue
 
             # Skip certain directories
-            skip = {"agent-orchestrator", "skill-installer", ".git", "__pycache__", "node_modules"}
+            skip = {
+                "agent-orchestrator",
+                "skill-installer",
+                ".git",
+                "__pycache__",
+                "node_modules",
+            }
             if any(part in skip for part in Path(root).parts):
                 continue
 
@@ -198,21 +211,24 @@ def find_skill_candidates(scan_locations: list[Path]) -> list[dict]:
                             pass
                 size_kb = round(total_size / 1024, 1)
 
-                candidates.append({
-                    "name": name,
-                    "source_path": str(root_path),
-                    "skill_md_path": str(skill_md),
-                    "already_installed": already_installed,
-                    "valid_frontmatter": has_valid,
-                    "description": desc_str[:120] + ("..." if len(desc_str) > 120 else ""),
-                    "version": meta.get("version", ""),
-                    "is_workspace": is_workspace,
-                    "location_type": _classify_location(root_path),
-                    "last_modified": mtime_str,
-                    "last_modified_ts": mtime,
-                    "size_kb": size_kb,
-                    "file_count": file_count,
-                })
+                candidates.append(
+                    {
+                        "name": name,
+                        "source_path": str(root_path),
+                        "skill_md_path": str(skill_md),
+                        "already_installed": already_installed,
+                        "valid_frontmatter": has_valid,
+                        "description": desc_str[:120]
+                        + ("..." if len(desc_str) > 120 else ""),
+                        "version": meta.get("version", ""),
+                        "is_workspace": is_workspace,
+                        "location_type": _classify_location(root_path),
+                        "last_modified": mtime_str,
+                        "last_modified_ts": mtime,
+                        "size_kb": size_kb,
+                        "file_count": file_count,
+                    }
+                )
 
     return candidates
 
@@ -235,6 +251,7 @@ def _classify_location(path: Path) -> str:
 
 
 # ── Main Logic ─────────────────────────────────────────────────────────────
+
 
 def detect(paths: list[Path] = None, scan_all: bool = False) -> dict:
     """
@@ -269,11 +286,13 @@ def detect(paths: list[Path] = None, scan_all: bool = False) -> dict:
     candidates = find_skill_candidates(unique_locations)
 
     # Sort: uninstalled first, then by most recently modified
-    candidates.sort(key=lambda c: (
-        c["already_installed"],
-        -c.get("last_modified_ts", 0),
-        c["name"].lower(),
-    ))
+    candidates.sort(
+        key=lambda c: (
+            c["already_installed"],
+            -c.get("last_modified_ts", 0),
+            c["name"].lower(),
+        )
+    )
 
     not_installed = [c for c in candidates if not c["already_installed"]]
     already = [c for c in candidates if c["already_installed"]]
@@ -289,6 +308,7 @@ def detect(paths: list[Path] = None, scan_all: bool = False) -> dict:
 
 # ── CLI Entry Point ───────────────────────────────────────────────────────
 
+
 def main():
     paths = []
     scan_all = "--all" in sys.argv
@@ -300,11 +320,16 @@ def main():
             if p.exists():
                 paths.append(p)
             else:
-                print(json.dumps({
-                    "error": f"Path does not exist: {p}",
-                    "total_found": 0,
-                    "candidates": [],
-                }, indent=2))
+                print(
+                    json.dumps(
+                        {
+                            "error": f"Path does not exist: {p}",
+                            "total_found": 0,
+                            "candidates": [],
+                        },
+                        indent=2,
+                    )
+                )
                 sys.exit(1)
 
     result = detect(paths=paths if paths else None, scan_all=scan_all)

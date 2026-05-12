@@ -5,12 +5,11 @@ Mantém PROJECT_REGISTRY.md atualizado.
 
 import re
 from datetime import datetime
-from pathlib import Path
 
 from config import (
+    KNOWN_PROJECTS,
     PROJECT_REGISTRY_PATH,
     SKILLS_ROOT,
-    KNOWN_PROJECTS,
 )
 from models import ProjectInfo
 
@@ -33,14 +32,24 @@ def load_registry() -> list[ProjectInfo]:
         if in_table and line.startswith("|"):
             cells = [c.strip() for c in line.split("|")[1:-1]]
             if len(cells) >= 4:
-                projects.append(ProjectInfo(
-                    name=cells[0],
-                    path=cells[1] if len(cells) > 4 else "",
-                    status=cells[2] if len(cells) > 4 else cells[1],
-                    last_touched=cells[3] if len(cells) > 4 else cells[2],
-                    last_session=_extract_session_number(cells[-1]) if cells[-1] else 0,
-                    next_actions=[a.strip() for a in (cells[4] if len(cells) > 4 else cells[3]).split(";") if a.strip()],
-                ))
+                projects.append(
+                    ProjectInfo(
+                        name=cells[0],
+                        path=cells[1] if len(cells) > 4 else "",
+                        status=cells[2] if len(cells) > 4 else cells[1],
+                        last_touched=cells[3] if len(cells) > 4 else cells[2],
+                        last_session=_extract_session_number(cells[-1])
+                        if cells[-1]
+                        else 0,
+                        next_actions=[
+                            a.strip()
+                            for a in (cells[4] if len(cells) > 4 else cells[3]).split(
+                                ";"
+                            )
+                            if a.strip()
+                        ],
+                    )
+                )
         elif in_table and not line.strip():
             in_table = False
 
@@ -59,16 +68,20 @@ def _discover_projects() -> list[ProjectInfo]:
     for name, display_name in KNOWN_PROJECTS.items():
         project_path = SKILLS_ROOT / name
         if project_path.exists() and project_path.is_dir():
-            projects.append(ProjectInfo(
-                name=display_name,
-                path=str(project_path),
-                status="active",
-                last_touched=datetime.now().strftime("%Y-%m-%d"),
-            ))
+            projects.append(
+                ProjectInfo(
+                    name=display_name,
+                    path=str(project_path),
+                    status="active",
+                    last_touched=datetime.now().strftime("%Y-%m-%d"),
+                )
+            )
     return projects
 
 
-def detect_projects_from_session(files_modified: list[dict], tool_calls: list[dict]) -> list[str]:
+def detect_projects_from_session(
+    files_modified: list[dict], tool_calls: list[dict]
+) -> list[str]:
     """Detecta quais projetos foram tocados numa sessão via paths."""
     touched = set()
 
@@ -95,7 +108,9 @@ def detect_projects_from_session(files_modified: list[dict], tool_calls: list[di
     return list(touched)
 
 
-def update_project(projects: list[ProjectInfo], name: str, **fields) -> list[ProjectInfo]:
+def update_project(
+    projects: list[ProjectInfo], name: str, **fields
+) -> list[ProjectInfo]:
     """Atualiza campos de um projeto existente ou cria novo."""
     for p in projects:
         if p.name == name:

@@ -3,17 +3,15 @@ Gerencia o ACTIVE_CONTEXT.md — arquivo que é sincronizado com MEMORY.md.
 Limite rígido de ~150 linhas para caber no system prompt.
 """
 
-import shutil
 from datetime import datetime
-from pathlib import Path
 
 from config import (
     ACTIVE_CONTEXT_PATH,
+    MAX_ACTIVE_CONTEXT_LINES,
     MEMORY_DIR,
     MEMORY_MD_PATH,
-    MAX_ACTIVE_CONTEXT_LINES,
 )
-from models import ActiveContext, SessionSummary, ProjectInfo, PendingTask
+from models import ActiveContext, PendingTask, ProjectInfo, SessionSummary
 
 
 def load_active_context() -> ActiveContext:
@@ -45,10 +43,12 @@ def load_active_context() -> ActiveContext:
                     priority = "high"
                 elif "(baixa)" in task_text.lower() or "(low)" in task_text.lower():
                     priority = "low"
-                ctx.pending_tasks.append(PendingTask(
-                    description=task_text,
-                    priority=priority,
-                ))
+                ctx.pending_tasks.append(
+                    PendingTask(
+                        description=task_text,
+                        priority=priority,
+                    )
+                )
         elif current_section == "decisões recentes":
             if stripped.startswith("- "):
                 ctx.recent_decisions.append(stripped[2:])
@@ -82,7 +82,8 @@ def update_active_context(ctx: ActiveContext, summary: SessionSummary) -> Active
     # Atualizar tarefas: marcar completadas, adicionar novas
     completed_descriptions = {t.lower().strip() for t in summary.tasks_completed}
     ctx.pending_tasks = [
-        t for t in ctx.pending_tasks
+        t
+        for t in ctx.pending_tasks
         if t.description.lower().strip() not in completed_descriptions
     ]
 
@@ -92,14 +93,18 @@ def update_active_context(ctx: ActiveContext, summary: SessionSummary) -> Active
                 ctx.pending_tasks.append(pt)
         elif isinstance(pt, str):
             if not any(t.description == pt for t in ctx.pending_tasks):
-                ctx.pending_tasks.append(PendingTask(
-                    description=pt,
-                    source_session=summary.session_number,
-                    created_date=summary.date,
-                ))
+                ctx.pending_tasks.append(
+                    PendingTask(
+                        description=pt,
+                        source_session=summary.session_number,
+                        created_date=summary.date,
+                    )
+                )
 
     # Atualizar sessões recentes
-    session_entry = f"session-{summary.session_number:03d}: {', '.join(summary.topics[:3])}"
+    session_entry = (
+        f"session-{summary.session_number:03d}: {', '.join(summary.topics[:3])}"
+    )
     ctx.recent_sessions.append(session_entry)
     ctx.recent_sessions = ctx.recent_sessions[-5:]
 
@@ -142,12 +147,20 @@ def save_active_context(ctx: ActiveContext, projects: list[ProjectInfo] = None):
         if high:
             lines.append("### Alta Prioridade")
             for t in high:
-                src = f" (desde session-{t.source_session:03d})" if t.source_session else ""
+                src = (
+                    f" (desde session-{t.source_session:03d})"
+                    if t.source_session
+                    else ""
+                )
                 lines.append(f"- [ ] {t.description}{src}")
         if medium:
             lines.append("### Média Prioridade")
             for t in medium:
-                src = f" (desde session-{t.source_session:03d})" if t.source_session else ""
+                src = (
+                    f" (desde session-{t.source_session:03d})"
+                    if t.source_session
+                    else ""
+                )
                 lines.append(f"- [ ] {t.description}{src}")
         if low:
             lines.append("### Baixa Prioridade")
@@ -187,8 +200,10 @@ def save_active_context(ctx: ActiveContext, projects: list[ProjectInfo] = None):
 
     # Garantir limite de linhas
     if len(lines) > MAX_ACTIVE_CONTEXT_LINES:
-        lines = lines[:MAX_ACTIVE_CONTEXT_LINES - 1]
-        lines.append("*[Contexto truncado — execute `python context_manager.py maintain` para otimizar]*")
+        lines = lines[: MAX_ACTIVE_CONTEXT_LINES - 1]
+        lines.append(
+            "*[Contexto truncado — execute `python context_manager.py maintain` para otimizar]*"
+        )
 
     ACTIVE_CONTEXT_PATH.write_text("\n".join(lines), encoding="utf-8")
 

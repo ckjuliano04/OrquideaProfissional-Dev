@@ -1,15 +1,19 @@
 from rest_framework import serializers
-from .models import HomePageSettings, Tip, Brand
+
+from .models import Brand, HomePageSettings, Tip
+
 
 class TipSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tip
-        fields = '__all__'
+        fields = "__all__"
+
 
 class BrandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Brand
-        fields = '__all__'
+        fields = "__all__"
+
 
 class HomePageSettingsSerializer(serializers.ModelSerializer):
     tips = serializers.SerializerMethodField()
@@ -17,7 +21,7 @@ class HomePageSettingsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = HomePageSettings
-        fields = '__all__'
+        fields = "__all__"
 
     def get_tips(self, obj):
         tips = Tip.objects.filter(is_active=True)[:3]

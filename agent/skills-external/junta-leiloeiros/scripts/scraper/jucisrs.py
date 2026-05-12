@@ -12,6 +12,7 @@ Estrutura HTML: <b><font color="#A01A14">MATRICULA</font> - NOME<br>
 Total: 376 leiloeiros (261 ativos + 111 cancelados)
 Nota: Antigo dominio jucers.rs.gov.br foi aposentado. Junta renomeada para JUCISRS.
 """
+
 from __future__ import annotations
 
 import logging
@@ -97,11 +98,11 @@ class JucisrsScraper(AbstractJuntaScraper):
                         situacao = "CANCELADO"
                         nome_raw = RE_CANCELADO.sub("", nome_raw).strip(" ")
                     nome = self.clean(nome_raw)
-                    remaining = lines[i+1:]
+                    remaining = lines[i + 1 :]
                     break
                 # Padrao 2: so matricula (numero puro), proximo e "- NOME"
                 if line.isdigit() and i + 1 < len(lines):
-                    next_line = lines[i+1]
+                    next_line = lines[i + 1]
                     if next_line.startswith("- ") or next_line.startswith("– "):
                         matricula = line
                         nome_raw = next_line[2:].strip()
@@ -109,7 +110,7 @@ class JucisrsScraper(AbstractJuntaScraper):
                             situacao = "CANCELADO"
                             nome_raw = RE_CANCELADO.sub("", nome_raw).strip(" ")
                         nome = self.clean(nome_raw)
-                        remaining = lines[i+2:]
+                        remaining = lines[i + 2 :]
                         break
 
             if not nome or len(nome) < 3:
@@ -159,8 +160,11 @@ class JucisrsScraper(AbstractJuntaScraper):
                 if line.startswith("www.") or line.startswith("http"):
                     continue
                 # Linha de endereco
-                if (not record["endereco"] and len(line) > 5 and
-                        re.search(r"[A-ZÁÉÍÓÚÀÃÕÇ]", line)):
+                if (
+                    not record["endereco"]
+                    and len(line) > 5
+                    and re.search(r"[A-ZÁÉÍÓÚÀÃÕÇ]", line)
+                ):
                     record["endereco"] = line
 
             records.append(record)
@@ -205,7 +209,9 @@ class JucisrsScraper(AbstractJuntaScraper):
                     logger.warning("[RS] POST retornou HTTP %d", resp.status_code)
                     return []
 
-                logger.info("[RS] POST OK - tamanho resposta: %d bytes", len(resp.content))
+                logger.info(
+                    "[RS] POST OK - tamanho resposta: %d bytes", len(resp.content)
+                )
                 return self._parse_plain_html(resp.text)
 
         except Exception as exc:
@@ -240,7 +246,7 @@ class JucisrsScraper(AbstractJuntaScraper):
         """Playwright com SSL completamente desabilitado para cert autoassinado."""
         try:
             from playwright.async_api import async_playwright
-            from bs4 import BeautifulSoup
+
             async with async_playwright() as pw:
                 browser = await pw.chromium.launch(
                     headless=True,

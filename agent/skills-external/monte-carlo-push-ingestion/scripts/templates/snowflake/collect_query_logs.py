@@ -46,7 +46,7 @@ def _check_available_memory(min_gb: float = 2.0) -> None:
         if hasattr(os, "sysconf"):  # Linux / macOS
             page_size = os.sysconf("SC_PAGE_SIZE")
             avail_pages = os.sysconf("SC_AVPHYS_PAGES")
-            avail_gb = (page_size * avail_pages) / (1024 ** 3)
+            avail_gb = (page_size * avail_pages) / (1024**3)
         else:
             return  # Windows — skip check
     except (ValueError, OSError):
@@ -57,6 +57,7 @@ def _check_available_memory(min_gb: float = 2.0) -> None:
             f"(minimum recommended: {min_gb:.1f} GB). "
             f"Consider reducing the lookback window or increasing available memory."
         )
+
 
 # How many hours to look back from the trailing-edge cutoff
 # ← SUBSTITUTE: adjust to match your collection cadence (e.g. 2 for every-2-hours runs)

@@ -32,7 +32,6 @@ import argparse
 import json
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timezone
 
 from pycarlo.core import Client, Session
 from pycarlo.features.ingestion import IngestionService
@@ -137,7 +136,9 @@ def push(
 
     def _push_batch(batch: list, batch_num: int) -> str | None:
         """Push a single batch using a dedicated Session (thread-safe)."""
-        client = Client(session=Session(mcd_id=key_id, mcd_token=key_token, scope="Ingestion"))
+        client = Client(
+            session=Session(mcd_id=key_id, mcd_token=key_token, scope="Ingestion")
+        )
         service = IngestionService(mc_client=client)
         result = service.send_metadata(
             resource_uuid=resource_uuid,
@@ -145,7 +146,9 @@ def push(
             events=batch,
         )
         invocation_id = service.extract_invocation_id(result)
-        print(f"  Pushed batch {batch_num}/{total_batches} ({len(batch)} assets) — invocation_id={invocation_id}")
+        print(
+            f"  Pushed batch {batch_num}/{total_batches} ({len(batch)} assets) — invocation_id={invocation_id}"
+        )
         return invocation_id
 
     # Push batches in parallel (each thread gets its own pycarlo Session)
@@ -219,7 +222,9 @@ def main() -> None:
     args = parser.parse_args()
 
     if not args.key_id or not args.key_token:
-        parser.error("--key-id and --key-token are required (or set MCD_INGEST_ID / MCD_INGEST_TOKEN)")
+        parser.error(
+            "--key-id and --key-token are required (or set MCD_INGEST_ID / MCD_INGEST_TOKEN)"
+        )
     if not args.resource_uuid:
         parser.error("--resource-uuid is required (or set MCD_RESOURCE_UUID)")
 

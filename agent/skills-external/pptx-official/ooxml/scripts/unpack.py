@@ -18,7 +18,9 @@ def _is_safe_destination(output_root: Path, member_name: str) -> bool:
     return destination.resolve().is_relative_to(output_root.resolve())
 
 
-def _extract_member(archive: zipfile.ZipFile, member: zipfile.ZipInfo, output_root: Path):
+def _extract_member(
+    archive: zipfile.ZipFile, member: zipfile.ZipInfo, output_root: Path
+):
     destination = output_root / member.filename
     if member.is_dir():
         destination.mkdir(parents=True, exist_ok=True)

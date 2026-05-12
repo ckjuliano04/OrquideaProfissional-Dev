@@ -3,6 +3,7 @@ Scraper JUCEC — Junta Comercial do Estado do Ceará
 URL: https://www.jucec.ce.gov.br/leiloeiros/
 Método: httpx + BeautifulSoup
 """
+
 from __future__ import annotations
 
 from typing import List
@@ -27,7 +28,9 @@ class JucecScraper(AbstractJuntaScraper):
             rows = table.find_all("tr")
             if len(rows) < 2:
                 continue
-            headers = [self.clean(th.get_text()) for th in rows[0].find_all(["th", "td"])]
+            headers = [
+                self.clean(th.get_text()) for th in rows[0].find_all(["th", "td"])
+            ]
             col = {(h or "").lower(): i for i, h in enumerate(headers)}
 
             def gcol(cells, frags):
@@ -43,16 +46,18 @@ class JucecScraper(AbstractJuntaScraper):
                 nome = gcol(cells, ["nome"]) or self.clean(cells[0].get_text())
                 if not nome or len(nome) < 3:
                     continue
-                results.append(self.make_leiloeiro(
-                    nome=nome,
-                    matricula=gcol(cells, ["matr", "registro", "núm"]),
-                    cpf_cnpj=gcol(cells, ["cpf", "cnpj"]),
-                    situacao=gcol(cells, ["situ", "status"]),
-                    municipio=gcol(cells, ["munic", "cidade", "fortaleza"]),
-                    telefone=gcol(cells, ["tel", "fone"]),
-                    email=gcol(cells, ["email"]),
-                    endereco=gcol(cells, ["ender", "logr"]),
-                ))
+                results.append(
+                    self.make_leiloeiro(
+                        nome=nome,
+                        matricula=gcol(cells, ["matr", "registro", "núm"]),
+                        cpf_cnpj=gcol(cells, ["cpf", "cnpj"]),
+                        situacao=gcol(cells, ["situ", "status"]),
+                        municipio=gcol(cells, ["munic", "cidade", "fortaleza"]),
+                        telefone=gcol(cells, ["tel", "fone"]),
+                        email=gcol(cells, ["email"]),
+                        endereco=gcol(cells, ["ender", "logr"]),
+                    )
+                )
 
         if not results:
             for el in soup.select("ul li, ol li, .leiloeiro"):

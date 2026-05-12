@@ -4,6 +4,7 @@ URL: https://www.juntacomercial.pr.gov.br/Pagina/LEILOEIROS-OFICIAIS
 Método: httpx + BeautifulSoup (tabela HTML ou PDF link)
 Nota: Site migrou de jucepar.pr.gov.br para juntacomercial.pr.gov.br
 """
+
 from __future__ import annotations
 
 import re
@@ -32,7 +33,9 @@ class JuceparScraper(AbstractJuntaScraper):
             rows = table.find_all("tr")
             if len(rows) < 2:
                 continue
-            headers = [self.clean(th.get_text()) for th in rows[0].find_all(["th", "td"])]
+            headers = [
+                self.clean(th.get_text()) for th in rows[0].find_all(["th", "td"])
+            ]
             col = {(h or "").lower(): i for i, h in enumerate(headers)}
 
             has_relevant = any(
@@ -52,29 +55,41 @@ class JuceparScraper(AbstractJuntaScraper):
                 cells = row.find_all(["td", "th"])
                 if not cells:
                     continue
-                nome = gcol(cells, ["nome", "leiloeiro"]) or self.clean(cells[0].get_text())
+                nome = gcol(cells, ["nome", "leiloeiro"]) or self.clean(
+                    cells[0].get_text()
+                )
                 if not nome or len(nome) < 3:
                     continue
-                results.append(self.make_leiloeiro(
-                    nome=nome,
-                    matricula=gcol(cells, ["matr", "registro", "nº"]),
-                    situacao=gcol(cells, ["situ", "status"]),
-                    municipio=gcol(cells, ["munic", "cidade"]) or "Curitiba",
-                    telefone=gcol(cells, ["tel", "fone"]),
-                    email=gcol(cells, ["email"]),
-                    endereco=gcol(cells, ["ender", "logr"]),
-                    data_registro=gcol(cells, ["data", "posse", "portaria"]),
-                ))
+                results.append(
+                    self.make_leiloeiro(
+                        nome=nome,
+                        matricula=gcol(cells, ["matr", "registro", "nº"]),
+                        situacao=gcol(cells, ["situ", "status"]),
+                        municipio=gcol(cells, ["munic", "cidade"]) or "Curitiba",
+                        telefone=gcol(cells, ["tel", "fone"]),
+                        email=gcol(cells, ["email"]),
+                        endereco=gcol(cells, ["ender", "logr"]),
+                        data_registro=gcol(cells, ["data", "posse", "portaria"]),
+                    )
+                )
             if results:
                 break
 
         # Tentativa 2: conteúdo textual com nomes em maiúsculas
         if not results:
-            content = soup.select_one("main, article, .conteudo, .page-content, #content")
+            content = soup.select_one(
+                "main, article, .conteudo, .page-content, #content"
+            )
             if content:
                 for p in content.find_all(["p", "li", "div"]):
                     text = self.clean(p.get_text())
-                    if text and len(text) > 5 and re.search(r"[A-ZÁÉÍÓÚÀÃÕÇ]{3,}", text):
-                        results.append(self.make_leiloeiro(nome=text, municipio="Curitiba"))
+                    if (
+                        text
+                        and len(text) > 5
+                        and re.search(r"[A-ZÁÉÍÓÚÀÃÕÇ]{3,}", text)
+                    ):
+                        results.append(
+                            self.make_leiloeiro(nome=text, municipio="Curitiba")
+                        )
 
         return results

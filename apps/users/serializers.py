@@ -1,9 +1,8 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Users
-
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 class OrquideaTokenSerializer(TokenObtainPairSerializer):
@@ -23,8 +22,14 @@ class CustomTokenObtainSerializer(serializers.Serializer):
     Retorna tokens JWT com dados do usuário no payload.
     """
 
-    email = serializers.EmailField(error_messages={"invalid": "Por favor, insira um endereço de e-mail válido."})
-    password = serializers.CharField(write_only=True, min_length=6, error_messages={"min_length": "A senha deve ter pelo menos 6 caracteres."})
+    email = serializers.EmailField(
+        error_messages={"invalid": "Por favor, insira um endereço de e-mail válido."}
+    )
+    password = serializers.CharField(
+        write_only=True,
+        min_length=6,
+        error_messages={"min_length": "A senha deve ter pelo menos 6 caracteres."},
+    )
 
     def validate(self, attrs):
         email = attrs.get("email").strip().lower()
@@ -36,12 +41,13 @@ class CustomTokenObtainSerializer(serializers.Serializer):
         try:
             user = Users.objects.get(email=email)
         except Users.DoesNotExist:
-            # Usuário não existe: executamos um check_password "fantasma" 
+            # Usuário não existe: executamos um check_password "fantasma"
             # para que o tempo de resposta seja similar ao de um usuário real.
             # Usamos um hash fixo e inválido para isso.
             import bcrypt
+
             dummy_hash = b"$2b$12$K8M8vR5kXf4v.u.7p9.A.O.Y.O.Y.O.Y.O.Y.O.Y.O.Y.O.Y.O.Y."
-            bcrypt.checkpw(password.encode('utf-8'), dummy_hash)
+            bcrypt.checkpw(password.encode("utf-8"), dummy_hash)
             raise serializers.ValidationError(error_msg)
 
         # Mesmo para usuários inativos, fazemos a checagem de senha primeiro

@@ -1,23 +1,25 @@
-import * as React from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { X } from "lucide-react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function Drawer({ open, onOpenChange, children, title }) {
-  const scrollRef = React.useRef(null)
+  const scrollRef = React.useRef(null);
 
   // Lock scroll when drawer is open and reset internal scroll
   React.useEffect(() => {
     if (open) {
-      document.body.style.overflow = 'hidden'
+      document.body.style.overflow = "hidden";
       if (scrollRef.current) {
-        scrollRef.current.scrollTop = 0
+        scrollRef.current.scrollTop = 0;
       }
     } else {
-      document.body.style.overflow = 'unset'
+      document.body.style.overflow = "unset";
     }
-    return () => { document.body.style.overflow = 'unset' }
-  }, [open])
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [open]);
 
   return (
     <AnimatePresence>
@@ -42,7 +44,12 @@ export function Drawer({ open, onOpenChange, children, title }) {
             className="fixed inset-y-0 right-0 z-50 w-full max-w-xs bg-white p-6 shadow-2xl flex flex-col"
           >
             <div className="flex items-center justify-between mb-8 flex-shrink-0">
-              <h2 id="drawer-title" className="text-xl font-black uppercase tracking-tight text-slate-900">{title}</h2>
+              <h2
+                id="drawer-title"
+                className="text-xl font-black uppercase tracking-tight text-slate-900"
+              >
+                {title}
+              </h2>
               <button
                 onClick={() => onOpenChange(false)}
                 aria-label="Fechar menu"
@@ -51,7 +58,7 @@ export function Drawer({ open, onOpenChange, children, title }) {
                 <X size={24} />
               </button>
             </div>
-            <div 
+            <div
               ref={scrollRef}
               className="overflow-y-auto flex-grow pr-2 scrollbar-thin scrollbar-thumb-slate-200"
             >
@@ -61,5 +68,5 @@ export function Drawer({ open, onOpenChange, children, title }) {
         </>
       )}
     </AnimatePresence>
-  )
+  );
 }

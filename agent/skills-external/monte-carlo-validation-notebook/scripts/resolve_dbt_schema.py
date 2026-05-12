@@ -12,7 +12,7 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, Optional, Tuple, Union
 
 import yaml
 
@@ -24,7 +24,9 @@ def parse_model_config_schema(model_content: str) -> Optional[str]:
     if match:
         return match.group(1).upper()
 
-    snapshot_pattern = r"target_schema\s*=\s*generate_schema_name\s*\(\s*['\"]([^'\"]+)['\"]"
+    snapshot_pattern = (
+        r"target_schema\s*=\s*generate_schema_name\s*\(\s*['\"]([^'\"]+)['\"]"
+    )
     match = re.search(snapshot_pattern, model_content, re.IGNORECASE | re.DOTALL)
     if match:
         return match.group(1).upper()
@@ -63,7 +65,9 @@ def parse_dbt_project_routing(
     return schema_routing, database_routing
 
 
-def parse_dbt_project_schema_routing(dbt_project: dict, project_name: str) -> Dict[str, str]:
+def parse_dbt_project_schema_routing(
+    dbt_project: dict, project_name: str
+) -> Dict[str, str]:
     schema_routing, _ = parse_dbt_project_routing(dbt_project, project_name)
     return schema_routing
 
@@ -136,8 +140,12 @@ def main() -> None:
     )
     parser.add_argument("dbt_project_path", help="Path to dbt_project.yml")
     parser.add_argument("model_path", help="Path to the model SQL file")
-    parser.add_argument("--default", default="PROD", help="Default schema (default: PROD)")
-    parser.add_argument("--no-prefix", action="store_true", help="Don't apply PROD_ prefix")
+    parser.add_argument(
+        "--default", default="PROD", help="Default schema (default: PROD)"
+    )
+    parser.add_argument(
+        "--no-prefix", action="store_true", help="Don't apply PROD_ prefix"
+    )
 
     args = parser.parse_args()
 

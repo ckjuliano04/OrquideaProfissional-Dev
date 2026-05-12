@@ -14,24 +14,24 @@ Endpoints:
     GET /export/json            → dump completo em JSON
     GET /export/csv             → dump completo em CSV
 """
+
 from __future__ import annotations
 
 import argparse
 import csv
 import io
-import json
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 sys.path.insert(0, str(Path(__file__).parent))
 
 from db import Database
 
 try:
+    import uvicorn
     from fastapi import FastAPI, HTTPException, Query
     from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
-    import uvicorn
 except ImportError:
     print("FastAPI não instalado. Execute: pip install fastapi uvicorn")
     sys.exit(1)
@@ -86,7 +86,9 @@ def list_leiloeiros(
 def leiloeiros_por_estado(estado: str):
     estado = estado.upper()
     if len(estado) != 2:
-        raise HTTPException(status_code=400, detail="Estado deve ser a UF com 2 letras (ex: SP)")
+        raise HTTPException(
+            status_code=400, detail="Estado deve ser a UF com 2 letras (ex: SP)"
+        )
     records = db.get_by_estado(estado)
     return {"estado": estado, "total": len(records), "data": records}
 
@@ -97,7 +99,9 @@ def busca(
     limit: int = Query(50, ge=1, le=500),
 ):
     if len(q) < 2:
-        raise HTTPException(status_code=400, detail="Query deve ter pelo menos 2 caracteres")
+        raise HTTPException(
+            status_code=400, detail="Query deve ter pelo menos 2 caracteres"
+        )
     records = db.search(q, limit=limit)
     return {"query": q, "total": len(records), "data": records}
 

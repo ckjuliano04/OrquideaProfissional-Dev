@@ -91,11 +91,13 @@ def check_network_interfaces():
     active = []
     for name, info in stats.items():
         if info.isup and info.speed > 0:
-            active.append({
-                "name": name,
-                "speed_mbps": info.speed,
-                "mtu": info.mtu,
-            })
+            active.append(
+                {
+                    "name": name,
+                    "speed_mbps": info.speed,
+                    "mtu": info.mtu,
+                }
+            )
     return active
 
 
@@ -124,7 +126,9 @@ def run_benchmark(samples=5):
             latencies.append(result)
             time.sleep(0.2)
 
-        valid = [r["latency_ms"] for r in latencies if r["reachable"] and r["latency_ms"]]
+        valid = [
+            r["latency_ms"] for r in latencies if r["reachable"] and r["latency_ms"]
+        ]
 
         ep_result = {
             "name": ep["name"],
@@ -171,8 +175,7 @@ def run_benchmark(samples=5):
         results["diagnosis"] = {
             "status": "ok",
             "message": (
-                f"Conexao excelente ({api_ep['avg_ms']}ms). "
-                f"A rede NAO e o gargalo."
+                f"Conexao excelente ({api_ep['avg_ms']}ms). A rede NAO e o gargalo."
             ),
         }
 
@@ -193,7 +196,9 @@ def format_results(results):
     # TLS
     tls = results["tls"]
     if tls.get("success"):
-        lines.append(f"- TLS: {tls['tls_version']} handshake em {tls['handshake_ms']}ms")
+        lines.append(
+            f"- TLS: {tls['tls_version']} handshake em {tls['handshake_ms']}ms"
+        )
     else:
         lines.append(f"- TLS: FALHOU ({tls.get('error', 'desconhecido')})")
 
@@ -216,13 +221,13 @@ def format_results(results):
     for iface in results["network_interfaces"]:
         speed = iface["speed_mbps"]
         if speed >= 1000:
-            speed_str = f"{speed/1000:.0f} Gbps"
+            speed_str = f"{speed / 1000:.0f} Gbps"
         else:
             speed_str = f"{speed} Mbps"
         lines.append(f"- {iface['name']}: {speed_str}")
 
     # Diagnóstico
-    lines.append(f"\n### Diagnostico")
+    lines.append("\n### Diagnostico")
     diag = results["diagnosis"]
     status_map = {"critical": "[!!!]", "warning": "[!]", "ok": "[OK]"}
     lines.append(f"{status_map[diag['status']]} {diag['message']}")
@@ -233,8 +238,12 @@ def format_results(results):
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="Claude Monitor - Benchmark de Conectividade")
-    parser.add_argument("--samples", type=int, default=5, help="Numero de testes por endpoint")
+    parser = argparse.ArgumentParser(
+        description="Claude Monitor - Benchmark de Conectividade"
+    )
+    parser.add_argument(
+        "--samples", type=int, default=5, help="Numero de testes por endpoint"
+    )
     parser.add_argument("--json", action="store_true", help="Output JSON")
     args = parser.parse_args()
 

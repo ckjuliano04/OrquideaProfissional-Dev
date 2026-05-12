@@ -1,5 +1,6 @@
 import bcrypt
 from django.contrib.auth.backends import BaseBackend
+
 from .models import Users
 
 
@@ -28,6 +29,7 @@ class LegacyMSSQLBackend(BaseBackend):
         except (ValueError, TypeError) as e:
             # Hash inválido ou mal formatado no banco
             import logging
+
             logger = logging.getLogger(__name__)
             logger.warning("Erro na validação BCrypt para %s: %s", username, e)
             return None

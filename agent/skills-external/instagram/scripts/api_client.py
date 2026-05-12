@@ -9,6 +9,7 @@ Uso:
     media = await api.get_user_media(limit=10)
     await api.close()
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -21,7 +22,6 @@ from typing import Any, Dict, List, Optional
 sys.path.insert(0, str(Path(__file__).parent))
 
 import httpx
-
 from config import (
     GRAPH_API_BASE,
     IMGUR_CLIENT_ID,
@@ -31,7 +31,7 @@ from config import (
     RETRY_BACKOFF_BASE,
 )
 from db import Database
-from governance import GovernanceManager, RateLimitExceeded
+from governance import GovernanceManager
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,9 @@ logger = logging.getLogger(__name__)
 class InstagramAPIError(Exception):
     """Erro da Instagram Graph API."""
 
-    def __init__(self, message: str, code: Optional[int] = None, subcode: Optional[int] = None):
+    def __init__(
+        self, message: str, code: Optional[int] = None, subcode: Optional[int] = None
+    ):
         self.code = code
         self.subcode = subcode
         super().__init__(message)
@@ -105,7 +107,11 @@ class InstagramAPI:
         # Verificar rate limit
         self._gov.check_rate_limit(action_name, self.account_id)
 
-        url = f"{GRAPH_API_BASE}/{endpoint}" if not endpoint.startswith("http") else endpoint
+        url = (
+            f"{GRAPH_API_BASE}/{endpoint}"
+            if not endpoint.startswith("http")
+            else endpoint
+        )
         params = params or {}
         params["access_token"] = self.access_token
 
@@ -132,14 +138,19 @@ class InstagramAPI:
                         subcode=error.get("error_subcode"),
                     )
                     if api_error.is_rate_limit():
-                        logger.warning("Rate limit da API atingido (code %s). Aguardando...", api_error.code)
+                        logger.warning(
+                            "Rate limit da API atingido (code %s). Aguardando...",
+                            api_error.code,
+                        )
                         if attempt < MAX_RETRIES:
-                            await asyncio.sleep(60)  # espera 1 min para rate limits da API
+                            await asyncio.sleep(
+                                60
+                            )  # espera 1 min para rate limits da API
                             continue
                     if api_error.is_permission_error():
                         raise api_error  # não faz retry para erros de permissão
                     if attempt < MAX_RETRIES:
-                        await asyncio.sleep(RETRY_BACKOFF_BASE ** attempt)
+                        await asyncio.sleep(RETRY_BACKOFF_BASE**attempt)
                         continue
                     raise api_error
 
@@ -158,33 +169,53 @@ class InstagramAPI:
             except httpx.HTTPStatusError as exc:
                 logger.warning(
                     "HTTP %s em %s (tentativa %d/%d)",
-                    exc.response.status_code, url, attempt, MAX_RETRIES,
+                    exc.response.status_code,
+                    url,
+                    attempt,
+                    MAX_RETRIES,
                 )
                 if attempt < MAX_RETRIES:
-                    await asyncio.sleep(RETRY_BACKOFF_BASE ** attempt)
+                    await asyncio.sleep(RETRY_BACKOFF_BASE**attempt)
                 else:
                     raise
 
             except (httpx.RequestError, httpx.TimeoutException) as exc:
                 logger.warning(
                     "Erro de request em %s: %s (tentativa %d/%d)",
-                    url, exc, attempt, MAX_RETRIES,
+                    url,
+                    exc,
+                    attempt,
+                    MAX_RETRIES,
                 )
                 if attempt < MAX_RETRIES:
-                    await asyncio.sleep(RETRY_BACKOFF_BASE ** attempt)
+                    await asyncio.sleep(RETRY_BACKOFF_BASE**attempt)
                 else:
                     raise
 
         raise InstagramAPIError("Falha após todas as tentativas")
 
-    async def get(self, endpoint: str, params: Optional[Dict] = None, action: str = "api_get") -> Dict:
+    async def get(
+        self, endpoint: str, params: Optional[Dict] = None, action: str = "api_get"
+    ) -> Dict:
         return await self._request("GET", endpoint, params=params, action_name=action)
 
-    async def post(self, endpoint: str, data: Optional[Dict] = None, params: Optional[Dict] = None, action: str = "api_post") -> Dict:
-        return await self._request("POST", endpoint, params=params, data=data, action_name=action)
+    async def post(
+        self,
+        endpoint: str,
+        data: Optional[Dict] = None,
+        params: Optional[Dict] = None,
+        action: str = "api_post",
+    ) -> Dict:
+        return await self._request(
+            "POST", endpoint, params=params, data=data, action_name=action
+        )
 
-    async def delete(self, endpoint: str, params: Optional[Dict] = None, action: str = "api_delete") -> Dict:
-        return await self._request("DELETE", endpoint, params=params, action_name=action)
+    async def delete(
+        self, endpoint: str, params: Optional[Dict] = None, action: str = "api_delete"
+    ) -> Dict:
+        return await self._request(
+            "DELETE", endpoint, params=params, action_name=action
+        )
 
     # ── User / Profile ────────────────────────────────────────────────────────
 
@@ -194,7 +225,7 @@ class InstagramAPI:
             f"{self.ig_user_id}",
             params={
                 "fields": "id,username,name,account_type,profile_picture_url,"
-                          "biography,followers_count,follows_count,media_count,website",
+                "biography,followers_count,follows_count,media_count,website",
             },
             action="get_profile",
         )
@@ -202,17 +233,21 @@ class InstagramAPI:
     # ── Media ─────────────────────────────────────────────────────────────────
 
     async def get_user_media(
-        self, limit: int = 25, after: Optional[str] = None,
+        self,
+        limit: int = 25,
+        after: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Lista mídia do usuário com paginação."""
         params = {
             "fields": "id,caption,media_type,media_url,thumbnail_url,permalink,"
-                      "timestamp,like_count,comments_count",
+            "timestamp,like_count,comments_count",
             "limit": str(limit),
         }
         if after:
             params["after"] = after
-        return await self.get(f"{self.ig_user_id}/media", params=params, action="get_media")
+        return await self.get(
+            f"{self.ig_user_id}/media", params=params, action="get_media"
+        )
 
     async def get_media_details(self, media_id: str) -> Dict[str, Any]:
         """Busca detalhes de uma mídia específica."""
@@ -220,7 +255,7 @@ class InstagramAPI:
             media_id,
             params={
                 "fields": "id,caption,media_type,media_url,thumbnail_url,permalink,"
-                          "timestamp,like_count,comments_count,children{id,media_type,media_url}",
+                "timestamp,like_count,comments_count,children{id,media_type,media_url}",
             },
             action="get_media_details",
         )
@@ -299,7 +334,10 @@ class InstagramAPI:
     # ── Comments ──────────────────────────────────────────────────────────────
 
     async def get_comments(
-        self, media_id: str, limit: int = 50, after: Optional[str] = None,
+        self,
+        media_id: str,
+        limit: int = 50,
+        after: Optional[str] = None,
     ) -> Dict[str, Any]:
         params = {
             "fields": "id,text,username,timestamp,replies{id,text,username,timestamp}",
@@ -307,7 +345,9 @@ class InstagramAPI:
         }
         if after:
             params["after"] = after
-        return await self.get(f"{media_id}/comments", params=params, action="get_comments")
+        return await self.get(
+            f"{media_id}/comments", params=params, action="get_comments"
+        )
 
     async def reply_to_comment(self, comment_id: str, text: str) -> Dict[str, Any]:
         return await self.post(
@@ -322,14 +362,19 @@ class InstagramAPI:
     async def get_mentions(self, limit: int = 25) -> Dict[str, Any]:
         return await self.get(
             f"{self.ig_user_id}/tags",
-            params={"fields": "id,caption,media_type,permalink,timestamp", "limit": str(limit)},
+            params={
+                "fields": "id,caption,media_type,permalink,timestamp",
+                "limit": str(limit),
+            },
             action="get_mentions",
         )
 
     # ── Insights ──────────────────────────────────────────────────────────────
 
     async def get_media_insights(
-        self, media_id: str, metrics: Optional[List[str]] = None,
+        self,
+        media_id: str,
+        metrics: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         if not metrics:
             metrics = ["impressions", "reach", "engagement", "saved", "shares"]
@@ -373,7 +418,9 @@ class InstagramAPI:
         )
 
     async def get_hashtag_recent_media(
-        self, hashtag_id: str, limit: int = 25,
+        self,
+        hashtag_id: str,
+        limit: int = 25,
     ) -> Dict[str, Any]:
         return await self.get(
             f"{hashtag_id}/recent_media",
@@ -386,7 +433,9 @@ class InstagramAPI:
         )
 
     async def get_hashtag_top_media(
-        self, hashtag_id: str, limit: int = 25,
+        self,
+        hashtag_id: str,
+        limit: int = 25,
     ) -> Dict[str, Any]:
         return await self.get(
             f"{hashtag_id}/top_media",

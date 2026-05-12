@@ -5,45 +5,71 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('products', '0001_initial'),
+        ("products", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='productnutrition',
-            options={'managed': True, 'verbose_name': 'Cabeçalho da Tabela Nutricional'},
+            name="productnutrition",
+            options={
+                "managed": True,
+                "verbose_name": "Cabeçalho da Tabela Nutricional",
+            },
         ),
         migrations.AddField(
-            model_name='productnutrition',
-            name='col_1_label',
-            field=models.CharField(default='Valor por 100g', max_length=50, verbose_name='Título Coluna 1'),
+            model_name="productnutrition",
+            name="col_1_label",
+            field=models.CharField(
+                default="Valor por 100g", max_length=50, verbose_name="Título Coluna 1"
+            ),
         ),
         migrations.AddField(
-            model_name='productnutrition',
-            name='col_2_label',
-            field=models.CharField(default='Valor por Porção', max_length=50, verbose_name='Título Coluna 2'),
+            model_name="productnutrition",
+            name="col_2_label",
+            field=models.CharField(
+                default="Valor por Porção",
+                max_length=50,
+                verbose_name="Título Coluna 2",
+            ),
         ),
         migrations.AddField(
-            model_name='productnutrition',
-            name='col_3_label',
-            field=models.CharField(default='% VD', max_length=50, verbose_name='Título Coluna 3'),
+            model_name="productnutrition",
+            name="col_3_label",
+            field=models.CharField(
+                default="% VD", max_length=50, verbose_name="Título Coluna 3"
+            ),
         ),
         migrations.AddField(
-            model_name='productnutrition',
-            name='column_count',
-            field=models.IntegerField(choices=[(1, '1 Coluna'), (2, '2 Colunas'), (3, '3 Colunas')], default=3, verbose_name='Número de Colunas no Site'),
+            model_name="productnutrition",
+            name="column_count",
+            field=models.IntegerField(
+                choices=[(1, "1 Coluna"), (2, "2 Colunas"), (3, "3 Colunas")],
+                default=3,
+                verbose_name="Número de Colunas no Site",
+            ),
         ),
         migrations.AlterField(
-            model_name='productnutrition',
-            name='footer_note',
-            field=models.TextField(blank=True, help_text='Ex: *% Valores Diários com base em uma dieta de 2.000 kcal...', null=True, verbose_name='Nota de Rodapé'),
+            model_name="productnutrition",
+            name="footer_note",
+            field=models.TextField(
+                blank=True,
+                help_text="Ex: *% Valores Diários com base em uma dieta de 2.000 kcal...",
+                null=True,
+                verbose_name="Nota de Rodapé",
+            ),
         ),
         migrations.AlterField(
-            model_name='productnutrition',
-            name='product',
-            field=models.OneToOneField(db_constraint=False, default=1, on_delete=django.db.models.deletion.CASCADE, related_name='nutrition', to='products.products', verbose_name='Produto'),
+            model_name="productnutrition",
+            name="product",
+            field=models.OneToOneField(
+                db_constraint=False,
+                default=1,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="nutrition",
+                to="products.products",
+                verbose_name="Produto",
+            ),
             preserve_default=False,
         ),
     ]

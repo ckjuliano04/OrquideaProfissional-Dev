@@ -65,7 +65,9 @@ def test_api_connection() -> tuple[bool, str]:
     try:
         response = httpx.get(
             f"{GRAPH_API}/{phone_id}",
-            params={"fields": "verified_name,code_verification_status,display_phone_number,quality_rating"},
+            params={
+                "fields": "verified_name,code_verification_status,display_phone_number,quality_rating"
+            },
             headers={"Authorization": f"Bearer {token}"},
             timeout=10.0,
         )
@@ -80,7 +82,10 @@ def test_api_connection() -> tuple[bool, str]:
     except httpx.TimeoutException:
         return False, "Request timed out after 10 seconds."
     except Exception as exc:
-        return False, f"Unexpected {exc.__class__.__name__} while contacting the Graph API."
+        return (
+            False,
+            f"Unexpected {exc.__class__.__name__} while contacting the Graph API.",
+        )
 
 
 def test_waba_access() -> tuple[bool, str]:
@@ -105,8 +110,12 @@ def test_waba_access() -> tuple[bool, str]:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Validate WhatsApp Cloud API configuration")
-    parser.add_argument("--env-file", default=".env", help="Path to .env file (default: .env)")
+    parser = argparse.ArgumentParser(
+        description="Validate WhatsApp Cloud API configuration"
+    )
+    parser.add_argument(
+        "--env-file", default=".env", help="Path to .env file (default: .env)"
+    )
     args = parser.parse_args()
 
     # Load environment
@@ -120,7 +129,9 @@ def main():
     print("=" * 50)
     print("WhatsApp Cloud API - Configuration Validator")
     print("=" * 50)
-    print("Detailed API payloads are intentionally omitted to protect sensitive configuration data.")
+    print(
+        "Detailed API payloads are intentionally omitted to protect sensitive configuration data."
+    )
     print()
 
     all_ok = True

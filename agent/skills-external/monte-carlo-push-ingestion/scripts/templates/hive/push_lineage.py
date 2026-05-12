@@ -109,9 +109,13 @@ def _build_column_lineage(edges_data: list[dict]) -> list[LineageEvent]:
                 (src["database"] for src in sources if src["table"] == src_table),
                 dest["database"],
             )
-            src_aid = source_asset_ids.get((src_db, src_table), f"{src_db}__{src_table}")
+            src_aid = source_asset_ids.get(
+                (src_db, src_table), f"{src_db}__{src_table}"
+            )
             if dest_col not in col_fields:
-                col_fields[dest_col] = ColumnLineageField(name=dest_col, source_fields=[])
+                col_fields[dest_col] = ColumnLineageField(
+                    name=dest_col, source_fields=[]
+                )
             col_fields[dest_col].source_fields.append(
                 ColumnLineageSourceField(asset_id=src_aid, field_name=src_col)
             )
@@ -195,7 +199,9 @@ def push(
     def _push_batch(batch: list, batch_num: int) -> str | None:
         """Push a single batch using a dedicated Session (thread-safe)."""
         print(f"  Pushing batch {batch_num}/{total_batches} ({len(batch)} events) ...")
-        client = Client(session=Session(mcd_id=key_id, mcd_token=key_token, scope="Ingestion"))
+        client = Client(
+            session=Session(mcd_id=key_id, mcd_token=key_token, scope="Ingestion")
+        )
         service = IngestionService(mc_client=client)
         result = service.send_lineage(
             resource_uuid=resource_uuid,
@@ -282,7 +288,9 @@ def main() -> None:
     args = parser.parse_args()
 
     if not args.key_id or not args.key_token:
-        parser.error("--key-id and --key-token are required (or set MCD_INGEST_ID / MCD_INGEST_TOKEN)")
+        parser.error(
+            "--key-id and --key-token are required (or set MCD_INGEST_ID / MCD_INGEST_TOKEN)"
+        )
     if not args.resource_uuid:
         parser.error("--resource-uuid is required (or set MCD_RESOURCE_UUID)")
 

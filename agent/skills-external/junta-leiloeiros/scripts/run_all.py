@@ -7,6 +7,7 @@ Uso:
     python scripts/run_all.py --concurrency 5      # paralelismo (default: 5)
     python scripts/run_all.py --dry-run            # mostra o que seria coletado
 """
+
 from __future__ import annotations
 
 import argparse
@@ -21,8 +22,8 @@ from typing import List, Optional
 # Ajusta PYTHONPATH para imports relativos funcionarem
 sys.path.insert(0, str(Path(__file__).parent))
 
-from scraper.states import SCRAPERS, get_all_scrapers, get_scraper
 from db import Database
+from scraper.states import SCRAPERS, get_scraper
 
 logging.basicConfig(
     level=logging.INFO,
@@ -85,7 +86,11 @@ async def run(estados: Optional[List[str]], concurrency: int, dry_run: bool) -> 
                 print(f"  {uf}: scraper nao encontrado")
         return
 
-    logger.info("Iniciando coleta de %d estados (concurrency=%d)", len(estados_alvo), concurrency)
+    logger.info(
+        "Iniciando coleta de %d estados (concurrency=%d)",
+        len(estados_alvo),
+        concurrency,
+    )
 
     semaphore = asyncio.Semaphore(concurrency)
     tasks = [scrape_state(uf, semaphore) for uf in estados_alvo]
@@ -114,15 +119,17 @@ async def run(estados: Optional[List[str]], concurrency: int, dry_run: bool) -> 
                 status = "VAZIO"
             logger.warning("[%s] STATUS=%s error=%s", estado, status, res.get("error"))
 
-        log_entries.append({
-            "estado": estado,
-            "junta": res.get("junta", "?"),
-            "url": res.get("url", "?"),
-            "status": status,
-            "count": count,
-            "error": res.get("error"),
-            "scraped_at": res["scraped_at"],
-        })
+        log_entries.append(
+            {
+                "estado": estado,
+                "junta": res.get("junta", "?"),
+                "url": res.get("url", "?"),
+                "status": status,
+                "count": count,
+                "error": res.get("error"),
+                "scraped_at": res["scraped_at"],
+            }
+        )
 
     # Salvar log
     LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -142,7 +149,7 @@ async def run(estados: Optional[List[str]], concurrency: int, dry_run: bool) -> 
 
     # Resumo final
     print("\n" + "=" * 60)
-    print(f"RESUMO DA COLETA")
+    print("RESUMO DA COLETA")
     print("=" * 60)
     ok = [e for e in log_entries if e["status"] == "OK"]
     vazios = [e for e in log_entries if e["status"] == "VAZIO"]
@@ -170,16 +177,21 @@ def main():
         description="Coleta dados de leiloeiros de todas as Juntas Comerciais do Brasil"
     )
     parser.add_argument(
-        "--estado", nargs="*", metavar="UF",
-        help="Estados específicos (ex: SP RJ MG). Padrão: todos os 27."
+        "--estado",
+        nargs="*",
+        metavar="UF",
+        help="Estados específicos (ex: SP RJ MG). Padrão: todos os 27.",
     )
     parser.add_argument(
-        "--concurrency", type=int, default=5,
-        help="Número de scrapers em paralelo (default: 5)"
+        "--concurrency",
+        type=int,
+        default=5,
+        help="Número de scrapers em paralelo (default: 5)",
     )
     parser.add_argument(
-        "--dry-run", action="store_true",
-        help="Mostra o que seria coletado sem executar"
+        "--dry-run",
+        action="store_true",
+        help="Mostra o que seria coletado sem executar",
     )
     args = parser.parse_args()
 

@@ -16,9 +16,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
-import time
 from typing import Any, Optional
 
 import requests
@@ -50,7 +50,10 @@ _FIELD_CONCEPTS: dict[str, dict[str, tuple[str, ...]]] = {
             "RevenueFromRenderingOfServices",
         ),
         "gross_profit": ("GrossProfit",),
-        "operating_income": ("OperatingIncomeLoss", "ProfitLossFromOperatingActivities"),
+        "operating_income": (
+            "OperatingIncomeLoss",
+            "ProfitLossFromOperatingActivities",
+        ),
         "net_income": (
             "NetIncomeLoss",
             "ProfitLoss",
@@ -84,7 +87,11 @@ _FIELD_CONCEPTS: dict[str, dict[str, tuple[str, ...]]] = {
             "CashAndCashEquivalentsAtCarryingValue",
             "CashAndCashEquivalents",
         ),
-        "long_term_debt": ("LongTermDebt", "LongTermDebtNoncurrent", "LongtermBorrowings"),
+        "long_term_debt": (
+            "LongTermDebt",
+            "LongTermDebtNoncurrent",
+            "LongtermBorrowings",
+        ),
         "short_term_borrowings": (
             "ShortTermBorrowings",
             "CurrentPortionOfLongtermBorrowings",
@@ -295,9 +302,15 @@ def get_filings_metadata(ticker: str, limit: int = 10) -> list[dict[str, Any]]:
         rows.append(
             {
                 "form": form,
-                "filing_date": filing_dates[index] if index < len(filing_dates) else None,
-                "report_date": report_dates[index] if index < len(report_dates) else None,
-                "accession_number": accessions[index] if index < len(accessions) else None,
+                "filing_date": filing_dates[index]
+                if index < len(filing_dates)
+                else None,
+                "report_date": report_dates[index]
+                if index < len(report_dates)
+                else None,
+                "accession_number": accessions[index]
+                if index < len(accessions)
+                else None,
                 "primary_document": docs[index] if index < len(docs) else None,
             }
         )
@@ -306,7 +319,9 @@ def get_filings_metadata(ticker: str, limit: int = 10) -> list[dict[str, Any]]:
     return rows
 
 
-def _extract_line_items(company_facts: dict[str, Any]) -> dict[tuple[str, str], list[dict[str, Any]]]:
+def _extract_line_items(
+    company_facts: dict[str, Any],
+) -> dict[tuple[str, str], list[dict[str, Any]]]:
     root = company_facts.get("facts", {})
     items: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
 
@@ -372,7 +387,9 @@ def _best_entry(
     concept_priority = _FIELD_CONCEPT_PRIORITY.get((statement, field), {})
     if concept_priority:
         default_rank = len(concept_priority) + 100
-        best_rank = min(concept_priority.get(r.get("concept", ""), default_rank) for r in scoped)
+        best_rank = min(
+            concept_priority.get(r.get("concept", ""), default_rank) for r in scoped
+        )
         scoped = [
             r
             for r in scoped
@@ -382,7 +399,9 @@ def _best_entry(
     unit_counts = Counter(r.get("unit") for r in scoped)
     preferred_unit = unit_counts.most_common(1)[0][0]
     scoped = [r for r in scoped if r.get("unit") == preferred_unit]
-    scoped.sort(key=lambda r: (r.get("period_end", ""), r.get("filed", "")), reverse=True)
+    scoped.sort(
+        key=lambda r: (r.get("period_end", ""), r.get("filed", "")), reverse=True
+    )
     return scoped[0]
 
 
@@ -417,7 +436,9 @@ def _build_snapshot(
             "concept": best.get("concept"),
             "namespace": best.get("namespace"),
         }
-        if best.get("period_end") and (not period_end or best["period_end"] > period_end):
+        if best.get("period_end") and (
+            not period_end or best["period_end"] > period_end
+        ):
             period_end = best["period_end"]
 
     return snapshot, sources, period_end
@@ -485,7 +506,9 @@ def _main() -> None:
         payload = {
             "ticker": args.ticker.strip().upper(),
             "filings": get_filings_metadata(args.ticker),
-            "retrieved_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+            "retrieved_utc": datetime.now(timezone.utc)
+            .replace(microsecond=0)
+            .isoformat(),
         }
 
     print(json.dumps(payload, indent=args.indent, sort_keys=False))

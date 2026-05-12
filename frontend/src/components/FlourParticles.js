@@ -1,11 +1,10 @@
-'use client';
+"use client";
 
-import { useMemo } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { useMemo } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 
 function Particles({ count = 1500 }) {
-
   // Cria as posições iniciais das partículas de farinha
   const particles = useMemo(() => {
     const temp = [];
@@ -21,20 +20,20 @@ function Particles({ count = 1500 }) {
   const geo = useMemo(() => {
     const g = new THREE.BufferGeometry();
     const pos = new Float32Array(count * 3);
-    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
     return g;
   }, [count]);
 
   const texture = useMemo(() => {
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width = 64;
     canvas.height = 64;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-    gradient.addColorStop(0, 'rgba(255,255,255,1)');
-    gradient.addColorStop(0.2, 'rgba(255,255,255,0.8)');
-    gradient.addColorStop(0.5, 'rgba(255,255,255,0.2)');
-    gradient.addColorStop(1, 'rgba(255,255,255,0)');
+    gradient.addColorStop(0, "rgba(255,255,255,1)");
+    gradient.addColorStop(0.2, "rgba(255,255,255,0.8)");
+    gradient.addColorStop(0.5, "rgba(255,255,255,0.2)");
+    gradient.addColorStop(1, "rgba(255,255,255,0)");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, 64, 64);
     return new THREE.CanvasTexture(canvas);
@@ -43,7 +42,7 @@ function Particles({ count = 1500 }) {
   useFrame((state) => {
     const positions = geo.attributes.position.array;
     const time = state.clock.elapsedTime;
-    
+
     for (let i = 0; i < count; i++) {
       const p = particles[i];
       const i3 = i * 3;
@@ -81,7 +80,10 @@ function Particles({ count = 1500 }) {
 
 export default function FlourParticles({ density = 1500, opacity = 0.4 }) {
   return (
-    <div className="absolute inset-0 pointer-events-none z-0" style={{ opacity }}>
+    <div
+      className="absolute inset-0 pointer-events-none z-0"
+      style={{ opacity }}
+    >
       <Canvas camera={{ position: [0, 0, 5], fov: 60 }}>
         <ambientLight intensity={0.5} />
         <Particles count={density} />

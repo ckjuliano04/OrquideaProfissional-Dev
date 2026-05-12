@@ -21,12 +21,16 @@ import argparse
 import os
 
 from collect_metadata import collect
-from push_metadata import push, _BATCH_SIZE
+from push_metadata import _BATCH_SIZE, push
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Push BigQuery metadata to Monte Carlo")
-    parser.add_argument("--project-id", default=os.getenv("BIGQUERY_PROJECT_ID"))  # ← SUBSTITUTE
+    parser = argparse.ArgumentParser(
+        description="Push BigQuery metadata to Monte Carlo"
+    )
+    parser.add_argument(
+        "--project-id", default=os.getenv("BIGQUERY_PROJECT_ID")
+    )  # ← SUBSTITUTE
     parser.add_argument("--resource-uuid", default=os.getenv("MCD_RESOURCE_UUID"))
     parser.add_argument("--key-id", default=os.getenv("MCD_INGEST_ID"))
     parser.add_argument("--key-token", default=os.getenv("MCD_INGEST_TOKEN"))
@@ -40,7 +44,11 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    missing = [k for k, v in vars(args).items() if v is None and k not in ("output_file", "push_result_file", "batch_size")]
+    missing = [
+        k
+        for k, v in vars(args).items()
+        if v is None and k not in ("output_file", "push_result_file", "batch_size")
+    ]
     if missing:
         parser.error(f"Missing required arguments/env vars: {missing}")
 

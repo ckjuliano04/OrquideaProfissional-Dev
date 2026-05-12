@@ -5,14 +5,12 @@ Analisa mensagens e gera session-NNN.md.
 
 import re
 from datetime import datetime
-from pathlib import Path
 
 from config import (
-    SESSIONS_DIR,
     DECISION_MARKERS,
-    PENDING_MARKERS,
+    SESSIONS_DIR,
 )
-from models import SessionSummary, PendingTask, SessionEntry
+from models import PendingTask, SessionEntry, SessionSummary
 
 
 def get_next_session_number() -> int:
@@ -37,8 +35,12 @@ def generate_summary(
     metadata: dict,
 ) -> SessionSummary:
     """Gera um resumo estruturado a partir das entradas da sessão."""
-    user_messages = [e.content for e in entries if e.role == "user" and e.content.strip()]
-    assistant_messages = [e.content for e in entries if e.role == "assistant" and e.content.strip()]
+    user_messages = [
+        e.content for e in entries if e.role == "user" and e.content.strip()
+    ]
+    assistant_messages = [
+        e.content for e in entries if e.role == "assistant" and e.content.strip()
+    ]
     all_messages = user_messages + assistant_messages
     all_tool_calls = []
     all_files_modified = []
@@ -92,7 +94,9 @@ def generate_summary(
 
     # Extrair tarefas
     summary.tasks_completed = _extract_completed_tasks(all_messages)
-    summary.tasks_pending = _extract_pending_tasks(all_messages, session_number, date_str)
+    summary.tasks_pending = _extract_pending_tasks(
+        all_messages, session_number, date_str
+    )
 
     # Extrair erros
     summary.errors_resolved = _extract_errors(assistant_messages)
@@ -110,7 +114,7 @@ def _extract_topics(user_messages: list[str]) -> list[str]:
         # Limpar mensagens muito longas
         msg_clean = msg[:500] if len(msg) > 500 else msg
         # Pegar a primeira frase significativa como tópico
-        sentences = re.split(r'[.!?\n]', msg_clean)
+        sentences = re.split(r"[.!?\n]", msg_clean)
         for s in sentences:
             s = s.strip()
             if len(s) > 10 and len(s) < 200:
@@ -183,12 +187,18 @@ def _extract_pending_tasks(
             if m:
                 desc = m.group(1).strip()
                 # Filtrar descrições que parecem código/documentação
-                if 10 < len(desc) < 200 and not desc.startswith("`") and not desc.startswith("-"):
-                    tasks.append(PendingTask(
-                        description=desc,
-                        source_session=session_number,
-                        created_date=date,
-                    ))
+                if (
+                    10 < len(desc) < 200
+                    and not desc.startswith("`")
+                    and not desc.startswith("-")
+                ):
+                    tasks.append(
+                        PendingTask(
+                            description=desc,
+                            source_session=session_number,
+                            created_date=date,
+                        )
+                    )
 
     # Deduplicate
     seen = set()
@@ -220,8 +230,14 @@ def _extract_findings(assistant_messages: list[str]) -> list[str]:
     """Extrai descobertas/findings importantes."""
     findings = []
     markers = [
-        "descobri que", "encontrei", "notei que", "importante:",
-        "found that", "noticed that", "important:", "key finding",
+        "descobri que",
+        "encontrei",
+        "notei que",
+        "importante:",
+        "found that",
+        "noticed that",
+        "important:",
+        "key finding",
     ]
     for msg in assistant_messages:
         for line in msg.split("\n"):

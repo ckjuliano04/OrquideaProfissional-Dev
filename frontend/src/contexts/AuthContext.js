@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useState, useEffect } from 'react';
-import { fetchAPI } from '../services/api';
-import { useRouter } from 'next/navigation';
+import { createContext, useContext, useState, useEffect } from "react";
+import { fetchAPI } from "../services/api";
+import { useRouter } from "next/navigation";
 
 const AuthContext = createContext({});
 
@@ -11,7 +11,7 @@ const AuthContext = createContext({});
  */
 function decodeJWTPayload(token) {
   try {
-    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
     return JSON.parse(atob(base64));
   } catch {
     return null;
@@ -25,7 +25,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     // Verifica se tem token ao carregar a aplicação
-    const token = localStorage.getItem('orquidea_token');
+    const token = localStorage.getItem("orquidea_token");
     if (token) {
       const payload = decodeJWTPayload(token);
       if (payload && payload.exp * 1000 > Date.now()) {
@@ -37,8 +37,8 @@ export function AuthProvider({ children }) {
         });
       } else {
         // Token expirado
-        localStorage.removeItem('orquidea_token');
-        localStorage.removeItem('orquidea_refresh');
+        localStorage.removeItem("orquidea_token");
+        localStorage.removeItem("orquidea_refresh");
       }
     }
     setLoading(false);
@@ -46,14 +46,14 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     try {
-      const data = await fetchAPI('/token/', {
-        method: 'POST',
+      const data = await fetchAPI("/token/", {
+        method: "POST",
         body: JSON.stringify({ email, password }),
       });
 
       // Salva os tokens
-      localStorage.setItem('orquidea_token', data.access);
-      localStorage.setItem('orquidea_refresh', data.refresh);
+      localStorage.setItem("orquidea_token", data.access);
+      localStorage.setItem("orquidea_refresh", data.refresh);
 
       // Decodifica os claims customizados do Access Token
       const payload = decodeJWTPayload(data.access);
@@ -64,7 +64,7 @@ export function AuthProvider({ children }) {
       };
       setUser(userData);
 
-      router.push('/dashboard');
+      router.push("/dashboard");
       return { success: true };
     } catch (error) {
       return { success: false, message: error.message };
@@ -72,14 +72,16 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
-    localStorage.removeItem('orquidea_token');
-    localStorage.removeItem('orquidea_refresh');
+    localStorage.removeItem("orquidea_token");
+    localStorage.removeItem("orquidea_refresh");
     setUser(null);
-    router.push('/login');
+    router.push("/login");
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, logout, isAuthenticated: !!user }}
+    >
       {children}
     </AuthContext.Provider>
   );

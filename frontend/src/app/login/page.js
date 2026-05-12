@@ -1,40 +1,47 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/contexts/ToastContext';
-import Link from 'next/link';
-import Image from 'next/image';
-import { Button } from '@/components/ui/Button';
-import { Card, CardContent } from '@/components/ui/Card';
-import { Mail, Lock, LogIn, LifeBuoy, AlertCircle, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/contexts/ToastContext";
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent } from "@/components/ui/Card";
+import {
+  Mail,
+  Lock,
+  LogIn,
+  LifeBuoy,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
   const { addToast } = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setIsSubmitting(true);
 
     try {
       const result = await login(email, password);
       if (result.success) {
-        addToast('Login realizado com sucesso! Bem-vindo.', 'success');
+        addToast("Login realizado com sucesso! Bem-vindo.", "success");
       } else {
-        setError(result.message || 'E-mail ou senha incorretos.');
-        addToast(result.message || 'Erro ao realizar login.', 'error');
+        setError(result.message || "E-mail ou senha incorretos.");
+        addToast(result.message || "Erro ao realizar login.", "error");
       }
     } catch (err) {
-      setError('Ocorreu um erro ao conectar ao servidor.');
-      addToast('Erro de conexão com o servidor.', 'error');
+      setError("Ocorreu um erro ao conectar ao servidor.");
+      addToast("Erro de conexão com o servidor.", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -43,23 +50,23 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-slate-50 relative overflow-hidden py-32">
       {/* Background decorations */}
-      <motion.div 
-        animate={{ 
+      <motion.div
+        animate={{
           scale: [1, 1.2, 1],
           x: [0, 50, 0],
-          y: [0, 30, 0]
+          y: [0, 30, 0],
         }}
         transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-        className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-orquidea-green/5 rounded-full blur-[120px] pointer-events-none" 
+        className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-orquidea-green/5 rounded-full blur-[120px] pointer-events-none"
       />
-      <motion.div 
-        animate={{ 
+      <motion.div
+        animate={{
           scale: [1.2, 1, 1.2],
           x: [0, -50, 0],
-          y: [0, -30, 0]
+          y: [0, -30, 0],
         }}
         transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-        className="absolute bottom-[-20%] right-[-10%] w-[800px] h-[800px] bg-orquidea-gold/5 rounded-full blur-[120px] pointer-events-none" 
+        className="absolute bottom-[-20%] right-[-10%] w-[800px] h-[800px] bg-orquidea-gold/5 rounded-full blur-[120px] pointer-events-none"
       />
 
       <div className="container mx-auto px-4 z-10 flex justify-center">
@@ -77,9 +84,9 @@ export default function LoginPage() {
                     whileHover={{ scale: 1.05 }}
                     transition={{ type: "spring", stiffness: 400, damping: 10 }}
                   >
-                    <Image 
-                      src="/logos/OrquideaProfissional_Logo_Transparente.png" 
-                      alt="Orquídea Profissional" 
+                    <Image
+                      src="/logos/OrquideaProfissional_Logo_Transparente.png"
+                      alt="Orquídea Profissional"
                       width={220}
                       height={100}
                       priority
@@ -87,15 +94,19 @@ export default function LoginPage() {
                     />
                   </motion.div>
                 </Link>
-                <h1 className="text-4xl font-black text-slate-900 mb-3 font-serif tracking-tight">Acesso Restrito</h1>
-                <p className="text-slate-500 font-medium">Insira suas credenciais para acessar a plataforma.</p>
+                <h1 className="text-4xl font-black text-slate-900 mb-3 font-serif tracking-tight">
+                  Acesso Restrito
+                </h1>
+                <p className="text-slate-500 font-medium">
+                  Insira suas credenciais para acessar a plataforma.
+                </p>
               </div>
 
               <AnimatePresence mode="wait">
                 {error && (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, height: 0, y: -20 }}
-                    animate={{ opacity: 1, height: 'auto', y: 0 }}
+                    animate={{ opacity: 1, height: "auto", y: 0 }}
                     exit={{ opacity: 0, height: 0, y: -20 }}
                     className="mb-8 p-4 bg-red-50 border border-red-100 text-red-600 text-xs rounded-2xl flex items-center gap-3 font-black uppercase tracking-wider overflow-hidden"
                   >
@@ -107,9 +118,14 @@ export default function LoginPage() {
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">E-mail Corporativo</label>
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">
+                    E-mail Corporativo
+                  </label>
                   <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                    <Mail
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"
+                      size={18}
+                    />
                     <input
                       type="email"
                       value={email}
@@ -122,9 +138,14 @@ export default function LoginPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Sua Senha</label>
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">
+                    Sua Senha
+                  </label>
                   <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                    <Lock
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"
+                      size={18}
+                    />
                     <input
                       type="password"
                       value={password}
@@ -136,7 +157,10 @@ export default function LoginPage() {
                   </div>
                   <div className="flex justify-end pr-1">
                     <motion.div whileHover={{ x: -5 }}>
-                      <Link href="#" className="text-xs font-black uppercase tracking-widest text-orquidea-green hover:text-orquidea-night transition-colors">
+                      <Link
+                        href="#"
+                        className="text-xs font-black uppercase tracking-widest text-orquidea-green hover:text-orquidea-night transition-colors"
+                      >
                         Esqueceu a senha?
                       </Link>
                     </motion.div>
@@ -157,7 +181,10 @@ export default function LoginPage() {
                     </>
                   ) : (
                     <>
-                      <LogIn size={20} className="group-hover/btn:translate-x-1 transition-transform" />
+                      <LogIn
+                        size={20}
+                        className="group-hover/btn:translate-x-1 transition-transform"
+                      />
                       Entrar no Portal
                     </>
                   )}
@@ -165,7 +192,10 @@ export default function LoginPage() {
               </form>
 
               <div className="mt-12 pt-8 border-t border-slate-100 flex items-center justify-center">
-                <Link href="/contato" className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-orquidea-green transition-colors group">
+                <Link
+                  href="/contato"
+                  className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-orquidea-green transition-colors group"
+                >
                   <motion.div
                     animate={{ rotate: [0, 10, -10, 0] }}
                     transition={{ duration: 4, repeat: Infinity }}
@@ -182,5 +212,3 @@ export default function LoginPage() {
     </main>
   );
 }
-
-

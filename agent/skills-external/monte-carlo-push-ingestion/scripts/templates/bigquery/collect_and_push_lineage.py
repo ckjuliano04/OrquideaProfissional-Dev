@@ -20,14 +20,18 @@ from __future__ import annotations
 import argparse
 import os
 
-from collect_lineage import collect, LOOKBACK_HOURS
-from push_lineage import push, _BATCH_SIZE
+from collect_lineage import LOOKBACK_HOURS, collect
+from push_lineage import _BATCH_SIZE, push
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Push BigQuery lineage to Monte Carlo")
-    parser.add_argument("--project-id", default=os.getenv("BIGQUERY_PROJECT_ID"))  # ← SUBSTITUTE
-    parser.add_argument("--region", default=os.getenv("BIGQUERY_REGION", "us"))    # ← SUBSTITUTE
+    parser.add_argument(
+        "--project-id", default=os.getenv("BIGQUERY_PROJECT_ID")
+    )  # ← SUBSTITUTE
+    parser.add_argument(
+        "--region", default=os.getenv("BIGQUERY_REGION", "us")
+    )  # ← SUBSTITUTE
     parser.add_argument("--resource-uuid", default=os.getenv("MCD_RESOURCE_UUID"))
     parser.add_argument("--key-id", default=os.getenv("MCD_INGEST_ID"))
     parser.add_argument("--key-token", default=os.getenv("MCD_INGEST_TOKEN"))

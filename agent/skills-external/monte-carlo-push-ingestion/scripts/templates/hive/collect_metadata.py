@@ -39,7 +39,7 @@ def _check_available_memory(min_gb: float = 2.0) -> None:
         if hasattr(os, "sysconf"):  # Linux / macOS
             page_size = os.sysconf("SC_PAGE_SIZE")
             avail_pages = os.sysconf("SC_AVPHYS_PAGES")
-            avail_gb = (page_size * avail_pages) / (1024 ** 3)
+            avail_gb = (page_size * avail_pages) / (1024**3)
         else:
             return  # Windows — skip check
     except (ValueError, OSError):
@@ -50,6 +50,7 @@ def _check_available_memory(min_gb: float = 2.0) -> None:
             f"(minimum recommended: {min_gb:.1f} GB). "
             f"Consider reducing the number of databases/tables or increasing available memory."
         )
+
 
 # ← SUBSTITUTE: set RESOURCE_TYPE to match your Monte Carlo connection type
 RESOURCE_TYPE = "data-lake"
@@ -92,7 +93,9 @@ def _normalize_hive_type(hive_type: str) -> str:
     """
     lower = hive_type.lower().strip()
     base = lower.split("(")[0].strip()
-    suffix = hive_type[len(base):].strip()  # preserve original params, e.g. decimal(10,2)
+    suffix = hive_type[
+        len(base) :
+    ].strip()  # preserve original params, e.g. decimal(10,2)
     return _HIVE_TYPE_MAP.get(base, base.upper()) + suffix
 
 
@@ -157,7 +160,9 @@ def _parse_describe_formatted(rows: list[tuple]) -> dict:
 
         if in_table_info:
             # Table Parameters rows have an empty col_name; key is in data_type, value in comment
-            param_key = data_type.strip() if not col_name else col_name.strip().rstrip(":")
+            param_key = (
+                data_type.strip() if not col_name else col_name.strip().rstrip(":")
+            )
             param_val = (comment.strip() if not col_name else data_type.strip()) or ""
 
             if re.search(r"numRows", param_key, re.IGNORECASE):
@@ -180,9 +185,11 @@ def _parse_describe_formatted(rows: list[tuple]) -> dict:
             elif re.search(r"^CreateTime", param_key):
                 # e.g. "Wed Mar 18 20:15:40 UTC 2026"
                 try:
-                    result["created_on"] = datetime.strptime(
-                        param_val, "%a %b %d %H:%M:%S %Z %Y"
-                    ).replace(tzinfo=timezone.utc).isoformat()
+                    result["created_on"] = (
+                        datetime.strptime(param_val, "%a %b %d %H:%M:%S %Z %Y")
+                        .replace(tzinfo=timezone.utc)
+                        .isoformat()
+                    )
                 except (ValueError, TypeError):
                     pass
             elif param_key == "comment" and not result["description"] and param_val:
@@ -237,8 +244,16 @@ def collect(
 
             info = _parse_describe_formatted(desc_rows)
 
-            row_count = info["row_count"] if info["row_count"] and info["row_count"] > 0 else None
-            byte_count = info["total_size"] if info["total_size"] and info["total_size"] > 0 else None
+            row_count = (
+                info["row_count"]
+                if info["row_count"] and info["row_count"] > 0
+                else None
+            )
+            byte_count = (
+                info["total_size"]
+                if info["total_size"] and info["total_size"] > 0
+                else None
+            )
 
             assets.append(
                 {
@@ -251,7 +266,11 @@ def collect(
                     "byte_count": byte_count,
                     "last_modified": info["last_modified"],
                     "fields": [
-                        {"name": col["name"], "type": col["type"], "description": col["description"]}
+                        {
+                            "name": col["name"],
+                            "type": col["type"],
+                            "description": col["description"],
+                        }
                         for col in info["columns"]
                     ],
                 }

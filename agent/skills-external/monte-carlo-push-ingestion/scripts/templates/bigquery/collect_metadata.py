@@ -102,7 +102,9 @@ def _collect_assets(bq_client: bigquery.Client, project_id: str) -> list[dict]:
                     "byte_count": table.num_bytes,
                 },
                 "freshness": {
-                    "last_updated_time": table.modified.isoformat() if table.modified else None,
+                    "last_updated_time": table.modified.isoformat()
+                    if table.modified
+                    else None,
                 },
             }
             assets.append(asset)
@@ -120,7 +122,9 @@ def collect(
 
     Returns the manifest dict.
     """
-    bq_client = bigquery.Client(project=project_id)  # ← SUBSTITUTE: adjust auth if needed
+    bq_client = bigquery.Client(
+        project=project_id
+    )  # ← SUBSTITUTE: adjust auth if needed
 
     log.info("Collecting metadata from project %s ...", project_id)
     assets = _collect_assets(bq_client, project_id)
@@ -142,7 +146,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Collect BigQuery metadata and write to a manifest file",
     )
-    parser.add_argument("--project-id", default=os.getenv("BIGQUERY_PROJECT_ID"))  # ← SUBSTITUTE
+    parser.add_argument(
+        "--project-id", default=os.getenv("BIGQUERY_PROJECT_ID")
+    )  # ← SUBSTITUTE
     parser.add_argument("--output-file", default="metadata_output.json")
     args = parser.parse_args()
 

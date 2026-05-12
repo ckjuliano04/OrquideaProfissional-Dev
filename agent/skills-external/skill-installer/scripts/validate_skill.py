@@ -11,10 +11,10 @@ Usage:
     python validate_skill.py "C:\\path\\to\\skill" --registry "C:\\path\\to\\registry.json"
 """
 
-import os
-import sys
 import json
+import os
 import re
+import sys
 from pathlib import Path
 
 # ── Constants ──────────────────────────────────────────────────────────────
@@ -43,6 +43,7 @@ REGISTRY_PATH = SKILLS_ROOT / "agent-orchestrator" / "data" / "registry.json"
 
 # ── YAML Frontmatter Parser ───────────────────────────────────────────────
 
+
 def parse_yaml_frontmatter(path: Path) -> dict:
     """Extract YAML frontmatter from a SKILL.md file.
 
@@ -59,6 +60,7 @@ def parse_yaml_frontmatter(path: Path) -> dict:
 
     try:
         import yaml
+
         return yaml.safe_load(match.group(1)) or {}
     except Exception:
         # Fallback: manual parsing
@@ -70,7 +72,7 @@ def parse_yaml_frontmatter(path: Path) -> dict:
                 result[key] = m.group(1).strip()
             else:
                 m2 = re.search(
-                    rf'^{key}:\s*>-?\s*\n((?:\s+.+\n?)+)', block, re.MULTILINE
+                    rf"^{key}:\s*>-?\s*\n((?:\s+.+\n?)+)", block, re.MULTILINE
                 )
                 if m2:
                     lines = m2.group(1).strip().split("\n")
@@ -79,6 +81,7 @@ def parse_yaml_frontmatter(path: Path) -> dict:
 
 
 # ── Validation Checks ─────────────────────────────────────────────────────
+
 
 def check_skill_md_exists(skill_dir: Path) -> dict:
     """Check 1: SKILL.md exists."""
@@ -261,7 +264,8 @@ def check_total_size(skill_dir: Path) -> dict:
         "check": 8,
         "name": f"Size <= {MAX_SIZE_MB}MB",
         "status": "pass" if ok else "warn",
-        "message": f"Total: {size_mb:.1f} MB" + ("" if ok else f" (exceeds {MAX_SIZE_MB}MB)"),
+        "message": f"Total: {size_mb:.1f} MB"
+        + ("" if ok else f" (exceeds {MAX_SIZE_MB}MB)"),
     }
 
 
@@ -310,9 +314,7 @@ def check_duplicate_name(meta: dict, registry_path: Path) -> dict:
 
     try:
         registry = json.loads(registry_path.read_text(encoding="utf-8"))
-        existing_names = [
-            s.get("name", "").lower() for s in registry.get("skills", [])
-        ]
+        existing_names = [s.get("name", "").lower() for s in registry.get("skills", [])]
         if name in existing_names:
             return {
                 "check": 10,
@@ -337,6 +339,7 @@ def check_duplicate_name(meta: dict, registry_path: Path) -> dict:
 
 
 # ── Main Validation ───────────────────────────────────────────────────────
+
 
 def validate(skill_dir: Path, strict: bool = False, registry_path: Path = None) -> dict:
     """Run all 10 validation checks on a skill directory.
@@ -364,16 +367,16 @@ def validate(skill_dir: Path, strict: bool = False, registry_path: Path = None) 
 
     # Run all 10 checks
     checks = [
-        check_skill_md_exists(skill_dir),           # 1
-        check_frontmatter_parseable(skill_dir),      # 2
-        check_name_exists(meta),                     # 3
-        check_description_exists(meta),              # 4
-        check_description_length(meta),              # 5
-        check_name_matches_dir(skill_dir, meta),     # 6
-        check_forbidden_files(skill_dir),            # 7
-        check_total_size(skill_dir),                 # 8
-        check_scripts_requirements(skill_dir),       # 9
-        check_duplicate_name(meta, registry_path),   # 10
+        check_skill_md_exists(skill_dir),  # 1
+        check_frontmatter_parseable(skill_dir),  # 2
+        check_name_exists(meta),  # 3
+        check_description_exists(meta),  # 4
+        check_description_length(meta),  # 5
+        check_name_matches_dir(skill_dir, meta),  # 6
+        check_forbidden_files(skill_dir),  # 7
+        check_total_size(skill_dir),  # 8
+        check_scripts_requirements(skill_dir),  # 9
+        check_duplicate_name(meta, registry_path),  # 10
     ]
 
     errors = [c for c in checks if c["status"] == "fail"]
@@ -403,12 +406,18 @@ def validate(skill_dir: Path, strict: bool = False, registry_path: Path = None) 
 
 # ── CLI Entry Point ───────────────────────────────────────────────────────
 
+
 def main():
     if len(sys.argv) < 2:
-        print(json.dumps({
-            "valid": False,
-            "error": "Usage: python validate_skill.py <skill-directory> [--strict] [--registry <path>]",
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "valid": False,
+                    "error": "Usage: python validate_skill.py <skill-directory> [--strict] [--registry <path>]",
+                },
+                indent=2,
+            )
+        )
         sys.exit(1)
 
     skill_dir = Path(sys.argv[1]).resolve()

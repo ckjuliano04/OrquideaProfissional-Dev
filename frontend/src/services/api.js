@@ -1,18 +1,18 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
 export async function fetchAPI(endpoint, options = {}) {
   // Pega o token do localStorage
   let token = null;
-  if (typeof window !== 'undefined') {
-    token = localStorage.getItem('orquidea_token');
+  if (typeof window !== "undefined") {
+    token = localStorage.getItem("orquidea_token");
   }
 
   const defaultHeaders = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   };
 
   if (token) {
-    defaultHeaders['Authorization'] = `Bearer ${token}`;
+    defaultHeaders["Authorization"] = `Bearer ${token}`;
   }
 
   const config = {
@@ -27,17 +27,17 @@ export async function fetchAPI(endpoint, options = {}) {
 
   if (!response.ok) {
     // Trata erros globais (ex: 401 Unauthorized)
-    if (response.status === 401 && typeof window !== 'undefined') {
-      localStorage.removeItem('orquidea_token');
+    if (response.status === 401 && typeof window !== "undefined") {
+      localStorage.removeItem("orquidea_token");
       // Redirecionamento pode ser gerido pelo contexto
     }
-    
+
     let errorMsg = `Erro ${response.status} em ${endpoint}`;
     try {
       const errorData = await response.json();
       errorMsg = errorData.detail || errorMsg;
-    } catch(e) {}
-    
+    } catch (e) {}
+
     throw new Error(`${errorMsg} (${response.status})`);
   }
 

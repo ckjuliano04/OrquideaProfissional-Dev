@@ -6,6 +6,7 @@ Uso:
     python scripts/hashtags.py --top "tecnologia"
     python scripts/hashtags.py --info "marketing"
 """
+
 from __future__ import annotations
 
 import argparse
@@ -55,11 +56,13 @@ async def search_hashtag(hashtag: str, limit: int = 25, mode: str = "recent") ->
     hashtag_id = hashtag_data[0]["id"]
 
     # Registrar busca
-    db.insert_hashtag_search({
-        "account_id": account["id"],
-        "hashtag": hashtag,
-        "ig_hashtag_id": hashtag_id,
-    })
+    db.insert_hashtag_search(
+        {
+            "account_id": account["id"],
+            "hashtag": hashtag,
+            "ig_hashtag_id": hashtag_id,
+        }
+    )
 
     # Step 2: Buscar posts
     if mode == "top":
@@ -90,13 +93,21 @@ async def hashtag_info(hashtag: str) -> None:
     api = InstagramAPI()
     result = await api.search_hashtag(hashtag)
     await api.close()
-    print(json.dumps({"hashtag": hashtag, "data": result.get("data", [])}, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"hashtag": hashtag, "data": result.get("data", [])},
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
 
 
 def main():
     parser = argparse.ArgumentParser(description="Hashtags do Instagram")
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--search", metavar="TAG", help="Buscar posts recentes com hashtag")
+    group.add_argument(
+        "--search", metavar="TAG", help="Buscar posts recentes com hashtag"
+    )
     group.add_argument("--top", metavar="TAG", help="Top posts de uma hashtag")
     group.add_argument("--info", metavar="TAG", help="Info da hashtag")
     parser.add_argument("--limit", type=int, default=25, help="Limite de resultados")

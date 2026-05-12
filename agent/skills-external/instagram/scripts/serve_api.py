@@ -18,12 +18,12 @@ Endpoints:
     GET /dashboard                  → dashboard HTML
     GET /webhook                    → stub para v2
 """
+
 from __future__ import annotations
 
 import argparse
 import csv
 import io
-import json
 import sys
 from pathlib import Path
 
@@ -33,9 +33,15 @@ from config import STATIC_DIR
 from db import Database
 
 try:
-    from fastapi import FastAPI, Query
-    from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, StreamingResponse
     import uvicorn
+    from fastapi import FastAPI, Query
+    from fastapi.responses import (
+        FileResponse,
+        HTMLResponse,
+        JSONResponse,
+        PlainTextResponse,
+        StreamingResponse,
+    )
 except ImportError:
     print("FastAPI não instalado. Execute: pip install fastapi uvicorn")
     sys.exit(1)
@@ -78,7 +84,9 @@ def list_posts(
 ):
     account = db.get_active_account()
     account_id = account["id"] if account else None
-    posts = db.get_posts(account_id=account_id, status=status, limit=limit, offset=offset)
+    posts = db.get_posts(
+        account_id=account_id, status=status, limit=limit, offset=offset
+    )
     return {"total": len(posts), "data": posts}
 
 
@@ -138,12 +146,16 @@ def best_times():
     weekday_names = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
     data = []
     for r in rows:
-        data.append({
-            "hour": f"{r['hour']}:00" if r["hour"] else "?",
-            "weekday": weekday_names[int(r["weekday"])] if r["weekday"] else "?",
-            "posts": r["post_count"],
-            "avg_engagement": round(r["avg_engagement"], 1) if r["avg_engagement"] else 0,
-        })
+        data.append(
+            {
+                "hour": f"{r['hour']}:00" if r["hour"] else "?",
+                "weekday": weekday_names[int(r["weekday"])] if r["weekday"] else "?",
+                "posts": r["post_count"],
+                "avg_engagement": round(r["avg_engagement"], 1)
+                if r["avg_engagement"]
+                else 0,
+            }
+        )
     return {"data": data}
 
 
@@ -181,7 +193,9 @@ def export_csv():
     if not posts:
         return PlainTextResponse("Sem dados.")
     output = io.StringIO()
-    writer = csv.DictWriter(output, fieldnames=list(posts[0].keys()), extrasaction="ignore")
+    writer = csv.DictWriter(
+        output, fieldnames=list(posts[0].keys()), extrasaction="ignore"
+    )
     writer.writeheader()
     writer.writerows(posts)
     output.seek(0)
@@ -197,7 +211,9 @@ def dashboard():
     dashboard_path = STATIC_DIR / "dashboard.html"
     if dashboard_path.exists():
         return FileResponse(dashboard_path, media_type="text/html")
-    return HTMLResponse("<h1>Dashboard não encontrado</h1><p>Crie static/dashboard.html</p>")
+    return HTMLResponse(
+        "<h1>Dashboard não encontrado</h1><p>Crie static/dashboard.html</p>"
+    )
 
 
 @app.get("/webhook", summary="Webhook stub (v2)")

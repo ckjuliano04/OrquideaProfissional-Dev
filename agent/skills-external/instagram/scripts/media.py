@@ -5,6 +5,7 @@ Uso:
     python scripts/media.py --list [--limit 10]
     python scripts/media.py --details --media-id 12345
 """
+
 from __future__ import annotations
 
 import argparse
@@ -27,11 +28,17 @@ async def list_media(limit: int = 25, after: str = None) -> None:
     await api.close()
 
     data = result.get("data", [])
-    print(json.dumps({
-        "total": len(data),
-        "media": data,
-        "paging": result.get("paging", {}),
-    }, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                "total": len(data),
+                "media": data,
+                "paging": result.get("paging", {}),
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
 
 
 async def media_details(media_id: str) -> None:
